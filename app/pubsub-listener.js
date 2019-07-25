@@ -1,20 +1,36 @@
 /* eslint babel/semi: "error" */
 import { promisifyAll } from 'bluebird';
 import { createClient as createRedisClient } from 'redis';
-import { cloneDeep, flatten, intersection, isArray, isFunction, isPlainObject, keyBy, map, uniqBy, noop, values, last, omit } from 'lodash';
+import {
+  cloneDeep,
+  compact,
+  flatten,
+  intersection,
+  isArray,
+  isFunction,
+  isPlainObject,
+  keyBy,
+  last,
+  map,
+  noop,
+  omit,
+  uniqBy,
+  values,
+} from 'lodash';
 import IoServer from 'socket.io';
 import redis_adapter from 'socket.io-redis';
-import jwt from 'jsonwebtoken';
 import createDebug from 'debug';
 import Raven from 'raven';
 
 import { load as configLoader } from '../config/config';
-import { dbAdapter, LikeSerializer, PostSerializer, PubsubCommentSerializer } from './models';
+
+import { dbAdapter, LikeSerializer, PostSerializer, PubsubCommentSerializer, AppTokenV1 } from './models';
 import { eventNames } from './support/PubSubAdapter';
 import { difference as listDifference, intersection as listIntersection } from './support/open-lists';
+import { tokenFromJWT } from './controllers/middlewares/with-auth-token';
+import { ForbiddenException } from './support/exceptions';
+import { HOMEFEED_MODE_FRIENDS_ALL_ACTIVITY, HOMEFEED_MODE_CLASSIC, HOMEFEED_MODE_FRIENDS_ONLY } from './models/timeline';
 
-
-promisifyAll(jwt);
 
 const config = configLoader();
 const sentryIsEnabled = 'sentryDsn' in config;
@@ -36,16 +52,8 @@ export default class PubsubListener {
 
     // authentication
     this.io.use(async (socket, next) => {
-      const authToken = socket.handshake.query.token;
-      const { secret } = config;
-
-      try {
-        const decoded = await jwt.verifyAsync(authToken, secret);
-        socket.user = await dbAdapter.getUserById(decoded.userId);
-      } catch (e) {
-        socket.user = { id: null };
-      }
-
+      socket.user = await getAuthUser(socket.handshake.query.token, socket);
+      debug(`[socket.id=${socket.id}] auth user`, socket.user.id);
       return next();
     });
 
@@ -66,29 +74,18 @@ export default class PubsubListener {
 
   onConnect = (socket) => {
     promisifyAll(socket);
-    const { secret } = config;
 
     socket.on('error', (e) => {
       debug(`[socket.id=${socket.id}] error`, e);
     });
 
-    onSocketEvent(socket, 'auth', async (data, debugPrefix) => {
+    onSocketEvent(socket, 'auth', async (data) => {
       if (!isPlainObject(data)) {
         throw new EventHandlingError('request without data');
       }
 
-      if (data.authToken && typeof data.authToken === 'string') {
-        try {
-          const decoded = await jwt.verifyAsync(data.authToken, secret);
-          socket.user = await dbAdapter.getUserById(decoded.userId);
-          debug(`${debugPrefix}: successfully authenticated as ${socket.user.username}`);
-        } catch (e) {
-          socket.user = { id: null };
-          throw new Error('invalid token', `invalid token ${data.authToken}, signing user out`);
-        }
-      } else {
-        socket.user = { id: null };
-      }
+      socket.user = await getAuthUser(data.authToken, socket);
+      debug(`[socket.id=${socket.id}] auth user`, socket.user.id);
     });
 
     onSocketEvent(socket, 'subscribe', async (data, debugPrefix) => {
@@ -101,43 +98,44 @@ export default class PubsubListener {
           throw new EventHandlingError(`List of ${channelType} ids has to be an array`);
         }
 
-        const promises = channelIds.map(async (id) => {
+        const promises = channelIds.map(async (channelId) => {
+          const [objId] = channelId.split('?', 2); // channelId may have params after '?'
+
           if (channelType === 'timeline') {
-            const t = await dbAdapter.getTimelineById(id);
+            const t = await dbAdapter.getTimelineById(objId);
 
             if (!t) {
               throw new EventHandlingError(
                 `attempt to subscribe to nonexistent timeline`,
-                `User ${socket.user.id} attempted to subscribe to nonexistent timeline (ID=${id})`
+                `User ${socket.user.id} attempted to subscribe to nonexistent timeline (ID=${objId})`
               );
             }
 
             if (t.isPersonal() && t.userId !== socket.user.id) {
               throw new EventHandlingError(
                 `attempt to subscribe to someone else's '${t.name}' timeline`,
-                `User ${socket.user.id} attempted to subscribe to '${t.name}' timeline (ID=${id}) belonging to user ${t.userId}`
+                `User ${socket.user.id} attempted to subscribe to '${t.name}' timeline (ID=${objId}) belonging to user ${t.userId}`
               );
             }
           } else if (channelType === 'user') {
-            if (id !== socket.user.id) {
+            if (objId !== socket.user.id) {
               throw new EventHandlingError(
                 `attempt to subscribe to someone else's '${channelType}' channel`,
-                `User ${socket.user.id} attempted to subscribe to someone else's '${channelType}' channel (ID=${id})`
+                `User ${socket.user.id} attempted to subscribe to someone else's '${channelType}' channel (ID=${objId})`
               );
             }
           }
 
-          return `${channelType}:${id}`;
+          return `${channelType}:${channelId}`;
         });
 
         return await Promise.all(promises);
       });
 
       const channelLists = await Promise.all(channelListsPromises);
-      await Promise.all(flatten(channelLists).map(async (channelId) => {
-        await socket.joinAsync(channelId);
-        debug(`${debugPrefix}: successfully subscribed to ${channelId}`);
-      }));
+      const roomsToSubscribe = flatten(channelLists);
+      await socket.joinAsync(roomsToSubscribe);
+      debug(`${debugPrefix}: successfully subscribed to ${roomsToSubscribe.join(', ')}`);
 
       const rooms = buildGroupedListOfSubscriptions(socket);
 
@@ -273,7 +271,7 @@ export default class PubsubListener {
         users = await post.onlyUsersCanSeePost(users);
       }
 
-      destSockets = destSockets.filter((s) => users.includes((s.user)));
+      destSockets = destSockets.filter((s) => users.includes(s.user));
     }
 
     const bansMap = await dbAdapter.getUsersBansIdsMap(users.map((u) => u.id).filter((id) => !!id));
@@ -565,25 +563,36 @@ export async function getRoomsOfPost(post) {
   const [
     postFeeds,
     myDiscussionsFeeds,
-    riverOfNewsFeeds,
+    riverOfNewsFeedsByModes,
   ] = await Promise.all([
     post.getTimelines(),
     post.getMyDiscussionsTimelines(),
-    post.getRiverOfNewsTimelines(),
+    post.getRiverOfNewsTimelinesByModes(),
   ]);
 
   const materialFeeds = postFeeds.filter((f) => f.isLikes() || f.isComments() || f.isPosts() || f.isDirects());
 
   // All feeds related to post
-  let feeds = [];
+  const allFeeds = uniqBy([
+    ...materialFeeds,
+    ...riverOfNewsFeedsByModes[HOMEFEED_MODE_FRIENDS_ALL_ACTIVITY],
+    ...myDiscussionsFeeds
+  ], 'id');
 
-  if (config.dynamicRiverOfNews) {
-    feeds = uniqBy([...materialFeeds, ...riverOfNewsFeeds, ...myDiscussionsFeeds], 'id');
-  } else {
-    feeds = uniqBy([...postFeeds, ...myDiscussionsFeeds], 'id');
-  }
+  const rooms = compact(flatten(allFeeds.map((t) => {
+    if (t.isRiverOfNews()) {
+      const inNarrowMode = riverOfNewsFeedsByModes[HOMEFEED_MODE_FRIENDS_ONLY].some((f) => f.id === t.id);
+      const inClassicMode = riverOfNewsFeedsByModes[HOMEFEED_MODE_CLASSIC].some((f) => f.id === t.id);
+      return [
+        `timeline:${t.id}?homefeed-mode=${HOMEFEED_MODE_FRIENDS_ALL_ACTIVITY}`,
+        inClassicMode && `timeline:${t.id}`, // Default mode
+        inClassicMode && `timeline:${t.id}?homefeed-mode=${HOMEFEED_MODE_CLASSIC}`,
+        inNarrowMode && `timeline:${t.id}?homefeed-mode=${HOMEFEED_MODE_FRIENDS_ONLY}`,
+      ];
+    }
 
-  const rooms = feeds.map((t) => `timeline:${t.id}`);
+    return `timeline:${t.id}`;
+  })));
   rooms.push(`post:${post.id}`);
   return rooms;
 }
@@ -644,3 +653,33 @@ const onSocketEvent = (socket, event, handler) => socket.on(event, async (data, 
     callback({ success: false, message: e.message });
   }
 });
+
+async function getAuthUser(jwtToken, socket) {
+  let authData = null;
+
+  try {
+    authData = await tokenFromJWT(
+      jwtToken,
+      {
+        headers:  socket.handshake.headers,
+        remoteIP: socket.handshake.address,
+        route:    `WS *`,
+      },
+    );
+  } catch (e) {
+    if (e instanceof ForbiddenException) {
+      // still allow anonymous access
+    } else {
+      throw e;
+    }
+  }
+
+  if (authData && authData.authToken instanceof AppTokenV1) {
+    await authData.authToken.registerUsage({
+      ip:        socket.handshake.address,
+      userAgent: socket.handshake.headers['user-agent'] || '<undefined>',
+    });
+  }
+
+  return authData ? authData.user : { id: null };
+}

@@ -10,6 +10,7 @@ import Raven from 'raven';
 import createDebug from 'debug';
 
 import { version as serverVersion } from '../package.json';
+
 import { originMiddleware } from './initializers/origin';
 import { load as configLoader } from './config';
 import { selectDatabase } from './database';
@@ -70,6 +71,10 @@ exports.init = async function (app) {
     if (gotErrors) {
       throw new Error(`some of required directories are missing`);
     }
+  }
+
+  if (config.trustProxyHeaders) {
+    app.proxy = true;
   }
 
   app.use(koaBody({

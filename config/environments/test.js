@@ -1,4 +1,5 @@
 import stubTransport from 'nodemailer-stub-transport';
+
 import { test as postgresConfig } from '../../knexfile';
 
 
@@ -15,13 +16,15 @@ export function getConfig() {
     appRoot:                   '.',
     acceptHashedPasswordsOnly: false,
 
+    // Configure koa app to trust proxy headers:
+    // X-Forwarded-Host, X-Forwarded-Proto and X-Forwarded-For
+    trustProxyHeaders: false,
+
     // disableRealtime: true,
     onboardingUsername: 'welcome',
     recaptcha:          { enabled: false },
 
     frontendPreferencesLimit: 65536,
-
-    dynamicRiverOfNews: true,
   };
 
   config.host = `http://localhost:${config.port}`;

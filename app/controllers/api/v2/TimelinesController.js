@@ -1,8 +1,14 @@
 import { escape as urlEscape } from 'querystring';
+
 import _ from 'lodash';
 import compose from 'koa-compose';
 
-import { dbAdapter } from '../../../models';
+import {
+  dbAdapter,
+  HOMEFEED_MODE_CLASSIC,
+  HOMEFEED_MODE_FRIENDS_ALL_ACTIVITY,
+  HOMEFEED_MODE_FRIENDS_ONLY,
+} from '../../../models';
 import { load as configLoader } from '../../../../config/config';
 import { serializePostsCollection, serializePost, serializeComment, serializeAttachment } from '../../../serializers/v2/post';
 import { monitored, authRequired, targetUserRequired } from '../../middlewares';
@@ -11,30 +17,6 @@ import { userSerializerFunction } from '../../../serializers/v2/user';
 
 export const ORD_UPDATED = 'bumped';
 export const ORD_CREATED = 'created';
-
-/**
- * "Only friends" homefeed mode
- *
- * Displays posts from Posts/Directs feeds subscribed to by viewer.
- */
-export const HOMEFEED_MODE_FRIENDS_ONLY = 'friends-only';
-
-/**
- * "Classic" homefeed mode
- *
- * Displays posts from Posts/Directs feeds and propagable posts
- * from Comments/Likes feeds subscribed to by viewer.
- */
-export const HOMEFEED_MODE_CLASSIC = 'classic';
-
-/**
- * "All friends activity" homefeed mode
- *
- * Displays posts from Posts/Directs feeds and all (not only propagable) posts
- * from Comments/Likes feeds subscribed to by viewer. Also displays all posts
- * created by users subscribed to by viewer.
- */
-export const HOMEFEED_MODE_FRIENDS_ALL_ACTIVITY = 'friends-all-activity';
 
 const config = configLoader();
 
@@ -97,6 +79,15 @@ export const userTimeline = (feedName) => compose([
     });
   },
 ]);
+
+export const everything = compose([
+  monitored(`timelines.everything`),
+  async (ctx) => {
+    const { user: viewer } = ctx.state;
+    ctx.body = await genericTimeline(null, viewer ? viewer.id : null, getCommonParams(ctx));
+  },
+]);
+
 
 export const metatags = compose([
   monitored(`timelines-metatags`),
@@ -170,7 +161,7 @@ function getCommonParams(ctx, defaultSort = ORD_UPDATED) {
   return { limit, offset, sort, homefeedMode, withMyPosts, hiddenCommentTypes, createdBefore, createdAfter };
 }
 
-async function genericTimeline(timeline, viewerId = null, params = {}) {
+async function genericTimeline(timeline = null, viewerId = null, params = {}) {
   params = {
     limit:              30,
     offset:             0,
@@ -186,7 +177,7 @@ async function genericTimeline(timeline, viewerId = null, params = {}) {
   };
 
   params.withLocalBumps = params.withLocalBumps && !!viewerId && params.sort === ORD_UPDATED;
-  params.withMyPosts = params.withMyPosts && timeline.name === 'MyDiscussions';
+  params.withMyPosts = params.withMyPosts && timeline && timeline.name === 'MyDiscussions';
 
   const allUserIds = new Set();
   const allPosts = [];
@@ -197,7 +188,7 @@ async function genericTimeline(timeline, viewerId = null, params = {}) {
 
   const { intId: hidesFeedId } = viewerId ? await dbAdapter.getUserNamedFeed(viewerId, 'Hides') : { intId: 0 };
 
-  const timelineIds = [timeline.intId];
+  const timelineIds = timeline ? [timeline.intId] : null;
   const activityFeedIds = [];
   const authorsIds = [];
 
@@ -205,52 +196,56 @@ async function genericTimeline(timeline, viewerId = null, params = {}) {
     authorsIds.push(viewerId);
   }
 
-  const owner = await timeline.getUser();
   let canViewUser = true;
 
-  if (timeline.name === 'MyDiscussions') {
-    const srcIds = await Promise.all([
-      owner.getCommentsTimelineIntId(),
-      owner.getLikesTimelineIntId(),
-    ]);
-    timelineIds.length = 0;
-    timelineIds.push(...srcIds);
-  } else if (['Posts', 'Comments', 'Likes'].includes(timeline.name)) {
-    // Checking access rights for viewer
-    if (!viewerId) {
-      canViewUser = (owner.isProtected === '0');
-    } else if (viewerId !== owner.id) {
-      if (owner.isPrivate === '1') {
-        const subscribers = await dbAdapter.getUserSubscribersIds(owner.id);
-        canViewUser = subscribers.includes(viewerId);
-      }
+  if (timeline) {
+    const owner = await timeline.getUser();
 
-      if (canViewUser) {
-        // Viewer cannot see feeds of users in ban relations with him
-        const banIds = await dbAdapter.getUsersBansOrWasBannedBy(viewerId);
-        canViewUser = !banIds.includes(owner.id);
-      }
-    }
-  } else if (timeline.name === 'RiverOfNews' && config.dynamicRiverOfNews) {
-    const { destinations, activities } = await dbAdapter.getSubscriprionsIntIds(viewerId);
-    timelineIds.length = 0;
-    timelineIds.push(...destinations);
+    if (timeline.name === 'MyDiscussions') {
+      const srcIds = await Promise.all([
+        owner.getCommentsTimelineIntId(),
+        owner.getLikesTimelineIntId(),
+      ]);
+      timelineIds.length = 0;
+      timelineIds.push(...srcIds);
+    } else if (['Posts', 'Comments', 'Likes'].includes(timeline.name)) {
+      // Checking access rights for viewer
+      if (!viewerId) {
+        canViewUser = (owner.isProtected === '0');
+      } else if (viewerId !== owner.id) {
+        if (owner.isPrivate === '1') {
+          const subscribers = await dbAdapter.getUserSubscribersIds(owner.id);
+          canViewUser = subscribers.includes(viewerId);
+        }
 
-    if (params.homefeedMode === HOMEFEED_MODE_FRIENDS_ALL_ACTIVITY) {
-      timelineIds.push(...activities);
-      const friendsIds = await dbAdapter.getUserFriendIds(viewerId);
-      authorsIds.push(...friendsIds);
-
-      if (!authorsIds.includes(viewerId)) {
-        authorsIds.push(viewerId);
+        if (canViewUser) {
+          // Viewer cannot see feeds of users in ban relations with him
+          const banIds = await dbAdapter.getUsersBansOrWasBannedBy(viewerId);
+          canViewUser = !banIds.includes(owner.id);
+        }
       }
-    } else if (params.homefeedMode === HOMEFEED_MODE_CLASSIC) {
-      activityFeedIds.push(...activities);
+    } else if (timeline.name === 'RiverOfNews') {
+      const { destinations, activities } = await dbAdapter.getSubscriprionsIntIds(viewerId);
+      timelineIds.length = 0;
+      timelineIds.push(...destinations);
+
+      if (params.homefeedMode === HOMEFEED_MODE_FRIENDS_ALL_ACTIVITY) {
+        timelineIds.push(...activities);
+        const friendsIds = await dbAdapter.getUserFriendIds(viewerId);
+        authorsIds.push(...friendsIds);
+
+        if (!authorsIds.includes(viewerId)) {
+          authorsIds.push(viewerId);
+        }
+      } else if (params.homefeedMode === HOMEFEED_MODE_CLASSIC) {
+        activityFeedIds.push(...activities);
+      }
     }
   }
 
+
   const postsIds = canViewUser ?
-    await dbAdapter.getTimelinePostsIds(timeline.name, timelineIds, viewerId, { ...params, authorsIds, activityFeedIds, limit: params.limit + 1 }) :
+    await dbAdapter.getTimelinePostsIds(timelineIds, viewerId, { ...params, authorsIds, activityFeedIds, limit: params.limit + 1 }) :
     [];
 
   const isLastPage = postsIds.length <= params.limit;
@@ -288,12 +283,17 @@ async function genericTimeline(timeline, viewerId = null, params = {}) {
     destinations.forEach((d) => allUserIds.add(d.user));
   }
 
-  const timelines = _.pick(timeline, ['id', 'name']);
-  timelines.user = timeline.userId;
-  timelines.posts = postsIds;
-  timelines.subscribers = canViewUser ? await dbAdapter.getTimelineSubscribersIds(timeline.id) : [];
-  allSubscribers.push(timeline.userId);
-  allSubscribers.push(...timelines.subscribers);
+  let timelines = null;
+
+  if (timeline) {
+    timelines = _.pick(timeline, ['id', 'name']);
+    timelines.user = timeline.userId;
+    timelines.posts = postsIds;
+    timelines.subscribers = canViewUser ? await dbAdapter.getTimelineSubscribersIds(timeline.id) : [];
+    allSubscribers.push(timeline.userId);
+    allSubscribers.push(...timelines.subscribers);
+  }
+
   allSubscribers.forEach((s) => allUserIds.add(s));
 
   const allGroupAdmins = canViewUser ? await dbAdapter.getGroupsAdministratorsIds([...allUserIds], viewerId) : {};
@@ -311,12 +311,12 @@ async function genericTimeline(timeline, viewerId = null, params = {}) {
 
   const serializeUser = userSerializerFunction(allUsersAssoc, allStatsAssoc, allGroupAdmins);
 
-  const users = Object.keys(allUsersAssoc).map(serializeUser).filter((u) => u.type === 'user' || u.id === timeline.userId);
+  const users = Object.keys(allUsersAssoc).map(serializeUser).filter((u) => u.type === 'user' || (timeline && u.id === timeline.userId));
   const subscribers = canViewUser ? uniqSubscribers.map(serializeUser) : [];
 
   const subscriptions = canViewUser ? _.uniqBy(_.compact(allDestinations), 'id') : [];
 
-  const admins = canViewUser ? (allGroupAdmins[timeline.userId] || []).map(serializeUser) : [];
+  const admins = canViewUser ? ((timeline && allGroupAdmins[timeline.userId]) || []).map(serializeUser) : [];
 
   return {
     timelines,

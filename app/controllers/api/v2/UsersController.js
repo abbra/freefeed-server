@@ -1,6 +1,7 @@
 import compose from 'koa-compose';
 import _ from 'lodash'
 import monitor from 'monitor-dog'
+
 import { dbAdapter, PubSub as pubSub } from '../../../models'
 import { serializeSelfUser, serializeUser } from '../../../serializers/v2/user'
 import { monitored, authRequired } from '../../middlewares';
@@ -86,7 +87,7 @@ export default class UsersController {
       requests: 'users.whoami-v2-requests'
     }),
     async (ctx) => {
-      const { user } = ctx.state;
+      const { state: { user, authToken } } = ctx;
 
       const [
         users,
@@ -149,6 +150,11 @@ export default class UsersController {
           group.requests = (pendingGroupRequests[group.id] || []).map(fillUser);
           return group;
         });
+
+      // Only full access tokens can see privateMeta
+      if (!authToken.hasFullAccess()) {
+        users.privateMeta = {};
+      }
 
       ctx.body = { users, subscribers, subscriptions, requests, managedGroups };
     },

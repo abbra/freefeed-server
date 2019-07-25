@@ -12,6 +12,7 @@ import { getSingleton } from '../../app/app'
 import { DummyPublisher } from '../../app/pubsub'
 import { PubSub } from '../../app/models'
 import { load as configLoader } from '../../config/config'
+
 import * as funcTestHelper from './functional_test_helper'
 import * as schema from './schemaV2-helper';
 
@@ -289,6 +290,48 @@ describe('UsersController', () => {
         })
     })
   })
+
+  describe('#showMe()', () => {
+    let authToken, luna;
+    const user = {
+      username: 'Luna',
+      password: 'password'
+    }
+
+    beforeEach(async () => {
+      luna = await funcTestHelper.createUserAsync(user.username, user.password);
+      ({ authToken } = luna);
+    });
+
+    it('should return current user for a valid user', async () => {
+      const resp = await funcTestHelper.performRequest('/v1/users/me', {
+        method:  'GET',
+        headers: {
+          'Content-Type':           'application/json',
+          'X-Authentication-Token': authToken,
+        },
+      });
+
+      expect(resp.status, 'to be', 200);
+      const respData = await resp.json();
+      expect(respData, 'to satisfy', {
+        users: {
+          ...schema.user,
+          id:       luna.user.id,
+          username: luna.username,
+        }
+      });
+    });
+
+    it('should not return user for an anonymous', async () => {
+      const resp = await funcTestHelper.performRequest('/v1/users/me', {
+        method:  'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      expect(resp.status, 'to be', 401);
+    });
+  });
 
   describe('#subscribe()', () => {
     let lunaContext = {}
