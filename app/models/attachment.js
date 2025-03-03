@@ -338,24 +338,29 @@ export function addModel(dbAdapter) {
       const { files = {}, ...mediaData } = await processMediaFile(originalPath, this.fileName);
 
       try {
-        if (mediaData.mediaType !== 'image') {
-          // It may happen if the original file is an animated gif
-          throw new Error(
-            `The resulting media type is not an image (got '${mediaData.mediaType}')`,
-          );
-        }
-
-        // We may already have some previews. We need to keep them (to keep all
-        // possible existing links) and don't delete or even replace them. We
-        // also shouldn't re-upload the original file.
+        // We may already have some image previews, there is the algorithm for
+        // them:
+        // - If there is not a GIF, then we need to keep them (to keep all
+        //   possible existing links) and don't delete or even replace them.
+        // - For GIFs, however, we want to sacrifice the old and big files for
+        //   the new and optimized ones.
+        //
+        // We also shouldn't re-upload the original file.
         const filesToUpload = {};
+        const pathsToDelete = [];
 
         for (const [variant, info] of Object.entries(files)) {
           if (variant === '') {
             // Skip the original
           } else if (this.previews.image[variant]) {
-            // This variant already exists, keep it as is
-            mediaData.previews.image[variant] = this.previews.image[variant];
+            if (this.fileExtension !== 'gif') {
+              // This variant already exists, keep it as is
+              mediaData.previews.image[variant] = this.previews.image[variant];
+            } else {
+              // This variant is a GIF, delete it and upload the new one
+              filesToUpload[variant] = info;
+              pathsToDelete.push(this.getRelFilePath(variant, 'gif'));
+            }
           } else {
             filesToUpload[variant] = info;
           }
@@ -367,6 +372,7 @@ export function addModel(dbAdapter) {
           imageSizes: null,
           updatedAt: 'now',
         });
+        await this.deleteFiles(pathsToDelete);
       } finally {
         // Remove the rest of local files
         const paths = [originalPath, ...Object.values(files).map(({ path }) => path)];
@@ -518,14 +524,12 @@ export function addModel(dbAdapter) {
     /**
      * Delete all attachment's files
      */
-    async deleteFiles() {
+    async deleteFiles(paths = this.allRelFilePaths()) {
       const storageConfig = currentConfig().attachments.storage;
 
       if (storageConfig.type === 's3') {
-        const keys = this.allRelFilePaths();
-
         await Promise.all(
-          keys.map(async (Key) => {
+          paths.map(async (Key) => {
             try {
               await s3Client().deleteObject({
                 Key,
@@ -540,9 +544,7 @@ export function addModel(dbAdapter) {
           }),
         );
       } else {
-        await Promise.all(
-          this.allRelFilePaths().map((path) => unlinkIfExists(storageConfig.rootDir + path)),
-        );
+        await Promise.all(paths.map((path) => unlinkIfExists(storageConfig.rootDir + path)));
       }
     }
 

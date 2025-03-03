@@ -15,6 +15,7 @@ import { eventNames, PubSubAdapter } from '../../app/support/PubSubAdapter';
 import { getSingleton } from '../../app/app';
 import { withModifiedConfig } from '../helpers/with-modified-config';
 import { API_VERSION_4 } from '../../app/api-versions';
+import { ATTACHMENT_RECREATE_PREVIEWS } from '../../app/jobs/attachment-recreate-previews';
 
 import {
   createTestUser,
@@ -416,6 +417,130 @@ describe('Attachments', () => {
         fileSize: 'this is a test'.length.toString(),
       },
       users: [{ id: luna.user.id }],
+    });
+  });
+
+  it('should re-create previews for old/legacy GIF attachment', async () => {
+    const jobManager = await initJobProcessing();
+
+    const filePath = path.join(__dirname, '../fixtures/test-image-animated.gif');
+    const data = new FormData();
+    data.append('file', await fileFrom(filePath, 'image/gif'));
+    const resp = await performJSONRequest('POST', '/v2/attachments', data, authHeaders(luna));
+    const { id, imageSizes } = resp.attachments;
+
+    // Make this attachment 'old'
+    {
+      const attObj = await dbAdapter.getAttachmentById(id);
+
+      // Update the attachment's files
+      for (const { variant, ext } of attObj.allFileVariants()) {
+        const localPath = attObj.getLocalFilePath(variant, ext);
+
+        if (variant === '') {
+          // Keep the original file
+          continue;
+        } else if (variant === 'thumbnails' || variant === 'thumbnails2') {
+          // Rename the legacy images to gifs
+          fs.renameSync(localPath, attObj.getLocalFilePath(variant, 'gif'));
+        } else {
+          // Delete all other files
+          fs.unlinkSync(localPath);
+        }
+      }
+
+      for (const [key, value] of Object.entries(imageSizes)) {
+        imageSizes[key] = {
+          w: value.w,
+          h: value.h,
+          url: value.url.replace('.webp', '.gif'),
+        };
+      }
+
+      await dbAdapter.updateAttachment(id, {
+        mediaType: 'image',
+        previews: null,
+        imageSizes,
+        width: null,
+        height: null,
+        duration: null,
+        meta: null,
+      });
+    }
+
+    // Check the files
+    {
+      const attObj = await dbAdapter.getAttachmentById(id);
+      expect(attObj.allFileVariants(), 'to equal', [
+        { variant: '', ext: 'gif' },
+        { variant: 'thumbnails', ext: 'gif' },
+        { variant: 'thumbnails2', ext: 'gif' },
+      ]);
+    }
+
+    // Request the preview
+    const resp1 = await performJSONRequest(
+      'GET',
+      `/v4/attachments/${id}/image?width=300&height=300`,
+    );
+    expect(resp1, 'to satisfy', {
+      url: expect.it('to end with', `/thumbnails2/${id}.gif`),
+      mimeType: 'image/gif',
+      width: 691,
+      height: 350,
+    });
+
+    // The ATTACHMENT_RECREATE_PREVIEWS job should be created
+    const jobs = await dbAdapter.getAllJobs([ATTACHMENT_RECREATE_PREVIEWS]);
+    expect(jobs, 'to have an item satisfying', {
+      name: ATTACHMENT_RECREATE_PREVIEWS,
+      payload: { attId: id },
+      uniqKey: id,
+      attempts: 0,
+    });
+
+    // Process the job
+    await jobManager.fetchAndProcess();
+
+    // Check the new files have been created
+    {
+      const attObj = await dbAdapter.getAttachmentById(id);
+      expect(attObj.allFileVariants(), 'to equal', [
+        { variant: 'p1', ext: 'webp' },
+        { variant: 'p2', ext: 'webp' },
+        { variant: 'thumbnails', ext: 'webp' },
+        { variant: 'thumbnails2', ext: 'webp' },
+        { variant: 'v1', ext: 'mp4' },
+        { variant: '', ext: 'gif' },
+      ]);
+
+      for (const { variant, ext } of attObj.allFileVariants()) {
+        const localPath = attObj.getLocalFilePath(variant, ext);
+
+        if (!fs.existsSync(localPath)) {
+          expect.fail('{0} expected to exist', localPath);
+        }
+      }
+    }
+
+    // Request the preview again (it should be WebP now)
+    const resp2 = await performJSONRequest(
+      'GET',
+      `/v4/attachments/${id}/image?width=300&height=300`,
+    );
+    expect(resp2, 'to satisfy', {
+      url: expect.it('to end with', `/thumbnails2/${id}.webp`),
+      mimeType: 'image/webp',
+      width: 691,
+      height: 350,
+    });
+
+    // Request the attachment info
+    const resp3 = await performJSONRequest('GET', `/v4/attachments/${id}`);
+    expect(resp3.attachments, 'to satisfy', {
+      mediaType: 'video',
+      previewTypes: ['image', 'video'],
+      meta: { silent: true, animatedImage: true },
     });
   });
 

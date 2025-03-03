@@ -19,6 +19,7 @@ import { startAttachmentsSanitizeJob } from '../../../jobs/attachments-sanitize'
 import { currentConfig } from '../../../support/app-async-context';
 import { getBestVariant } from '../../../support/media-files/geometry';
 import { getAttachmentsByIdsInputSchema } from '../v2/data-schemes/attachmants';
+import { createRecreatePreviewsJob } from '../../../jobs/attachment-recreate-previews';
 
 export default class AttachmentsController {
   app;
@@ -293,6 +294,15 @@ export default class AttachmentsController {
       ctx.body = `Redirecting to ${response.url}`;
     } else {
       ctx.body = response;
+    }
+
+    // Set the re-encode task for legacy GIFs and large images
+    if (
+      attachment.isLegacyImage &&
+      (attachment.fileExtension === 'gif' ||
+        attachment.imageSizes.o.w * attachment.imageSizes.o.h > 20e6)
+    ) {
+      await createRecreatePreviewsJob(attachment.id);
     }
   }
 
