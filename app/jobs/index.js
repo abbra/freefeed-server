@@ -6,6 +6,7 @@ import { initHandlers as initPeriodicHandlers } from './periodic';
 import { initHandlers as initUserGoneHandlers } from './user-gone';
 import { initHandlers as initAttachmentsSanitizeHandlers } from './attachments-sanitize';
 import { initHandlers as initAttachmentPrepareVideoHandlers } from './attachment-prepare-video';
+import { initHandlers as initAttachmentRecreatePreviewsHandlers } from './attachment-recreate-previews';
 import { keepJobLockedMiddleware, sentryMiddleware } from './middlewares';
 
 export async function initJobProcessing(app) {
@@ -16,6 +17,7 @@ export async function initJobProcessing(app) {
       initUserGoneHandlers,
       initAttachmentsSanitizeHandlers,
       initAttachmentPrepareVideoHandlers,
+      initAttachmentRecreatePreviewsHandlers,
     ].map((h) => h(jobManager, app)),
   );
 
