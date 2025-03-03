@@ -202,6 +202,23 @@ export class Attachment {
   mimeType: string;
   sanitized: number;
   readonly previews: MediaPreviews;
+  readonly imageSizes: {
+    o: {
+      w: number;
+      h: number;
+      url: string;
+    };
+    t?: {
+      w: number;
+      h: number;
+      url: string;
+    };
+    t2?: {
+      w: number;
+      h: number;
+      url: string;
+    };
+  } | null;
   meta: MediaMetaData;
   width: number | null;
   height: number | null;
@@ -228,7 +245,7 @@ export class Attachment {
   maxSizedVariant(mediaType: 'image' | 'video'): string | null;
   downloadOriginal(): Promise<string>;
   sanitizeOriginal(): Promise<boolean>;
-  recreatePreviews(): Promise<boolean>;
+  recreatePreviews(): Promise<void>;
   destroy(destroyedBy?: User): Promise<void>;
 }
 
