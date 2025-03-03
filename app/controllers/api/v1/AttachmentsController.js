@@ -299,8 +299,7 @@ export default class AttachmentsController {
     // Set the re-encode task for legacy GIFs and large images
     if (
       attachment.isLegacyImage &&
-      (attachment.fileExtension === 'gif' ||
-        attachment.imageSizes.o.w * attachment.imageSizes.o.h > 20e6)
+      (attachment.fileExtension === 'gif' || attachment.width * attachment.height > 20e6)
     ) {
       await createRecreatePreviewsJob(attachment.id);
     }
