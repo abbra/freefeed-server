@@ -1102,6 +1102,19 @@ describe('Attachments', () => {
             height: 100,
           });
         });
+
+        it(`should return a largest 'image' preview with AVIF format and 'download' flag`, async () => {
+          const resp = await performJSONRequest(
+            'GET',
+            `/v4/attachments/${att.id}/image?format=avif&download`,
+          );
+          expect(resp, 'to satisfy', {
+            url: `${att.getFileUrl('')}?format=avif&download=`,
+            mimeType: 'image/avif',
+            width: 900,
+            height: 300,
+          });
+        });
       });
     });
 

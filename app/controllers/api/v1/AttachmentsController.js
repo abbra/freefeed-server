@@ -200,6 +200,7 @@ export default class AttachmentsController {
     }
 
     const asRedirect = 'redirect' in query;
+    const withDownload = 'download' in query;
 
     const attachment = await dbAdapter.getAttachmentById(attId);
 
@@ -281,6 +282,12 @@ export default class AttachmentsController {
 
         response.url = fileUrl.toString();
       }
+    }
+
+    if (withDownload) {
+      const url = new URL(response.url);
+      url.searchParams.set('download', '');
+      response.url = url.toString();
     }
 
     if (asRedirect) {
