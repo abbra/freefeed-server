@@ -13,7 +13,7 @@ import {
 } from '../../../support/exceptions';
 import { serializeAttachment } from '../../../serializers/v2/attachment';
 import { serializeUsersByIds } from '../../../serializers/v2/user';
-import { authRequired, inputSchemaRequired } from '../../middlewares';
+import { authRequired, inputSchemaRequired, monitored } from '../../middlewares';
 import { dbAdapter, Attachment } from '../../../models';
 import { startAttachmentsSanitizeJob } from '../../../jobs/attachments-sanitize';
 import { currentConfig } from '../../../support/app-async-context';
@@ -148,172 +148,179 @@ export default class AttachmentsController {
     },
   ]);
 
-  async getById(ctx) {
-    const { attId } = ctx.params;
-    const { user, apiVersion } = ctx.state;
+  getById = compose([
+    monitored('attachments.get-preview'),
+    async (ctx) => {
+      const { attId } = ctx.params;
+      const { user, apiVersion } = ctx.state;
 
-    const attachment = await dbAdapter.getAttachmentById(attId);
+      const attachment = await dbAdapter.getAttachmentById(attId);
 
-    if (!attachment) {
-      throw new NotFoundException('Attachment not found');
-    }
+      if (!attachment) {
+        throw new NotFoundException('Attachment not found');
+      }
 
-    const serAttachment = serializeAttachment(attachment, apiVersion);
-    const users = await serializeUsersByIds([attachment.userId], user?.id);
+      const serAttachment = serializeAttachment(attachment, apiVersion);
+      const users = await serializeUsersByIds([attachment.userId], user?.id);
 
-    ctx.body = {
-      attachments: serAttachment,
-      users,
-    };
-  }
+      ctx.body = {
+        attachments: serAttachment,
+        users,
+      };
+    },
+  ]);
 
   /**
    * @param {import('koa').Context} ctx
    */
-  async getPreview(ctx) {
-    const { attId, type } = ctx.params;
-    const { query } = ctx.request;
-    const { useImgProxy } = currentConfig().attachments;
-    const imageFormats = ['webp', 'jpeg', 'avif'];
-    const formatExtensions = {
-      jpeg: 'jpg',
-      webp: 'webp',
-      avif: 'avif',
-    };
+  getPreview = compose([
+    monitored('attachments.get-preview'),
+    async (ctx) => {
+      const { attId, type } = ctx.params;
+      const { query } = ctx.request;
+      const { useImgProxy } = currentConfig().attachments;
+      const imageFormats = ['webp', 'jpeg', 'avif'];
+      const formatExtensions = {
+        jpeg: 'jpg',
+        webp: 'webp',
+        avif: 'avif',
+      };
 
-    if (!['original', 'image', 'video', 'audio'].includes(type)) {
-      throw new NotFoundException('Invalid preview type');
-    }
-
-    if ('format' in query && !imageFormats.includes(query.format)) {
-      throw new ValidationException('Invalid format value');
-    }
-
-    const width = 'width' in query ? Number.parseInt(query.width, 10) : undefined;
-    const height = 'height' in query ? Number.parseInt(query.height, 10) : undefined;
-
-    if (
-      (width && (!Number.isFinite(width) || width <= 0)) ||
-      (height && (!Number.isFinite(height) || height <= 0))
-    ) {
-      throw new ValidationException('Invalid width/height values');
-    }
-
-    const asRedirect = 'redirect' in query;
-    const withDownload = 'download' in query;
-
-    const attachment = await dbAdapter.getAttachmentById(attId);
-
-    if (!attachment) {
-      throw new NotFoundException('Attachment not found');
-    }
-
-    if (type !== 'original' && !(type in attachment.previews)) {
-      throw new NotFoundException('Preview of specified type not found');
-    }
-
-    const response = {};
-
-    if (type === 'original') {
-      response.url = attachment.getFileUrl('');
-      response.mimeType = attachment.mimeType;
-
-      if (attachment.width && attachment.height) {
-        response.width = attachment.width;
-        response.height = attachment.height;
+      if (!['original', 'image', 'video', 'audio'].includes(type)) {
+        throw new NotFoundException('Invalid preview type');
       }
-    } else if (type === 'audio') {
-      // We always have one audio preview
-      const [[variant, { ext }]] = Object.entries(attachment.previews.audio);
-      response.url = attachment.getFileUrl(variant);
-      response.mimeType = lookup(ext) || 'application/octet-stream';
-    } else {
-      // Visual types, 'image' and 'video'
 
-      const previews = attachment.previews[type];
-      const {
-        variant,
-        width: resWidth,
-        height: resHeight,
-      } = getBestVariant(previews, width, height);
-      const prv = previews[variant];
+      if ('format' in query && !imageFormats.includes(query.format)) {
+        throw new ValidationException('Invalid format value');
+      }
 
-      response.url = attachment.getFileUrl(variant);
-      response.mimeType = lookup(prv.ext) || 'application/octet-stream';
-      response.width = prv.w;
-      response.height = prv.h;
+      const width = 'width' in query ? Number.parseInt(query.width, 10) : undefined;
+      const height = 'height' in query ? Number.parseInt(query.height, 10) : undefined;
 
-      // With imgproxy, we can resize images (except some types) and change
-      // their format
       if (
-        useImgProxy &&
-        type === 'image' &&
-        // We don't need to resize SVGs
-        attachment.fileExtension !== 'svg' &&
-        // We should not resize (probably) animated legacy GIFs
-        !(attachment.fileExtension === 'gif' && attachment.isLegacyImage)
+        (width && (!Number.isFinite(width) || width <= 0)) ||
+        (height && (!Number.isFinite(height) || height <= 0))
       ) {
-        let { format } = query;
+        throw new ValidationException('Invalid width/height values');
+      }
 
-        if (!format) {
-          const acceptedTypes = imageFormats.map((f) => `image/${f}`);
-          format = mediaType(ctx.headers.accept ?? 'image/jpeg', acceptedTypes);
+      const asRedirect = 'redirect' in query;
+      const withDownload = 'download' in query;
 
-          if (acceptedTypes.includes(format)) {
-            format = format.replace('image/', '');
-          } else {
-            format = 'jpeg';
+      const attachment = await dbAdapter.getAttachmentById(attId);
+
+      if (!attachment) {
+        throw new NotFoundException('Attachment not found');
+      }
+
+      if (type !== 'original' && !(type in attachment.previews)) {
+        throw new NotFoundException('Preview of specified type not found');
+      }
+
+      const response = {};
+
+      if (type === 'original') {
+        response.url = attachment.getFileUrl('');
+        response.mimeType = attachment.mimeType;
+
+        if (attachment.width && attachment.height) {
+          response.width = attachment.width;
+          response.height = attachment.height;
+        }
+      } else if (type === 'audio') {
+        // We always have one audio preview
+        const [[variant, { ext }]] = Object.entries(attachment.previews.audio);
+        response.url = attachment.getFileUrl(variant);
+        response.mimeType = lookup(ext) || 'application/octet-stream';
+      } else {
+        // Visual types, 'image' and 'video'
+
+        const previews = attachment.previews[type];
+        const {
+          variant,
+          width: resWidth,
+          height: resHeight,
+        } = getBestVariant(previews, width, height);
+        const prv = previews[variant];
+
+        response.url = attachment.getFileUrl(variant);
+        response.mimeType = lookup(prv.ext) || 'application/octet-stream';
+        response.width = prv.w;
+        response.height = prv.h;
+
+        // With imgproxy, we can resize images (except some types) and change
+        // their format
+        if (
+          useImgProxy &&
+          type === 'image' &&
+          // We don't need to resize SVGs
+          attachment.fileExtension !== 'svg' &&
+          // We should not resize (probably) animated legacy GIFs
+          !(attachment.fileExtension === 'gif' && attachment.isLegacyImage)
+        ) {
+          let { format } = query;
+
+          if (!format) {
+            const acceptedTypes = imageFormats.map((f) => `image/${f}`);
+            format = mediaType(ctx.headers.accept ?? 'image/jpeg', acceptedTypes);
+
+            if (acceptedTypes.includes(format)) {
+              format = format.replace('image/', '');
+            } else {
+              format = 'jpeg';
+            }
           }
+
+          const fileUrl = new URL(response.url);
+
+          if (prv.ext !== formatExtensions[format]) {
+            fileUrl.searchParams.set('format', format);
+            response.mimeType = `image/${format}`;
+          }
+
+          if (resWidth !== prv.w || resHeight !== prv.h) {
+            fileUrl.searchParams.set('width', resWidth.toString());
+            fileUrl.searchParams.set('height', resHeight.toString());
+            response.width = resWidth;
+            response.height = resHeight;
+          }
+
+          response.url = fileUrl.toString();
         }
-
-        const fileUrl = new URL(response.url);
-
-        if (prv.ext !== formatExtensions[format]) {
-          fileUrl.searchParams.set('format', format);
-          response.mimeType = `image/${format}`;
-        }
-
-        if (resWidth !== prv.w || resHeight !== prv.h) {
-          fileUrl.searchParams.set('width', resWidth.toString());
-          fileUrl.searchParams.set('height', resHeight.toString());
-          response.width = resWidth;
-          response.height = resHeight;
-        }
-
-        response.url = fileUrl.toString();
-      }
-    }
-
-    if (withDownload) {
-      const url = new URL(response.url);
-      url.searchParams.set('download', '');
-      response.url = url.toString();
-    }
-
-    if (asRedirect) {
-      if (!attachment.meta.inProgress) {
-        // If the attachment is ready, we can use permanent redirect
-        ctx.status = 301;
-        ctx.set('Cache-Control', 'max-age=3600');
       }
 
-      ctx.redirect(response.url);
-      ctx.body = `Redirecting to ${response.url}`;
-    } else {
-      ctx.body = response;
-    }
+      if (withDownload) {
+        const url = new URL(response.url);
+        url.searchParams.set('download', '');
+        response.url = url.toString();
+      }
 
-    // Set the re-encode task for legacy GIFs and large images
-    if (
-      attachment.isLegacyImage &&
-      (attachment.fileExtension === 'gif' || attachment.width * attachment.height > 20e6)
-    ) {
-      await createRecreatePreviewsJob(attachment.id);
-    }
-  }
+      if (asRedirect) {
+        if (!attachment.meta.inProgress) {
+          // If the attachment is ready, we can use permanent redirect
+          ctx.status = 301;
+          ctx.set('Cache-Control', 'max-age=3600');
+        }
+
+        ctx.redirect(response.url);
+        ctx.body = `Redirecting to ${response.url}`;
+      } else {
+        ctx.body = response;
+      }
+
+      // Set the re-encode task for legacy GIFs and large images
+      if (
+        attachment.isLegacyImage &&
+        (attachment.fileExtension === 'gif' || attachment.width * attachment.height > 20e6)
+      ) {
+        await createRecreatePreviewsJob(attachment.id);
+      }
+    },
+  ]);
 
   getByIds = compose([
     inputSchemaRequired(getAttachmentsByIdsInputSchema),
+    monitored('attachments.by-ids'),
     async (ctx) => {
       const maxAttByIds = 100;
 
