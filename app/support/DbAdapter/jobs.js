@@ -1,8 +1,11 @@
+import createDebug from 'debug';
 import { difference, uniq } from 'lodash';
 
 import { Job } from '../../models';
 
 import { prepareModelPayload, initObject } from './utils';
+
+const debug = createDebug('freefeed:jobs:debug');
 
 export default function jobsTrait(superClass) {
   return class extends superClass {
@@ -50,17 +53,9 @@ export default function jobsTrait(superClass) {
      * @returns {Promise<Job[]>}
      */
     async fetchJobs(count, lockTime, limitedJobs = {}) {
-      const hasLimits = Object.keys(limitedJobs).length > 0;
-
-      if (!hasLimits) {
-        // Simple case, no limited jobs
-        const rows = await this._justFetchJobs(this.database, count, lockTime);
-        return rows.map(initJobObject);
-      }
-
       const rows1 = await this.database.transaction(async (trx) => {
         // Lock jobs table
-        await trx.raw('lock table jobs in share update exclusive mode');
+        await trx.raw('lock table jobs in access exclusive mode');
         const allRows = [];
         const allReturning = [];
         let maxLoops = 10; // To prevent infinite loop
@@ -102,13 +97,12 @@ export default function jobsTrait(superClass) {
       return rows1.map(initJobObject);
     }
 
-    async _justFetchJobs(db, count, lockTime) {
-      return await db.getAll(
+    async _fetchJobsWithLimits(db, count, lockTime, limitedJobs = {}) {
+      const rows = await db.getAll(
         `with selected as (
             select id, unlock_at as old_unlock_at from jobs 
             where unlock_at <= now()
             order by unlock_at
-            for update skip locked
             limit :count
         )
         update jobs set
@@ -119,10 +113,11 @@ export default function jobsTrait(superClass) {
         returning jobs.*, selected.old_unlock_at`,
         { count, lockTime },
       );
-    }
 
-    async _fetchJobsWithLimits(db, count, lockTime, limitedJobs = {}) {
-      const rows = await this._justFetchJobs(db, count, lockTime);
+      for (const row of rows) {
+        debug(`got a job ${row.name} (${row.id})`);
+      }
+
       const toReturn = [];
 
       // Are there any limited jobs in results?
@@ -134,27 +129,23 @@ export default function jobsTrait(superClass) {
       }
 
       // How many jobs are already taken for each job name?
-      const takenCounts = await db.getAll(
+      const takenCountsRows = await db.getAll(
         `select name, count(*)::int from jobs where unlock_at > now() and name = any(:limNames) group by name`,
         { limNames: uniq(limRows.map((row) => row.name)) },
       );
+      const takenCounts = {};
 
-      // How many jobs are over the limit for each job name?
-      const overLimits = takenCounts.reduce((acc, row) => {
-        acc[row.name] = row.count - limitedJobs[row.name];
-        return acc;
-      }, {});
+      for (const row of takenCountsRows) {
+        takenCounts[row.name] = row.count;
+      }
 
       // Put back jobs that are over the limit
       for (const row of limRows) {
-        if (overLimits[row.name] > 0) {
+        if (takenCounts[row.name] > limitedJobs[row.name]) {
+          debug(`returning job ${row.name} (${row.id}) to the queue`);
           toReturn.push(row);
-          overLimits[row.name]--;
+          takenCounts[row.name]--;
         }
-      }
-
-      if (toReturn.length === 0) {
-        return { rows, toReturn };
       }
 
       return {

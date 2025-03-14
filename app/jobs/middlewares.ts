@@ -51,7 +51,9 @@ export function keepJobLockedMiddleware(handler: JobHandler<unknown>): JobHandle
     const abortController = new AbortController();
 
     try {
-      await Promise.race([
+      // The 'keepJobLocked' will not be settled until the controller is
+      // aborted, so the race will always return the result of the 'handler'.
+      return await Promise.race([
         handler(job),
         keepJobLocked(job, refreshInterval, abortController.signal),
       ]);
@@ -62,11 +64,11 @@ export function keepJobLockedMiddleware(handler: JobHandler<unknown>): JobHandle
 }
 
 async function keepJobLocked(job: Job, intervalSec: number, signal: AbortSignal): Promise<void> {
-  await job.setUnlockAt(intervalSec * 1.5);
+  // Re-lock the job every 0.7 of 'intervalSec'
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  for await (const _ of setInterval(intervalSec * 1000, null, { signal })) {
+  for await (const _ of setInterval(intervalSec * 1000 * 0.7, null, { signal })) {
     debug(`${job.name}: re-locking the job ${job.id}`);
-    await job.setUnlockAt(intervalSec * 1.5);
+    await job.setUnlockAt(intervalSec);
   }
 }
