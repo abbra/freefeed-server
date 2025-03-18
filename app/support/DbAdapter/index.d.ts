@@ -1,6 +1,7 @@
 import { Knex } from 'knex';
 import { Cache } from 'cache-manager';
 import { DatabasePool } from 'slonik';
+import { z } from 'zod';
 
 import { IPAddr, ISO8601DateTimeString, ISO8601DurationString, Nullable, UUID } from '../types';
 import { AppTokenV1, Attachment, Comment, Group, Post, Timeline, User, Job } from '../../models';
@@ -23,6 +24,7 @@ import {
   type RegisterOptions as TranslationRegisterOptions,
   type UsageOptions as TranslationUsageOptions,
 } from './translation-usage';
+import { notificationsDigestRecipientSchema } from './users';
 
 type QueryBindings = readonly Knex.RawBinding[] | Knex.ValueDict | Knex.RawBinding;
 
@@ -160,6 +162,7 @@ export class DbAdapter {
     Map<UUID, typeof User.ACCEPT_DIRECTS_FROM_ALL | typeof User.ACCEPT_DIRECTS_FROM_FRIENDS>
   >;
   getAllUsersIds(limit?: number, offset?: number, types?: ('user' | 'group')[]): Promise<UUID[]>;
+  getNotificationsDigestRecipients(): Promise<z.infer<typeof notificationsDigestRecipientSchema>[]>;
   /**
    * Returns unsorted IDs of users whose username sparse matches `query`.
    */
@@ -307,14 +310,16 @@ export class DbAdapter {
   getUserEvents(
     userIntId: number,
     eventTypes?: string[],
-    limit?: number,
-    offset?: number,
-    startDate?: Date,
-    endDate?: Date,
+    limit?: number | null,
+    offset?: number | null,
+    startDate?: Date | null,
+    endDate?: Date | null,
   ): Promise<EventRecord[]>;
 
   getUnreadDirectsNumber(userId: UUID): Promise<number>;
   getUnreadEventsNumber(userId: UUID): Promise<number>;
+  getDigestSentAt(userIntIds: number[]): Promise<Record<number, Date>>;
+  addSentEmailLogEntry(userIntId: number, email: string, emailType: string): Promise<void>;
 
   // Backlinks
   getBacklinksCounts(uuids: UUID[], viewerId?: Nullable<UUID>): Promise<Map<UUID, number>>;
