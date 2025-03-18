@@ -6,6 +6,7 @@ import { createCache, memoryStore } from 'cache-manager';
 import { createPool } from 'slonik';
 
 import { connect as redisConnect } from '../../setup/database';
+import { createResultParserInterceptor } from '../slonik/ResultParserInterceptor';
 
 import usersTrait from './users';
 import usersCacheTrait from './users-cache';
@@ -90,7 +91,9 @@ class DbAdapterBase {
       uri.port = port;
       uri.pathname = database;
 
-      this.#slonik = await createPool(uri.href);
+      this.#slonik = await createPool(uri.href, {
+        interceptors: [createResultParserInterceptor()],
+      });
     }
 
     return this.#slonik;
