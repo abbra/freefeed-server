@@ -16,7 +16,7 @@ export async function sendEmails() {
   const emailsSentAt = await dbAdapter.getDigestSentAt(users.map((u) => u.intId));
 
   const promises = users.map(async (u) => {
-    const notificationsLastSeenAt = u.notificationsReadAt ? u.notificationsReadAt : null;
+    const notificationsLastSeenAt = u.notificationsReadAt ? new Date(u.notificationsReadAt) : null;
     const digestSentAt = emailsSentAt[u.intId];
     const notificationsQueryDate = getUnreadEventsIntervalStart(
       digestSentAt,
