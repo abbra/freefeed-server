@@ -1,5 +1,6 @@
 import { Knex } from 'knex';
 import { Cache } from 'cache-manager';
+import { DatabasePool } from 'slonik';
 
 import { IPAddr, ISO8601DateTimeString, ISO8601DurationString, Nullable, UUID } from '../types';
 import { AppTokenV1, Attachment, Comment, Group, Post, Timeline, User, Job } from '../../models';
@@ -98,6 +99,8 @@ export class DbAdapter {
   cache: Cache;
 
   now(): Promise<Date>;
+
+  getSlonik(): Promise<DatabasePool>;
 
   doInTransaction<T>(action: () => Promise<T>): Promise<T>;
 

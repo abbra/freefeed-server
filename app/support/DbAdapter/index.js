@@ -3,6 +3,7 @@ import NodeCache from 'node-cache';
 import { ioRedisStore } from '@tirke/node-cache-manager-ioredis';
 import config from 'config';
 import { createCache, memoryStore } from 'cache-manager';
+import { createPool } from 'slonik';
 
 import { connect as redisConnect } from '../../setup/database';
 
@@ -47,6 +48,11 @@ import translationUsageTrait from './translation-usage';
 import postCommentEventsTrait from './post-comment-events';
 
 class DbAdapterBase {
+  /**
+   * @type {import('slonik').DatabasePool} | undefined
+   */
+  #slonik;
+
   constructor(database) {
     this.database = withDbHelpers(database);
     this.statsCache = new NodeCache({ stdTTL: 300 });
@@ -72,6 +78,22 @@ class DbAdapterBase {
     }
 
     return this._pgVersion;
+  }
+
+  async getSlonik() {
+    if (!this.#slonik) {
+      const { user, password, host, port, database } = config.postgres.connection;
+      const uri = new URL('postgresql://');
+      uri.username = user;
+      uri.password = password;
+      uri.hostname = host;
+      uri.port = port;
+      uri.pathname = database;
+
+      this.#slonik = await createPool(uri.href);
+    }
+
+    return this.#slonik;
   }
 
   doInTransaction(action) {

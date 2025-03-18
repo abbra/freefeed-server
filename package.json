@@ -101,6 +101,7 @@
     "react": "~18.3.1",
     "react-dom": "~18.3.1",
     "sbd": "~1.0.19",
+    "slonik": "~46.4.0",
     "social-text-tokenizer": "~3.1.0",
     "socket.io": "~4.8.1",
     "stream-meter": "~1.0.4",
