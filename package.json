@@ -5,6 +5,7 @@
   "homepage": "https://freefeed.net",
   "version": "2.23.15",
   "private": true,
+  "type": "commonjs",
   "scripts": {
     "start": "cross-env TZ=UTC yarn babel index.js",
     "travis": "run-s -c typecheck test lint",
