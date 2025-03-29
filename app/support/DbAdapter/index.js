@@ -85,9 +85,9 @@ class DbAdapterBase {
     if (!this.#slonik) {
       const { user, password, host, port, database } = config.postgres.connection;
       const uri = new URL('postgresql://');
+      uri.hostname = host;
       uri.username = user;
       uri.password = password;
-      uri.hostname = host;
       uri.port = port;
       uri.pathname = database;
 
