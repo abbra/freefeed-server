@@ -16,7 +16,7 @@ export async function sendEmails() {
   const emailsSentAt = await dbAdapter.getDigestSentAt(users.map((u) => u.intId));
 
   const promises = users.map(async (u) => {
-    const notificationsLastSeenAt = u.notificationsReadAt ? u.notificationsReadAt : null;
+    const notificationsLastSeenAt = u.notificationsReadAt ? new Date(u.notificationsReadAt) : null;
     const digestSentAt = emailsSentAt[u.intId];
     const notificationsQueryDate = getUnreadEventsIntervalStart(
       digestSentAt,
@@ -43,7 +43,7 @@ export async function sendEmails() {
       DIGEST_EVENT_TYPES,
       null,
       null,
-      notificationsQueryDate,
+      notificationsQueryDate.toDate(),
     );
 
     if (!events.length) {
@@ -66,7 +66,11 @@ export async function sendEmails() {
   debug('all promised actions are finished');
 }
 
-export function getUnreadEventsIntervalStart(digestSentAt, notificationsLastSeenAt, now) {
+export function getUnreadEventsIntervalStart(
+  digestSentAt: Date | null,
+  notificationsLastSeenAt: Date | null,
+  now?: Date,
+) {
   const wrappedDigestSentAt = digestSentAt ? moment(digestSentAt) : null;
   const wrappedNotificationsLastSeenAt = notificationsLastSeenAt
     ? moment(notificationsLastSeenAt)

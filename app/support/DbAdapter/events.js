@@ -141,6 +141,10 @@ const eventsTrait = (superClass) =>
       return count;
     }
 
+    /**
+     * @param userIntIds {Array<number>}
+     * @returns {Promise<Record<number, Date>>}
+     */
     async getDigestSentAt(userIntIds) {
       const res = await this.database('sent_emails_log')
         .select('user_id')
