@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [2.24.0] - Not released
+### Added
+- The [Slonik](https://github.com/gajus/slonik) library has been added as the
+  additional DB-access layer. Query-results are validated by Zod and propagated
+  to TS further on.
+
+### Changed
+- The Node version in Dockerfile has been updated to 22. Also, the Node versions
+  in the Github test matrix now are 20 and 22. The Node 18 version is no longer
+  directly supported.
 
 ## [2.23.15] - 2025-03-14
 ### Added
