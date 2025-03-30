@@ -9,11 +9,11 @@ const expect = unexpected.clone().use(unexpectedMoment);
 
 describe('NotificationsDigest', () => {
   describe('getUnreadEventsIntervalStart()', () => {
-    const longTimeAgo1 = '2017-01-10T01:00:00.000Z';
-    const longTimeAgo2 = '2017-01-11T01:00:00.000Z';
-    const someTimeAgo1 = '2017-12-20T00:00:00.000Z';
-    const someTimeAgo2 = '2017-12-21T00:00:00.000Z';
-    const recently = '2018-01-01T00:00:00.000Z';
+    const longTimeAgo1 = new Date('2017-01-10T01:00:00.000Z');
+    const longTimeAgo2 = new Date('2017-01-11T01:00:00.000Z');
+    const someTimeAgo1 = new Date('2017-12-20T00:00:00.000Z');
+    const someTimeAgo2 = new Date('2017-12-21T00:00:00.000Z');
+    const recently = new Date('2018-01-01T00:00:00.000Z');
 
     const now = recently;
     const ninetyAgo = moment(now).subtract(90, 'days');
@@ -90,7 +90,7 @@ describe('NotificationsDigest', () => {
     });
 
     describe('if sent 23 hours 30 minutes ago', () => {
-      const sentAt = moment(now).subtract(23, 'hours').subtract(30, 'minutes').toISOString();
+      const sentAt = moment(now).subtract(23, 'hours').subtract(30, 'minutes').toDate();
 
       it('should send recent items', async () => {
         const seenAt = longTimeAgo1;
@@ -100,7 +100,7 @@ describe('NotificationsDigest', () => {
     });
 
     describe('if sent less than 23 hours 30 minutes ago', () => {
-      const sentAt = moment(now).subtract(23, 'hours').subtract(29, 'minutes').toISOString();
+      const sentAt = moment(now).subtract(23, 'hours').subtract(29, 'minutes').toDate();
 
       it('should not send anything', async () => {
         const seenAt = longTimeAgo1;

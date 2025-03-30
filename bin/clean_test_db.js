@@ -1,20 +1,21 @@
 #!/usr/bin/env babel-node
 import knexLib from 'knex';
+import configModule from 'config';
 
 // Forcefully set the NODE_ENV to 'test'
 const prevEnv = process.env.NODE_ENV;
 process.env.NODE_ENV = 'test';
 
-const config = require('../knexfile');
+const config = configModule.util.loadFileConfigs();
 
 process.env.NODE_ENV = prevEnv;
 
-if (!('test' in config)) {
-  process.stderr.write(`Error: no "test" section in knexfile`);
+if (!config || !('postgres' in config)) {
+  process.stderr.write(`Error: no "postgres" section in config file\n`);
   process.exit(1);
 }
 
-const knex = knexLib(config.test);
+const knex = knexLib(config.postgres);
 
 async function run() {
   await knex.raw('drop schema public cascade');

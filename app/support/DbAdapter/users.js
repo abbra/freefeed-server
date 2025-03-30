@@ -3,6 +3,8 @@ import _ from 'lodash';
 import validator from 'validator';
 import { DateTime, Duration } from 'luxon';
 import { camelizeKeys } from 'humps';
+import { z } from 'zod';
+import { sql } from 'slonik';
 
 import { User, Group, Comment } from '../../models';
 import { normalizeEmail } from '../email-norm';
@@ -16,6 +18,14 @@ import { initObject, prepareModelPayload } from './utils';
  * @typedef {import('../types').ISO8601DateTimeString} ISO8601DateTimeString
  * @typedef {import('../types').ISO8601DurationString} ISO8601DurationString
  */
+
+export const notificationsDigestRecipientSchema = z.object({
+  email: z.string(),
+  id: z.string().uuid(),
+  intId: z.number(),
+  notificationsReadAt: z.number(), // milliseconds
+  username: z.string(),
+});
 
 const usersTrait = (superClass) =>
   class extends superClass {
@@ -415,11 +425,11 @@ const usersTrait = (superClass) =>
       params.hidden_comments_count = 0;
 
       if (!params.restore_comments_and_likes) {
-        const sql = `select count(*) from
+        const query = `select count(*) from
         hidden_comments h
         join comments c on c.uid = h.comment_id
         where c.hide_type = :hideType and (h.user_id = :userId or h.old_username = :oldUsername)`;
-        const res = await this.database.raw(sql, {
+        const res = await this.database.raw(query, {
           hideType: Comment.HIDDEN_ARCHIVED,
           userId,
           oldUsername: params.old_username,
@@ -501,10 +511,21 @@ const usersTrait = (superClass) =>
     }
 
     async getNotificationsDigestRecipients() {
-      const users = await this.database('users')
-        .where('type', 'user')
-        .whereRaw(`preferences -> 'sendNotificationsDigest' = 'true'::jsonb`);
-      return users.map(initUserObject);
+      const query = sql.type(notificationsDigestRecipientSchema)`
+        SELECT
+            email, id, int_id, username, notifications_read_at
+        FROM users
+        WHERE
+            type = 'user' AND
+            preferences -> 'sendNotificationsDigest' = 'true'::jsonb
+      `;
+
+      /** @type {DbAdapter} */
+      const db = this;
+      const pool = await db.getSlonik();
+
+      const users = await pool.any(query);
+      return users;
     }
 
     async getDailyBestOfDigestRecipients() {

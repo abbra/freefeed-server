@@ -5,6 +5,7 @@
   "homepage": "https://freefeed.net",
   "version": "2.24.0",
   "private": true,
+  "type": "commonjs",
   "scripts": {
     "start": "cross-env TZ=UTC yarn babel index.js",
     "travis": "run-s -c typecheck test lint",
@@ -101,6 +102,7 @@
     "react": "~18.3.1",
     "react-dom": "~18.3.1",
     "sbd": "~1.0.19",
+    "slonik": "~46.4.0",
     "social-text-tokenizer": "~3.1.0",
     "socket.io": "~4.8.1",
     "stream-meter": "~1.0.4",
@@ -109,7 +111,8 @@
     "uuid": "~11.0.5",
     "validator": "~13.12.0",
     "xmlbuilder": "~15.1.1",
-    "xregexp": "~5.1.1"
+    "xregexp": "~5.1.1",
+    "zod": "~3.24.2"
   },
   "devDependencies": {
     "@babel/core": "~7.26.8",
