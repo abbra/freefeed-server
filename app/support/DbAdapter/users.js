@@ -20,10 +20,10 @@ import { initObject, prepareModelPayload } from './utils';
  */
 
 export const notificationsDigestRecipientSchema = z.object({
+  id: z.number(),
+  uid: z.string().uuid(),
   email: z.string(),
-  id: z.string().uuid(),
-  intId: z.number(),
-  notificationsReadAt: z.number(), // milliseconds
+  notifications_read_at: z.number(), // milliseconds
   username: z.string(),
 });
 
@@ -513,7 +513,7 @@ const usersTrait = (superClass) =>
     async getNotificationsDigestRecipients() {
       const query = sql.type(notificationsDigestRecipientSchema)`
         SELECT
-            email, id, int_id, username, notifications_read_at
+            email, id, uid, username, notifications_read_at
         FROM users
         WHERE
             type = 'user' AND
