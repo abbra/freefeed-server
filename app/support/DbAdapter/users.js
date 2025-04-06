@@ -20,10 +20,10 @@ import { initObject, prepareModelPayload } from './utils';
  */
 
 export const notificationsDigestRecipientSchema = z.object({
+  id: z.number(),
+  uid: z.string().uuid(),
   email: z.string(),
-  id: z.string().uuid(),
-  intId: z.number(),
-  notificationsReadAt: z.number(), // milliseconds
+  notifications_read_at: z.number(), // milliseconds
   username: z.string(),
 });
 
@@ -326,7 +326,7 @@ const usersTrait = (superClass) =>
       if (!attrs) {
         const { rows } = await this.database.raw(
           `select u.*
-          from users u join user_past_names p on u.uid = p.user_id 
+          from users u join user_past_names p on u.uid = p.user_id
           where p.username = lower(:username) limit 1`,
           { username },
         );
@@ -353,7 +353,7 @@ const usersTrait = (superClass) =>
       if (notFoundUsernames.length > 0) {
         const { rows } = await this.database.raw(
           `select distinct u.*
-          from users u join user_past_names p on u.uid = p.user_id 
+          from users u join user_past_names p on u.uid = p.user_id
           where p.username = any(:usernames)`,
           { usernames: notFoundUsernames },
         );
@@ -484,7 +484,7 @@ const usersTrait = (superClass) =>
     async getUsersWhoCanSeeFeeds(feedIntIds) {
       const hasNotPrivate = await this.database.getOne(
         `select exists (
-          select 1 
+          select 1
           from feeds f join users u on u.uid = f.user_id
           where f.name = 'Posts' and f.id = any(:feedIntIds) and not u.is_private
           )`,
@@ -513,7 +513,7 @@ const usersTrait = (superClass) =>
     async getNotificationsDigestRecipients() {
       const query = sql.type(notificationsDigestRecipientSchema)`
         SELECT
-            email, id, int_id, username, notifications_read_at
+            email, id, uid, username, notifications_read_at
         FROM users
         WHERE
             type = 'user' AND
@@ -633,7 +633,7 @@ const usersTrait = (superClass) =>
      */
     async usersFrozenUntil(userIds) {
       const exps = await this.database.getCol(
-        `select f.expires_at 
+        `select f.expires_at
           from
             unnest(:userIds::uuid[]) with ordinality as src (uid, ord)
             left join frozen_users f on f.user_id = src.uid and f.expires_at > now()
@@ -658,7 +658,7 @@ const usersTrait = (superClass) =>
     getFrozenUsers(limit = 30, offset = 0) {
       return this.database
         .getAll(
-          `select * from frozen_users 
+          `select * from frozen_users
           where expires_at > now()
           order by expires_at asc
           limit :limit offset :offset`,
@@ -677,7 +677,7 @@ const usersTrait = (superClass) =>
 
     async setUserSysPrefs(userId, key, value) {
       await this.database.raw(
-        `update users 
+        `update users
           set sys_preferences = jsonb_set(coalesce(sys_preferences, '{}'::jsonb), :path, :value)
           where uid = :userId`,
         { path: [key], value: JSON.stringify(value), userId },
@@ -686,7 +686,7 @@ const usersTrait = (superClass) =>
 
     getAllUsersIds(limit = 30, offset = 0, types = ['user']) {
       return this.database.getCol(
-        `select uid from users 
+        `select uid from users
           where type = any(:types)
           order by
               created_at desc,

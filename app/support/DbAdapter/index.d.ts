@@ -163,6 +163,10 @@ export class DbAdapter {
   >;
   getAllUsersIds(limit?: number, offset?: number, types?: ('user' | 'group')[]): Promise<UUID[]>;
   getNotificationsDigestRecipients(): Promise<z.infer<typeof notificationsDigestRecipientSchema>[]>;
+  getDailyBestOfDigestRecipients(): Promise<User[]>;
+  getWeeklyBestOfDigestRecipients(): Promise<User[]>;
+  getDailyBestOfEmailSentAt(userIntIds: number[]): Promise<{ [userIntId: string]: Date }>;
+  getWeeklyBestOfEmailSentAt(userIntIds: number[]): Promise<{ [userIntId: string]: Date }>;
   /**
    * Returns unsorted IDs of users whose username sparse matches `query`.
    */
@@ -319,7 +323,11 @@ export class DbAdapter {
   getUnreadDirectsNumber(userId: UUID): Promise<number>;
   getUnreadEventsNumber(userId: UUID): Promise<number>;
   getDigestSentAt(userIntIds: number[]): Promise<Record<number, Date>>;
-  addSentEmailLogEntry(userIntId: number, email: string, emailType: string): Promise<void>;
+  addSentEmailLogEntry(
+    userIntId: number,
+    email: string,
+    emailType: 'daily_best_of' | 'weekly_best_of' | 'notification',
+  ): Promise<void>;
 
   // Backlinks
   getBacklinksCounts(uuids: UUID[], viewerId?: Nullable<UUID>): Promise<Map<UUID, number>>;
