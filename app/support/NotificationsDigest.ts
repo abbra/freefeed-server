@@ -8,10 +8,10 @@ import { sendEventsDigestEmail } from '../mailers/NotificationDigestMailer';
 import { DIGEST_EVENT_TYPES } from './EventTypes';
 
 export async function sendEmails() {
-  const debug = createDebug('freefeed:sendEmails');
+  const debugLog = createDebug('freefeed:digests:notifications');
 
   const users = await dbAdapter.getNotificationsDigestRecipients();
-  debug(`getNotificationsDigestRecipients() returned ${users.length} records`);
+  debugLog(`getNotificationsDigestRecipients() returned ${users.length} records`);
 
   const emailsSentAt = await dbAdapter.getDigestSentAt(users.map((u) => u.id));
 
@@ -32,7 +32,7 @@ export async function sendEmails() {
     );
 
     if (!notificationsQueryDate) {
-      debug(`[${u.username}] getUnreadEventsIntervalStart() returned falsy value: SKIP`);
+      debugLog(`[${u.username}] getUnreadEventsIntervalStart() returned falsy value: SKIP`);
       return;
     }
 
@@ -44,7 +44,7 @@ export async function sendEmails() {
       digestInterval = notificationsQueryDate.format('MMM Do YYYY');
     }
 
-    debug(`[${u.username}] looking for notifications since ${digestInterval}…`);
+    debugLog(`[${u.username}] looking for notifications since ${digestInterval}…`);
 
     const events = await dbAdapter.getUserEvents(
       u.intId,
@@ -55,23 +55,23 @@ export async function sendEmails() {
     );
 
     if (!events.length) {
-      debug(`[${u.username}] no relevant notifications found: SKIP`);
+      debugLog(`[${u.username}] no relevant notifications found: SKIP`);
       return;
     }
 
-    debug(`[${u.username}] found ${events.length} notifications`);
+    debugLog(`[${u.username}] found ${events.length} notifications`);
 
     const serializedEvents = await serializeEvents(events, u.id);
     await sendEventsDigestEmail(u, serializedEvents, digestInterval);
-    debug(`[${u.username}] email is queued: OK`);
+    debugLog(`[${u.username}] email is queued: OK`);
 
     await dbAdapter.addSentEmailLogEntry(u.intId, u.email, 'notification');
-    debug(`[${u.username}] added entry to sent_emails_log`);
+    debugLog(`[${u.username}] added entry to sent_emails_log`);
   });
 
-  debug('waiting for all promised actions to finish');
+  debugLog('waiting for all promised actions to finish');
   await Promise.all(promises);
-  debug('all promised actions are finished');
+  debugLog('all promised actions are finished');
 }
 
 export function getUnreadEventsIntervalStart(

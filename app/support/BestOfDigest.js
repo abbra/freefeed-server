@@ -9,17 +9,17 @@ import { generalSummary } from '../controllers/api/v2/SummaryController.js';
 const BESTOF_DIGEST_POSTS_LIMIT = 15;
 
 export async function sendBestOfEmails() {
-  const debug = createDebug('freefeed:sendBestOfEmails');
+  const debugLog = createDebug('freefeed:digests:bestOf');
 
   const weeklyDigestRecipients = (await dbAdapter.getWeeklyBestOfDigestRecipients()).filter(
     (u) => u.isActive,
   );
-  debug(`getWeeklyBestOfDigestRecipients returned ${weeklyDigestRecipients.length} records`);
+  debugLog(`getWeeklyBestOfDigestRecipients returned ${weeklyDigestRecipients.length} records`);
 
   const dailyDigestRecipients = (await dbAdapter.getDailyBestOfDigestRecipients()).filter(
     (u) => u.isActive,
   );
-  debug(`getDailyBestOfDigestRecipients returned ${dailyDigestRecipients.length} records`);
+  debugLog(`getDailyBestOfDigestRecipients returned ${dailyDigestRecipients.length} records`);
 
   const dailyDigestDate = moment().format('MMMM Do');
   const weeklyDigestDate = moment().subtract(7, 'days').format('MMMM Do');
@@ -30,65 +30,65 @@ export async function sendBestOfEmails() {
     dailyDigestRecipients.map((u) => u.intId),
   );
 
-  debug('Starting iteration over weekly digest recipients');
+  debugLog('Starting iteration over weekly digest recipients');
 
   for (const u of weeklyDigestRecipients) {
-    debug(`[${u.username}]…`);
+    debugLog(`[${u.username}]…`);
 
     if (!shouldSendWeeklyBestOfDigest(weeklyEmailsSentAt[u.intId])) {
-      debug(`[${u.username}] shouldSendWeeklyBestOfDigest() returned falsy value: SKIP`);
+      debugLog(`[${u.username}] shouldSendWeeklyBestOfDigest() returned falsy value: SKIP`);
       continue;
     }
 
-    debug(`[${u.username}] -> getSummary()`);
+    debugLog(`[${u.username}] -> getSummary()`);
     const weeklySummary = await getSummary(u, 7); // eslint-disable-line no-await-in-loop
 
     if (!canMakeBestOfEmail(weeklySummary)) {
-      debug(`[${u.username}] getSummary() returned 0 posts: SKIP`);
+      debugLog(`[${u.username}] getSummary() returned 0 posts: SKIP`);
       continue;
     }
 
-    debug(`[${u.username}] -> sendWeeklyBestOfEmail()`);
+    debugLog(`[${u.username}] -> sendWeeklyBestOfEmail()`);
     await sendWeeklyBestOfEmail(u, weeklySummary, weeklyDigestDate); // eslint-disable-line no-await-in-loop
 
-    debug(`[${u.username}] -> email is queued`);
+    debugLog(`[${u.username}] -> email is queued`);
 
     await dbAdapter.addSentEmailLogEntry(u.intId, u.email, 'weekly_best_of'); // eslint-disable-line no-await-in-loop
     weeklyEmailsSentAt[u.intId] = moment();
 
-    debug(`[${u.username}] -> added entry to sent_emails_log`);
+    debugLog(`[${u.username}] -> added entry to sent_emails_log`);
   }
 
-  debug('Finished iterating over weekly digest recipients');
+  debugLog('Finished iterating over weekly digest recipients');
 
-  debug('Starting iteration over daily digest recipients');
+  debugLog('Starting iteration over daily digest recipients');
 
   for (const u of dailyDigestRecipients) {
-    debug(`[${u.username}]…`);
+    debugLog(`[${u.username}]…`);
 
     if (!shouldSendDailyBestOfDigest(dailyEmailsSentAt[u.intId], weeklyEmailsSentAt[u.intId])) {
-      debug(`[${u.username}] shouldSendDailyBestOfDigest() returned falsy value: SKIP`);
+      debugLog(`[${u.username}] shouldSendDailyBestOfDigest() returned falsy value: SKIP`);
       continue;
     }
 
-    debug(`[${u.username}] -> getSummary()`);
+    debugLog(`[${u.username}] -> getSummary()`);
     const dailySummary = await getSummary(u, 1); // eslint-disable-line no-await-in-loop
 
     if (!canMakeBestOfEmail(dailySummary)) {
-      debug(`[${u.username}] getSummary() returned 0 posts: SKIP`);
+      debugLog(`[${u.username}] getSummary() returned 0 posts: SKIP`);
       continue;
     }
 
-    debug(`[${u.username}] -> sendDailyBestOfEmail()`);
+    debugLog(`[${u.username}] -> sendDailyBestOfEmail()`);
     await sendDailyBestOfEmail(u, dailySummary, dailyDigestDate); // eslint-disable-line no-await-in-loop
 
-    debug(`[${u.username}] -> email is queued`);
+    debugLog(`[${u.username}] -> email is queued`);
 
     await dbAdapter.addSentEmailLogEntry(u.intId, u.email, 'daily_best_of'); // eslint-disable-line no-await-in-loop
-    debug(`[${u.username}] -> added entry to sent_emails_log`);
+    debugLog(`[${u.username}] -> added entry to sent_emails_log`);
   }
 
-  debug('Finished iterating over daily digest recipients');
+  debugLog('Finished iterating over daily digest recipients');
 }
 
 export function shouldSendWeeklyBestOfDigest(weeklyDigestSentAt, now) {

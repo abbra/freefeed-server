@@ -18,14 +18,14 @@ export function renderSummaryBody(data) {
 }
 
 export async function sendDailyBestOfEmail(user, data, digestDate) {
-  const debug = createDebug('freefeed:BestOfDigestMailer');
+  const errorLog = createDebug('freefeed:digests:bestOf:errors');
 
   let emailBodyWithInlineStyles;
 
   try {
     emailBodyWithInlineStyles = await renderSummaryBody(data);
   } catch (err) {
-    debug('Error occurred while trying to inline styles', err);
+    errorLog('Error occurred while trying to inline styles', err);
     return;
   }
 

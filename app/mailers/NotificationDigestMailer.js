@@ -5,7 +5,7 @@ import { render as renderEJS } from 'ejs';
 
 import Mailer from '../../lib/mailer';
 
-const debug = createDebug('freefeed:sendEmails');
+const errorLog = createDebug('freefeed:digests:notifications:errors');
 
 export function sendEventsDigestEmail(user, { events, users, groups }, digestInterval) {
   const emailBody = events
@@ -38,7 +38,7 @@ export function getEventText(event, users, groups) {
     return template(eventData);
   }
 
-  debug(`Template not found for event type ${event.event_type}`);
+  errorLog(`Template not found for event type ${event.event_type}`);
   return null;
 }
 
