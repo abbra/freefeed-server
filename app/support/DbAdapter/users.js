@@ -19,13 +19,21 @@ import { initObject, prepareModelPayload } from './utils';
  * @typedef {import('../types').ISO8601DurationString} ISO8601DurationString
  */
 
-export const notificationsDigestRecipientSchema = z.object({
-  id: z.number(),
-  uid: z.string().uuid(),
-  email: z.string(),
-  notifications_read_at: z.number(), // milliseconds
-  username: z.string(),
-});
+export const notificationsDigestRecipientSchema = z
+  .object({
+    id: z.string().uuid(),
+    int_id: z.number(),
+    email: z.string(),
+    notifications_read_at: z.date(),
+    username: z.string(),
+  })
+  .transform((data) => ({
+    id: data.id,
+    intId: data.int_id,
+    email: data.email,
+    notificationsReadAt: data.notifications_read_at,
+    username: data.username,
+  }));
 
 const usersTrait = (superClass) =>
   class extends superClass {
@@ -513,11 +521,12 @@ const usersTrait = (superClass) =>
     async getNotificationsDigestRecipients() {
       const query = sql.type(notificationsDigestRecipientSchema)`
         SELECT
-            email, id, uid, username, notifications_read_at
+            email, id as int_id, uid as id, username, notifications_read_at
         FROM users
         WHERE
             type = 'user' AND
-            preferences -> 'sendNotificationsDigest' = 'true'::jsonb
+            preferences -> 'sendNotificationsDigest' = 'true'::jsonb AND
+            email IS NOT NULL
       `;
 
       /** @type {DbAdapter} */

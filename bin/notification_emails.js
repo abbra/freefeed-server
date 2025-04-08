@@ -1,5 +1,9 @@
 #!/usr/bin/env babel-node
+import createDebug from 'debug';
+
 import { sendEmails } from '../app/support/NotificationsDigest';
+
+const errorLog = createDebug('freefeed:errors');
 
 sendEmails()
   .then(() => {
@@ -7,6 +11,7 @@ sendEmails()
     process.exit(0);
   })
   .catch((e) => {
+    errorLog(e);
     process.stderr.write(`Error: ${e}\n`);
     process.exit(1);
   });
