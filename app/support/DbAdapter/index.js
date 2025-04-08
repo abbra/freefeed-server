@@ -3,7 +3,13 @@ import NodeCache from 'node-cache';
 import { ioRedisStore } from '@tirke/node-cache-manager-ioredis';
 import config from 'config';
 import { createCache, memoryStore } from 'cache-manager';
-import { createPool } from 'slonik';
+import {
+  createBigintTypeParser,
+  createDateTypeParser,
+  createIntervalTypeParser,
+  createNumericTypeParser,
+  createPool,
+} from 'slonik';
 
 import { connect as redisConnect } from '../../setup/database';
 import { createResultParserInterceptor } from '../slonik/ResultParserInterceptor';
@@ -92,6 +98,19 @@ class DbAdapterBase {
       uri.pathname = database;
 
       this.#slonik = await createPool(uri.href, {
+        /**
+         * Exclude the `createTimestampTypeParser` and
+         * `createTimestampWithTimeZoneTypeParser` from the standard parsers
+         * set, because we want to output timestamp(tz) type as Date object.
+         *
+         * @see https://github.com/gajus/slonik/issues/456#issuecomment-1823306404
+         */
+        typeParsers: [
+          createBigintTypeParser(),
+          createDateTypeParser(),
+          createIntervalTypeParser(),
+          createNumericTypeParser(),
+        ],
         interceptors: [createResultParserInterceptor()],
       });
     }
