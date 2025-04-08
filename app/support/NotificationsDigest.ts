@@ -13,22 +13,13 @@ export async function sendEmails() {
   const users = await dbAdapter.getNotificationsDigestRecipients();
   debugLog(`getNotificationsDigestRecipients() returned ${users.length} records`);
 
-  const emailsSentAt = await dbAdapter.getDigestSentAt(users.map((u) => u.id));
+  const emailsSentAt = await dbAdapter.getDigestSentAt(users.map((u) => u.intId));
 
-  const promises = users.map(async (_u) => {
-    const u = {
-      id: _u.uid,
-      intId: _u.id,
-      username: _u.username,
-      email: _u.email,
-      notificationsReadAt: _u.notifications_read_at,
-    };
-
-    const notificationsLastSeenAt = u.notificationsReadAt ? new Date(u.notificationsReadAt) : null;
-    const digestSentAt = emailsSentAt[u.intId];
+  const promises = users.map(async (u) => {
+    const digestSentAt: Date | null = emailsSentAt[u.intId] ?? null;
     const notificationsQueryDate = getUnreadEventsIntervalStart(
       digestSentAt,
-      notificationsLastSeenAt,
+      u.notificationsReadAt,
     );
 
     if (!notificationsQueryDate) {
