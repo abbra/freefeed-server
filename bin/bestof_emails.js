@@ -3,6 +3,11 @@ import createDebug from 'debug';
 
 import { sendBestOfEmails } from '../app/support/BestOfDigest';
 
+process.stdout.write('The "Best of Digest" is sending in app process now\n');
+process.exit(0);
+
+// TODO: remove this file
+
 const errorLog = createDebug('freefeed:errors');
 
 sendBestOfEmails()
