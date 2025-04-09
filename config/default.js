@@ -548,4 +548,11 @@ config.corsProxy = {
   allowedUrlPrefixes: [],
 };
 
+config.dailyMails = {
+  bestOf: {
+    enabled: true,
+    sendAt: '06:40', // 'HH:MM'
+  },
+};
+
 module.exports = config;
