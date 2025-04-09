@@ -203,6 +203,13 @@ declare module 'config' {
       allowedUrlPrefixes: string[];
       allowLocalhostOrigins: boolean;
     };
+
+    dailyMails: {
+      bestOf: {
+        enabled: boolean;
+        sendAt: string;
+      };
+    };
   };
 
   export type TranslationLimits = {
