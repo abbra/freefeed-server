@@ -1,4 +1,5 @@
 import config from 'config';
+import { DateTime } from 'luxon';
 
 import { JobManager } from '../../models';
 import { sendBestOfEmails } from '../../support/BestOfDigest';
@@ -20,14 +21,14 @@ export function initHandlers(jobManager: JobManager) {
     name: PERIODIC_SEND_BEST_OF_EMAILS,
     handler: sendBestOfEmails,
     nextTime: () => {
-      const now = new Date();
-      const next = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
+      const now = DateTime.now().setZone(config.ianaTimeZone);
+      let next = now.startOf('day').plus({ hours, minutes });
 
       if (next < now) {
-        next.setDate(next.getDate() + 1);
+        next = next.plus({ days: 1 });
       }
 
-      return next;
+      return next.toJSDate();
     },
     payload: {},
   });
