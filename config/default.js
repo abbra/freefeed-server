@@ -551,7 +551,11 @@ config.corsProxy = {
 config.dailyMails = {
   bestOf: {
     enabled: true,
-    sendAt: '06:40', // 'HH:MM'
+    sendAt: '06:40', // 'HH:MM' in config.ianaTimeZone
+  },
+  notifications: {
+    enabled: true,
+    sendAt: '21:45', // 'HH:MM' in config.ianaTimeZone
   },
 };
 

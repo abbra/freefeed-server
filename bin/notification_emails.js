@@ -3,6 +3,11 @@ import createDebug from 'debug';
 
 import { sendEmails } from '../app/support/NotificationsDigest';
 
+process.stdout.write('The "Notifications Digest" is sending in app process now\n');
+process.exit(0);
+
+// TODO: remove this file
+
 const errorLog = createDebug('freefeed:errors');
 
 sendEmails()
