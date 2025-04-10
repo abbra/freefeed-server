@@ -205,7 +205,7 @@ declare module 'config' {
     };
 
     dailyMails: {
-      bestOf: {
+      [key: string]: {
         enabled: boolean;
         sendAt: string;
       };

@@ -553,6 +553,10 @@ config.dailyMails = {
     enabled: true,
     sendAt: '06:40', // 'HH:MM' in config.ianaTimeZone
   },
+  notifications: {
+    enabled: true,
+    sendAt: '21:45', // 'HH:MM' in config.ianaTimeZone
+  },
 };
 
 module.exports = config;
