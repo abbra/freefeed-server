@@ -8,7 +8,7 @@ import { Job, type JobHandler, JobManager } from '../../models';
 import { initHandlers as initAuthTokensHandlers } from './auth-tokens';
 import { initHandlers as initFrozenUsersHandlers } from './frozen-users';
 import { initHandlers as initTranslationUsageHandlers } from './translation-usage';
-import { initHandlers as initBestOfEmailsHandlers } from './best-of-emails';
+import { initHandlers as initDailyEmailsHandlers } from './daily-emails';
 
 const debugError = createDebug('freefeed:jobs:errors');
 
@@ -19,7 +19,7 @@ export async function initHandlers(jobManager: JobManager, app: FreefeedApp) {
       initAuthTokensHandlers,
       initFrozenUsersHandlers,
       initTranslationUsageHandlers,
-      initBestOfEmailsHandlers,
+      initDailyEmailsHandlers,
     ].map((h) => h(jobManager, app)),
   );
 }

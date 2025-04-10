@@ -5,6 +5,7 @@ import _ from 'lodash';
 import { dbAdapter } from '../models';
 import { sendDailyBestOfEmail, sendWeeklyBestOfEmail } from '../mailers/BestOfDigestMailer';
 import { generalSummary } from '../controllers/api/v2/SummaryController.js';
+import { API_VERSION_2 } from '../api-versions';
 
 const BESTOF_DIGEST_POSTS_LIMIT = 15;
 
@@ -162,10 +163,10 @@ function preparePosts(payload, recipient) {
   return payload;
 }
 
-async function getSummary(user, days) {
+export async function getSummary(user, days) {
   const ctx = {
     request: { query: { limit: BESTOF_DIGEST_POSTS_LIMIT } },
-    state: { user },
+    state: { user, apiVersion: API_VERSION_2 },
     params: { days },
   };
 
