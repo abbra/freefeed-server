@@ -14,7 +14,11 @@ const juiceResourcesAsync = util.promisify(juiceResources);
 
 export function renderSummaryBody(data) {
   const body = renderToStaticMarkup(SummaryEmail(data));
-  return juiceResourcesAsync(body, {});
+  return juiceResourcesAsync(body, {
+    // Many email clients do not show inline (data:url) images
+    // @see https://stackoverflow.com/questions/8580355/can-you-send-images-in-datauri-format-to-gmail
+    webResources: { images: false },
+  });
 }
 
 export async function sendDailyBestOfEmail(user, data, digestDate) {
