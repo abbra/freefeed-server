@@ -108,6 +108,11 @@ export async function sendBestOfEmails() {
  *
  */
 
+/**
+ * @param {MayBeDate} weeklyDigestSentAt
+ * @param {MayBeDate} [now]
+ * @returns {boolean}
+ */
 export function shouldSendWeeklyBestOfDigest(weeklyDigestSentAt, now) {
   const tz = currentConfig().ianaTimeZone;
 
@@ -122,7 +127,7 @@ export function shouldSendWeeklyBestOfDigest(weeklyDigestSentAt, now) {
 /**
  * @param {MayBeDate} dailyDigestSentAt
  * @param {MayBeDate} weeklyDigestSentAt
- * @param {MayBeDate} now
+ * @param {MayBeDate} [now]
  * @returns {boolean}
  */
 export function shouldSendDailyBestOfDigest(dailyDigestSentAt, weeklyDigestSentAt, now) {
