@@ -104,13 +104,16 @@ export default function jobsTrait(superClass) {
             where unlock_at <= now()
             order by unlock_at
             limit :count
+        ),
+        updated as (
+            update jobs set
+                unlock_at = now() + :lockTime * '1 second'::interval,
+                attempts = attempts + 1
+            from selected
+            where jobs.id = selected.id
+            returning jobs.*, selected.old_unlock_at          
         )
-        update jobs set
-            unlock_at = now() + :lockTime * '1 second'::interval,
-            attempts = attempts + 1
-        from selected
-        where jobs.id = selected.id
-        returning jobs.*, selected.old_unlock_at`,
+        select * from updated order by old_unlock_at`,
         { count, lockTime },
       );
 

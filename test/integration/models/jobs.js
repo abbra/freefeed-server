@@ -332,13 +332,14 @@ describe('Jobs', () => {
 
     it(`should fetch only one job of type 'foo'`, async () => {
       const jm = new JobManager({ limitedJobs: { foo: 1 } });
-      const job1 = await Job.create('foo');
-      const job2 = await Job.create('foo');
+      await Promise.all([Job.create('foo'), Job.create('foo')]);
+
+      let fetchedJob;
 
       {
         const jobs = await jm.fetch();
         expect(jobs, 'to have length', 1);
-        expect(jobs[0].id, 'to be', job1.id);
+        [fetchedJob] = jobs;
       }
 
       {
@@ -346,12 +347,11 @@ describe('Jobs', () => {
         expect(jobs, 'to have length', 0);
       }
 
-      await job1.delete();
+      await fetchedJob.delete();
 
       {
         const jobs = await jm.fetch();
         expect(jobs, 'to have length', 1);
-        expect(jobs[0].id, 'to be', job2.id);
       }
     });
 
