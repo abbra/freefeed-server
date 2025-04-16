@@ -196,12 +196,13 @@ const eventsTrait = (superClass) =>
       return emailSentMapping;
     }
 
-    addSentEmailLogEntry(userIntId, email, emailType) {
-      return this.database('sent_emails_log').insert({
-        email_type: emailType,
-        user_id: userIntId,
-        email,
-      });
+    async addSentEmailLogEntry(userIntId, email, emailType) {
+      const row = await this.database.getRow(
+        `insert into sent_emails_log (user_id, email, email_type) values (:userIntId, :email, :emailType) returning sent_at`,
+        { userIntId, email, emailType },
+      );
+
+      return row.sent_at;
     }
   };
 
