@@ -1,15 +1,18 @@
-import moment from 'moment';
 import createDebug from 'debug';
 import _ from 'lodash';
+import { DateTime } from 'luxon';
 
 import { dbAdapter } from '../models';
 import { sendDailyBestOfEmail, sendWeeklyBestOfEmail } from '../mailers/BestOfDigestMailer';
 import { generalSummary } from '../controllers/api/v2/SummaryController.js';
 import { API_VERSION_2 } from '../api-versions';
 
+import { currentConfig } from './app-async-context';
+
 const BESTOF_DIGEST_POSTS_LIMIT = 15;
 
 export async function sendBestOfEmails() {
+  const tz = currentConfig().ianaTimeZone;
   const debugLog = createDebug('freefeed:digests:bestOf');
 
   const weeklyDigestRecipients = (await dbAdapter.getWeeklyBestOfDigestRecipients()).filter(
@@ -22,8 +25,12 @@ export async function sendBestOfEmails() {
   );
   debugLog(`getDailyBestOfDigestRecipients returned ${dailyDigestRecipients.length} records`);
 
-  const dailyDigestDate = moment().format('MMMM Do');
-  const weeklyDigestDate = moment().subtract(7, 'days').format('MMMM Do');
+  const dailyDigestDate = formatDigestDate(DateTime.now().setZone(tz));
+  const weeklyDigestDate = formatDigestDate(
+    // Start of the previous week
+    DateTime.now().setZone(tz).minus({ weeks: 1 }).startOf('week'),
+  );
+
   const weeklyEmailsSentAt = await dbAdapter.getWeeklyBestOfEmailSentAt(
     weeklyDigestRecipients.map((u) => u.intId),
   );
@@ -54,8 +61,12 @@ export async function sendBestOfEmails() {
 
     debugLog(`[${u.username}] -> email is queued`);
 
-    await dbAdapter.addSentEmailLogEntry(u.intId, u.email, 'weekly_best_of'); // eslint-disable-line no-await-in-loop
-    weeklyEmailsSentAt[u.intId] = moment();
+    // eslint-disable-next-line no-await-in-loop
+    weeklyEmailsSentAt[u.intId] = await dbAdapter.addSentEmailLogEntry(
+      u.intId,
+      u.email,
+      'weekly_best_of',
+    );
 
     debugLog(`[${u.username}] -> added entry to sent_emails_log`);
   }
@@ -92,27 +103,75 @@ export async function sendBestOfEmails() {
   debugLog('Finished iterating over daily digest recipients');
 }
 
+/**
+ * @typedef {Date|import('./types').ISO8601DateTimeString|null|undefined} MayBeDate
+ *
+ */
+
+/**
+ * @param {MayBeDate} weeklyDigestSentAt
+ * @param {MayBeDate} [now]
+ * @returns {boolean}
+ */
 export function shouldSendWeeklyBestOfDigest(weeklyDigestSentAt, now) {
-  const weeklyEmailDay = 'Monday';
-  const wrappedWeeklyDigestSentAt = moment(weeklyDigestSentAt || 0);
-  const wrappedNow = moment(now);
+  const tz = currentConfig().ianaTimeZone;
 
-  if (wrappedNow.day() !== moment().day(weeklyEmailDay).day()) {
-    return false;
-  }
+  const deepPast = DateTime.fromISO('2000-01-01').setZone(tz);
+  const weeklySentAtWeek = parseDateLike(weeklyDigestSentAt, deepPast).setZone(tz).startOf('week');
+  const thisWeek = parseDateLike(now, DateTime.now()).setZone(tz).startOf('week');
+  const thisDayOfWeek = parseDateLike(now, DateTime.now()).setZone(tz).weekday;
 
-  const weekAgo = wrappedNow.clone().subtract(1, 'week').add(30, 'minutes');
-
-  return wrappedWeeklyDigestSentAt.isBefore(weekAgo);
+  return thisDayOfWeek === 1 /** Monday */ && thisWeek > weeklySentAtWeek;
 }
 
+/**
+ * @param {MayBeDate} dailyDigestSentAt
+ * @param {MayBeDate} weeklyDigestSentAt
+ * @param {MayBeDate} [now]
+ * @returns {boolean}
+ */
 export function shouldSendDailyBestOfDigest(dailyDigestSentAt, weeklyDigestSentAt, now) {
-  const wrappedWeeklyDigestSentAt = moment(weeklyDigestSentAt || 0);
-  const wrappedDailyDigestSentAt = moment(dailyDigestSentAt || 0);
-  const wrappedNow = moment(now);
-  const dayAgo = wrappedNow.clone().subtract(1, 'days').add(30, 'minutes');
+  const tz = currentConfig().ianaTimeZone;
 
-  return wrappedDailyDigestSentAt.isBefore(dayAgo) && wrappedWeeklyDigestSentAt.isBefore(dayAgo);
+  const deepPast = DateTime.fromISO('2000-01-01').setZone(tz);
+  const dailySentAtDay = parseDateLike(dailyDigestSentAt, deepPast).setZone(tz).startOf('day');
+  const weeklySentAtDay = parseDateLike(weeklyDigestSentAt, deepPast).setZone(tz).startOf('day');
+  const today = parseDateLike(now, DateTime.now()).setZone(tz).startOf('day');
+
+  return dailySentAtDay < today && weeklySentAtDay < today;
+}
+
+/**
+ *
+ * @param {MayBeDate} dateLike
+ * @param {DateTime} defaultValue
+ * @returns {DateTime}
+ */
+function parseDateLike(dateLike, defaultValue) {
+  if (dateLike instanceof Date) {
+    return DateTime.fromJSDate(dateLike);
+  } else if (typeof dateLike === 'string') {
+    return DateTime.fromISO(dateLike);
+  }
+
+  return defaultValue;
+}
+
+/**
+ * Emulate of moment's 'MMMM Do' format
+ * @param {DateTime} date
+ * @returns {string}
+ */
+function formatDigestDate(date) {
+  const month = date.toFormat('MMMM');
+  const intDay = date.day;
+
+  // @see
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = intDay % 100;
+  const daySuffix = s[(v - 20) % 10] || s[v] || s[0];
+
+  return `${month} ${intDay}${daySuffix}`;
 }
 
 export function canMakeBestOfEmail(summaryPayload) {

@@ -25,26 +25,24 @@ const sendConfigs = [
 
 export async function initHandlers(jobManager: JobManager) {
   await Promise.all(
-    sendConfigs
-      .filter(({ enabled }) => enabled)
-      .map(({ name, sendAt, handler }) => {
-        const [hours, minutes] = sendAt.split(':').map(Number);
+    sendConfigs.map(({ name, sendAt, handler, enabled }) => {
+      const [hours, minutes] = sendAt.split(':').map(Number);
 
-        return definePeriodicJob(jobManager, {
-          name,
-          handler,
-          nextTime: () => {
-            const now = DateTime.now().setZone(config.ianaTimeZone);
-            let next = now.startOf('day').plus({ hours, minutes });
+      return definePeriodicJob(jobManager, {
+        name,
+        handler: enabled ? handler : () => Promise.resolve(),
+        nextTime: () => {
+          const now = DateTime.now().setZone(config.ianaTimeZone);
+          let next = now.startOf('day').plus({ hours, minutes });
 
-            if (next < now) {
-              next = next.plus({ days: 1 });
-            }
+          if (next < now) {
+            next = next.plus({ days: 1 });
+          }
 
-            return next.toJSDate();
-          },
-          payload: {},
-        });
-      }),
+          return next.toJSDate();
+        },
+        payload: {},
+      });
+    }),
   );
 }

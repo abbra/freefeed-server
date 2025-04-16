@@ -327,7 +327,7 @@ export class DbAdapter {
     userIntId: number,
     email: string,
     emailType: 'daily_best_of' | 'weekly_best_of' | 'notification',
-  ): Promise<void>;
+  ): Promise<Date>;
 
   // Backlinks
   getBacklinksCounts(uuids: UUID[], viewerId?: Nullable<UUID>): Promise<Map<UUID, number>>;

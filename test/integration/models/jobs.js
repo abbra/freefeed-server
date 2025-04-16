@@ -332,13 +332,14 @@ describe('Jobs', () => {
 
     it(`should fetch only one job of type 'foo'`, async () => {
       const jm = new JobManager({ limitedJobs: { foo: 1 } });
-      const job1 = await Job.create('foo');
-      const job2 = await Job.create('foo');
+      await Promise.all([Job.create('foo'), Job.create('foo')]);
+
+      let fetchedJob;
 
       {
         const jobs = await jm.fetch();
         expect(jobs, 'to have length', 1);
-        expect(jobs[0].id, 'to be', job1.id);
+        [fetchedJob] = jobs;
       }
 
       {
@@ -346,12 +347,11 @@ describe('Jobs', () => {
         expect(jobs, 'to have length', 0);
       }
 
-      await job1.delete();
+      await fetchedJob.delete();
 
       {
         const jobs = await jm.fetch();
         expect(jobs, 'to have length', 1);
-        expect(jobs[0].id, 'to be', job2.id);
       }
     });
 
@@ -410,9 +410,9 @@ describe('Jobs', () => {
 
     it('should respect unlock_at ordering', async () => {
       const jm = new JobManager({ limitedJobs: { foo: 1 } });
-      const foo1 = await Job.create('foo');
-      await setTimeout(100);
-      await Job.create('foo');
+      const [foo1] = await Promise.all([Job.create('foo'), Job.create('foo')]);
+      // Both jobs aren't locked, but foo1 should be processed first
+      await foo1.setUnlockAt(-10);
 
       const jobs = await jm.fetch();
       expect(jobs, 'to have length', 1);
@@ -441,7 +441,7 @@ describe('Jobs', () => {
     it('should correctly handle mix of limited and unlimited jobs', async () => {
       const jm = new JobManager({ batchSize: 4, limitedJobs: { foo: 1, bar: 2 } });
 
-      await Promise.all([
+      const jobs = await Promise.all([
         Job.create('foo'),
         Job.create('foo'),
         Job.create('bar'),
@@ -449,6 +449,9 @@ describe('Jobs', () => {
         Job.create('unlimited'),
         Job.create('unlimited'),
       ]);
+
+      // Manually set the job lock times in order of the jobs array: foo, foo, bar, bar, ...
+      await Promise.all(jobs.map((j, n) => j.setUnlockAt(n - 100)));
 
       const fetched = await jm.fetch();
       expect(fetched, 'to have length', 4);
