@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.24.0] - Not released
+## [2.23.22] - 2025-04-16
 ### Fixed
 - The `shouldSend*BestOfDigest()` functions now compares the current date with
   the last sent date. If the day/week has changed, the digest is sent, otherwise
