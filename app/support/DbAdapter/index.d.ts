@@ -172,6 +172,8 @@ export class DbAdapter {
    */
   sparseMatchesUserIds(query: string): Promise<UUID[]>;
 
+  setFirstUserInteraction(userId: UUID): Promise<Date | null>;
+
   getUsersIdsByIntIds(intIds: number[]): Promise<{ id: number; uid: UUID }[]>;
   getPostsIdsByIntIds(intIds: number[]): Promise<{ id: number; uid: UUID }[]>;
   getCommentsIdsByIntIds(intIds: number[]): Promise<{ id: number; uid: UUID }[]>;

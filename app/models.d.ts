@@ -43,6 +43,7 @@ export class User {
   invitationId: number | null;
   goneStatus: keyof typeof GONE_NAMES | null;
   goneStatusName: string;
+  firstInteractionAt: Date | null;
   constructor(params: unknown);
   create(): Promise<this>;
   update(params: unknown): Promise<void>;
@@ -111,6 +112,8 @@ export class User {
     subscriptions: number;
   }>;
   notifyOfAllCommentsOfPost(post: Post, enabled: boolean): Promise<void>;
+
+  setFirstInteraction(): Promise<boolean>;
 }
 
 export class Group {
@@ -137,6 +140,8 @@ export class Group {
 
   enableBansFor(userId: UUID, initiatorId?: UUID): Promise<void>;
   disableBansFor(userId: UUID, initiatorId?: UUID): Promise<void>;
+
+  setFirstInteraction(): Promise<boolean>;
 }
 
 type PostUserState = {
