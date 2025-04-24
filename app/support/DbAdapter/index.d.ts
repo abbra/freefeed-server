@@ -215,6 +215,8 @@ export class DbAdapter {
   filterSuspendedPosts(ids: UUID[]): Promise<UUID[]>;
   withdrawPostFromDestFeed(feedIntId: number, postUUID: UUID): Promise<boolean>;
   getPostsPresentsInTimeline(postIds: UUID[], feedIntId: number): Promise<UUID[]>;
+  getUserPostsCount(userId: UUID): Promise<number>;
+  getTimelinePostsIds(timelineIntIds?: number[], viewerId?: UUID, params?: object): Promise<UUID[]>;
 
   // Likes
   unlikePost(postId: UUID, userId: UUID): Promise<boolean>;
@@ -361,7 +363,7 @@ export class DbAdapter {
   getJobById(id: UUID): Promise<Nullable<Job>>;
   deleteJob(id: UUID): Promise<void>;
   fetchJobs(count: number, lockTime: number, limitedJobs?: Record<string, number>): Promise<Job[]>;
-  getAllJobs(names?: string[]): Promise<Job[]>; // For testing purposes only
+  getAllJobs<T = unknown>(names?: string[]): Promise<Job<T>[]>; // For testing purposes only
 
   // Group blocks
   blockUserInGroup(userId: UUID, groupId: UUID): Promise<boolean>;

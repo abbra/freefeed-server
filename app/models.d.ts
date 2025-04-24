@@ -66,6 +66,7 @@ export class User {
   isValidEmail(): Promise<boolean>;
   static validateEmail(email: string | null): Promise<void>;
   newComment(params: { body: string; postId: UUID }): Comment;
+  getFriends(): Promise<(User | Group)[]>;
 
   getGenericTimeline(name: (typeof User.feedNames)[number]): Promise<Timeline | null>;
   getGenericTimelineId(name: (typeof User.feedNames)[number]): Promise<UUID | null>;
@@ -176,6 +177,7 @@ export class Post {
   getCommentsListeners(): Promise<UUID[]>;
   getUserSpecificProps(user: User): Promise<PostUserState>;
   linkAttachments(attachments: UUID[]): Promise<void>;
+  getComments(): Promise<Comment[]>;
 }
 
 export class Timeline {
