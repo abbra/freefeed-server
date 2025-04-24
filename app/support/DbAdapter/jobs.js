@@ -17,7 +17,7 @@ export default function jobsTrait(superClass) {
           on conflict (name, uniq_key) do 
             update set (payload, unlock_at) = (:payload, :unlockAt)
           returning *`,
-        { name, payload, uniqKey, unlockAt: this._jobUnlockAt(unlockAt) },
+        { name, payload: JSON.stringify(payload), uniqKey, unlockAt: this._jobUnlockAt(unlockAt) },
       );
 
       return initJobObject(row);
