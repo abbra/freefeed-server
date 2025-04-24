@@ -2353,6 +2353,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/js-yaml@npm:^4":
+  version: 4.0.9
+  resolution: "@types/js-yaml@npm:4.0.9"
+  checksum: 10c0/24de857aa8d61526bbfbbaa383aa538283ad17363fcd5bb5148e2c7f604547db36646440e739d78241ed008702a8920665d1add5618687b6743858fae00da211
+  languageName: node
+  linkType: hard
+
 "@types/json5@npm:^0.0.29":
   version: 0.0.29
   resolution: "@types/json5@npm:0.0.29"
@@ -5798,6 +5805,7 @@ __metadata:
     "@tirke/node-cache-manager-ioredis": "npm:~3.6.0"
     "@types/debug": "npm:~4.1.12"
     "@types/humps": "npm:~2.0.6"
+    "@types/js-yaml": "npm:^4"
     "@types/jsonwebtoken": "npm:~9.0.8"
     "@types/koa": "npm:~2.15.0"
     "@types/koa-conditional-get": "npm:~2.0.3"
@@ -5853,6 +5861,7 @@ __metadata:
     grapheme-breaker: "npm:0.3.2"
     humps: "npm:~2.0.1"
     ioredis: "npm:~5.5.0"
+    js-yaml: "npm:~4.1.0"
     jsonwebtoken: "npm:~9.0.2"
     juice: "npm:~11.0.0"
     knex: "npm:~3.1.0"
@@ -5922,6 +5931,7 @@ __metadata:
     xmlbuilder: "npm:~15.1.1"
     xregexp: "npm:~5.1.1"
     zod: "npm:~3.24.2"
+    zod-validation-error: "npm:~3.4.0"
   languageName: unknown
   linkType: soft
 
@@ -7243,7 +7253,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-yaml@npm:^4.1.0":
+"js-yaml@npm:^4.1.0, js-yaml@npm:~4.1.0":
   version: 4.1.0
   resolution: "js-yaml@npm:4.1.0"
   dependencies:
@@ -12176,6 +12186,15 @@ __metadata:
   version: 0.1.0
   resolution: "yocto-queue@npm:0.1.0"
   checksum: 10c0/dceb44c28578b31641e13695d200d34ec4ab3966a5729814d5445b194933c096b7ced71494ce53a0e8820685d1d010df8b2422e5bf2cdea7e469d97ffbea306f
+  languageName: node
+  linkType: hard
+
+"zod-validation-error@npm:~3.4.0":
+  version: 3.4.0
+  resolution: "zod-validation-error@npm:3.4.0"
+  peerDependencies:
+    zod: ^3.18.0
+  checksum: 10c0/aaadb0e65c834aacb12fa088663d52d9f4224b5fe6958f09b039f4ab74145fda381c8a7d470bfddf7ddd9bbb5fdfbb52739cd66958ce6d388c256a44094d1fba
   languageName: node
   linkType: hard
 

@@ -210,6 +210,11 @@ declare module 'config' {
         sendAt: string;
       };
     };
+
+    welcomeDirects: {
+      senderAccount: string;
+      scheduleFile: string | null;
+    };
   };
 
   export type TranslationLimits = {
