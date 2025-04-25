@@ -182,6 +182,7 @@ config.attachments = {
   // Use https://imgproxy.net/ to dynamically create image thumbnails
   useImgProxy: false,
   previews: {
+    imagePreviewQuality: 90,
     imagePreviewAreas: {
       p1: 120_000,
       p2: 400_000,

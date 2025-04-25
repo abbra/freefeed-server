@@ -194,6 +194,7 @@ async function processImage(
   isVideoStill = false,
 ): Promise<[VisualPreviews, FilesToUpload]> {
   const previewSizes = getImagePreviewSizes(info);
+  const quality = currentConfig().attachments.previews.imagePreviewQuality;
 
   debug(`image preview sizes for ${localFilePath}`, previewSizes);
 
@@ -244,7 +245,7 @@ async function processImage(
         ['-resize', `${width}!x${height}!`],
         ['-profile', `${__dirname}/../../../lib/assets/sRGB.icm`],
         '-strip',
-        ['-quality', '75'],
+        ['-quality', quality.toString()],
         `webp:${tmpFileVariant(localFilePath, variant, 'webp')}`,
       ]);
 
