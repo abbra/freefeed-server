@@ -1,5 +1,7 @@
 /* eslint-env node, mocha */
 /* global $pg_database */
+import { join as pathJoin } from 'path';
+
 import expect from 'unexpected';
 import _ from 'lodash';
 
@@ -13,6 +15,9 @@ import {
   HOMEFEED_MODE_FRIENDS_ONLY,
   HOMEFEED_MODE_FRIENDS_ALL_ACTIVITY,
 } from '../../app/models';
+import { withModifiedConfig } from '../helpers/with-modified-config';
+import { WELCOME_DIRECT } from '../../app/support/welcome-directs';
+import { initJobProcessing } from '../../app/jobs';
 
 import {
   createUserAsync,
@@ -35,6 +40,7 @@ import {
   unsavePost,
   justCreatePost,
   justCreateComment,
+  createTestUser,
 } from './functional_test_helper';
 
 describe('TimelinesControllerV2', () => {
@@ -379,6 +385,51 @@ describe('TimelinesControllerV2', () => {
 
           const homefeed = await fetchHomefeed(mars);
           expect(homefeed.posts, 'to be empty');
+        });
+      });
+
+      describe('Welcome directs', () => {
+        withModifiedConfig({
+          ianaTimeZone: 'UTC',
+          welcomeDirects: {
+            senderAccount: 'welcome',
+            scheduleFile: pathJoin(__dirname, '../fixtures/welcome-directs.yml'),
+          },
+        });
+
+        /** @type {import('../../app/models').JobManager} */
+        let jm;
+        /** @type {import('./functional_test_helper').UserCtx} */
+        let welcomeUser;
+
+        beforeEach(async () => {
+          [jm, welcomeUser] = await Promise.all([
+            initJobProcessing(),
+            // We need the directs sender
+            createTestUser('welcome'),
+          ]);
+        });
+
+        it('should create welcome directs on first homefeed load', async () => {
+          {
+            const homefeed = await fetchHomefeed(luna);
+            expect(homefeed.posts, 'to be empty');
+          }
+
+          const jobs = await dbAdapter.getAllJobs([WELCOME_DIRECT]);
+          expect(jobs, 'to have length', 3);
+
+          await jm.fetchAndProcess();
+
+          {
+            const homefeed = await fetchHomefeed(luna);
+            expect(homefeed.posts, 'to satisfy', [
+              {
+                createdBy: welcomeUser.user.id,
+                body: 'Hi and welcome to FreeFeed! I am a welcome bot and this is your personal welcome message.',
+              },
+            ]);
+          }
         });
       });
     });

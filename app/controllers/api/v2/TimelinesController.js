@@ -13,6 +13,7 @@ import {
 import { serializeFeed } from '../../../serializers/v2/post';
 import { monitored, authRequired, targetUserRequired } from '../../middlewares';
 import { NotFoundException } from '../../../support/exceptions';
+import { scheduleWelcomeDirects } from '../../../support/welcome-directs';
 
 export const ORD_UPDATED = 'bumped';
 export const ORD_CREATED = 'created';
@@ -73,6 +74,10 @@ export const ownTimeline = (feedName, params = {}) =>
 
       if (!timeline || timeline.userId !== user.id || timeline.name !== feedName) {
         throw new NotFoundException(`Timeline is not found`);
+      }
+
+      if (feedName === 'RiverOfNews' && (await user.setFirstInteraction())) {
+        await scheduleWelcomeDirects(user);
       }
 
       ctx.body = await genericTimeline(timeline, user.id, {
