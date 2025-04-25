@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [2.24.0] - Not released
+### Added
+- The User model now has the `firstInteractionAt` field. This field is used to
+  track when the user has interacted with the platform (namely, loaded their
+  home feed) for the first time.
+- The server can be configured to send series of direct messages to the new
+  users. The configuration option is `welcomeDirects`. The schedule of direct
+  messages is defined in the separate YAML file, see
+  `test/fixtures/welcome-directs.yml` for an example and format.
 
 ## [2.23.22] - 2025-04-16
 ### Fixed
