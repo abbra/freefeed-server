@@ -59,8 +59,8 @@ export async function scheduleWelcomeDirects(user: User): Promise<boolean> {
   const sender = await dbAdapter.getUserByUsername(senderAccount);
 
   if (!sender) {
-    errorLog(`User "${senderAccount}" does not exist`);
-    throw new Error(`User "${senderAccount}" does not exist`);
+    errorLog(`Sender account does not exist`, { senderAccount });
+    throw new Error(`Sender account (${senderAccount}) does not exist`);
   }
 
   let entries: EntrySchema[];
@@ -70,12 +70,12 @@ export async function scheduleWelcomeDirects(user: User): Promise<boolean> {
     entries = z.array(entrySchema).parse(loadAll(yamlData));
   } catch (err) {
     if (isNoEntryError(err)) {
-      errorLog(`The schedule file is not found: ${scheduleFile}`);
+      errorLog(`The schedule file is not found`, { scheduleFile });
       return false;
     }
 
     if (isZodErrorLike(err)) {
-      errorLog(`The schedule file has invalid format: ${fromError(err).toString()}`);
+      errorLog(`The schedule file has invalid format`, { error: fromError(err) });
       return false;
     }
 
@@ -119,16 +119,20 @@ export async function jobHandler(job: Job<JobPayload>) {
   ]);
 
   if (!sender) {
-    errorLog(`Sender ${senderId} does not exist`);
+    errorLog(`Sender does not exist`, { senderId });
     return;
   }
 
   if (!user) {
-    errorLog(`User ${userId} does not exist`);
+    errorLog(`User does not exist`, { userId });
     return;
   }
 
-  const logPrefix = `${id} (${sender.username} -> ${user.username}): `;
+  const logPayload = {
+    jobId: id,
+    sender: sender.username,
+    receiver: user.username,
+  };
 
   // Check criterion
   if (!criterion) {
@@ -137,7 +141,7 @@ export async function jobHandler(job: Job<JobPayload>) {
     const postsCount = await dbAdapter.getUserPostsCount(user.id);
 
     if (postsCount > 0) {
-      debugLog(`${logPrefix}User has ${postsCount} posts, skipping`);
+      debugLog(`User has ${postsCount} posts, skipping`, logPayload);
       return;
     }
   } else if (criterion.type === 'noSubscriptions') {
@@ -151,23 +155,23 @@ export async function jobHandler(job: Job<JobPayload>) {
     const friendsCount = friends.filter((f) => !ignoreList.includes(f.username)).length;
 
     if (friendsCount > maxSubscriptions) {
-      debugLog(`${logPrefix}User has ${friendsCount} friends, skipping`);
+      debugLog(`User has ${friendsCount} friends, skipping`, logPayload);
       return;
     }
   } else {
-    debugLog(`${logPrefix}Unknown criterion type ${criterion.type}, skipping`);
+    debugLog(`Unknown criterion type ${criterion.type}, skipping`, logPayload);
     return;
   }
 
   // Send message and comment (if any)
-  debugLog(`${logPrefix}Sending message`);
+  debugLog(`Sending message`, logPayload);
   const [userDirectsId, senderDirectsId] = await Promise.all([
     user.getDirectsTimelineId(),
     sender.getDirectsTimelineId(),
   ]);
 
   if (!userDirectsId || !senderDirectsId) {
-    errorLog(`${logPrefix}User or sender has no direct timeline, skipping`);
+    errorLog(`User or sender has no direct timeline, skipping`, logPayload);
     return;
   }
 
@@ -178,16 +182,16 @@ export async function jobHandler(job: Job<JobPayload>) {
     timelineIds: [userDirectsId, senderDirectsId],
   });
   await post.create();
-  debugLog(`${logPrefix}Message sent`);
+  debugLog(`Message sent`, logPayload);
 
   if (comment) {
-    debugLog(`${logPrefix}Adding comment`);
+    debugLog(`Adding comment`, logPayload);
     const newComment = new Comment({
       body: comment,
       postId: post.id,
       userId: sender.id,
     });
     await newComment.create();
-    debugLog(`${logPrefix}Comment added`);
+    debugLog(`Comment added`, logPayload);
   }
 }
