@@ -1,16 +1,15 @@
-import { readFile } from 'fs/promises';
+import { join } from 'path';
 
+import configModule from 'config';
 import createDebug from 'debug';
-import { loadAll } from 'js-yaml';
 import { z } from 'zod';
 import { DateTime, Duration } from 'luxon';
-import { fromError, isZodErrorLike } from 'zod-validation-error';
+import { fromError } from 'zod-validation-error';
 
 import { dbAdapter, User, Job, Post, Comment, JobManager } from '../models';
 
 import { currentConfig } from './app-async-context';
 import { UUID } from './types';
-import { isNoEntryError } from './is-no-entry';
 
 export const WELCOME_DIRECT = 'WELCOME_DIRECT';
 
@@ -46,40 +45,40 @@ const entrySchema = z
   })
   .strict();
 
+const directsConfigSchema = z
+  .object({
+    sender: z.string(),
+    schedule: z.array(entrySchema),
+  })
+  .strict();
+
 type EntrySchema = z.infer<typeof entrySchema>;
 
 export async function scheduleWelcomeDirects(user: User): Promise<boolean> {
-  const { senderAccount, scheduleFile } = currentConfig().welcomeDirects;
+  const directsConfigDir = join(configModule.util.getEnv('NODE_CONFIG_DIR'), 'welcome-directs');
+  const directsConfig = configModule.util.loadFileConfigs(directsConfigDir, {
+    skipConfigSources: true,
+  });
 
-  if (!scheduleFile) {
-    // No schedule file is configured, so nothing to do
+  const { error, data: validatedDirectsConfig } = directsConfigSchema.safeParse(directsConfig);
+
+  if (error) {
+    errorLog(`The schedule file has invalid format`, { error: fromError(error) });
     return false;
   }
 
-  const sender = await dbAdapter.getUserByUsername(senderAccount);
+  const { sender: senderUsername, schedule: entries } = validatedDirectsConfig;
 
-  if (!sender) {
-    errorLog(`Sender account does not exist`, { senderAccount });
-    throw new Error(`Sender account (${senderAccount}) does not exist`);
+  if (entries.length === 0) {
+    // No schedule is configured, so nothing to do
+    return false;
   }
 
-  let entries: EntrySchema[];
+  const sender = await dbAdapter.getUserByUsername(senderUsername);
 
-  try {
-    const yamlData = await readFile(scheduleFile, 'utf-8');
-    entries = z.array(entrySchema).parse(loadAll(yamlData));
-  } catch (err) {
-    if (isNoEntryError(err)) {
-      errorLog(`The schedule file is not found`, { scheduleFile });
-      return false;
-    }
-
-    if (isZodErrorLike(err)) {
-      errorLog(`The schedule file has invalid format`, { error: fromError(err) });
-      return false;
-    }
-
-    throw err;
+  if (!sender) {
+    errorLog(`Sender account does not exist`, { senderUsername });
+    throw new Error(`Sender account (${senderUsername}) does not exist`);
   }
 
   await Promise.all(entries.map((entry) => scheduleEntry(user, sender, entry)));

@@ -10,10 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The User model now has the `firstInteractionAt` field. This field is used to
   track when the user has interacted with the platform (namely, loaded their
   home feed) for the first time.
-- The server can be configured to send series of direct messages to the new
-  users. The configuration option is `welcomeDirects`. The schedule of direct
-  messages is defined in the separate YAML file, see
-  `test/fixtures/welcome-directs.yml` for an example and format.
+- The server can be configured to send a series of direct messages to new users.
+
+  The configuration for these messages is defined in a separate set of config
+  files located in the `config/welcome-directs` directory. See
+  `config/welcome-directs/default.yml` and `config/welcome-directs/test.yml` for
+  the file format and examples.
+
+  As with regular configuration files, the server administrator can create a
+  `config/welcome-directs/local.yml` file to override the default settings.
+
 
 ## [2.23.22] - 2025-04-16
 ### Fixed

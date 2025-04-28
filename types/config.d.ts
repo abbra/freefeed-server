@@ -210,11 +210,6 @@ declare module 'config' {
         sendAt: string;
       };
     };
-
-    welcomeDirects: {
-      senderAccount: string;
-      scheduleFile: string | null;
-    };
   };
 
   export type TranslationLimits = {
@@ -249,6 +244,14 @@ declare module 'config' {
         s3ConfigOptions: Record<string, unknown>;
       };
 
-  const c: Config;
+  interface Util {
+    getEnv(key: string): string;
+    loadFileConfigs<C = unknown>(
+      configDir: string | null,
+      options?: { skipConfigSources?: boolean },
+    ): C;
+  }
+
+  const c: Config & { util: Util };
   export default c;
 }

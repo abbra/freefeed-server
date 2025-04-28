@@ -1,5 +1,3 @@
-import { join as pathJoin } from 'path';
-
 import { beforeEach, describe, it } from 'mocha';
 import unexpected from 'unexpected';
 import unexpectedDate from 'unexpected-date';
@@ -29,13 +27,7 @@ describe('Welcome Directs', () => {
     [welcome, luna] = await createUsers(['welcome', 'luna']);
   });
 
-  withModifiedConfig({
-    ianaTimeZone: 'UTC',
-    welcomeDirects: {
-      senderAccount: 'welcome',
-      scheduleFile: pathJoin(__dirname, '../../fixtures/welcome-directs.yml'),
-    },
-  });
+  withModifiedConfig({ ianaTimeZone: 'UTC' });
 
   it('should schedule welcome directs', async () => {
     const [ok, now] = await Promise.all([scheduleWelcomeDirects(luna), dbAdapter.now()]);

@@ -559,9 +559,4 @@ config.dailyMails = {
   },
 };
 
-config.welcomeDirects = {
-  senderAccount: 'welcome',
-  scheduleFile: null, // Path to a YAML file with direct messages entries
-};
-
 module.exports = config;
