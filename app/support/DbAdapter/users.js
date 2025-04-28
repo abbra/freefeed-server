@@ -724,7 +724,7 @@ const usersTrait = (superClass) =>
       const tSql = sql.type(z.object({ first_interaction_at: z.date() }));
       return await pool.maybeOneFirst(
         tSql`update users set first_interaction_at = now() 
-          where first_interaction_at is null and type = ${'user'} and uid = ${userId}
+          where first_interaction_at is null and type = 'user' and uid = ${userId}
           returning first_interaction_at`,
       );
     }

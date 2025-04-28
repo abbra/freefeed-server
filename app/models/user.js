@@ -1330,7 +1330,8 @@ export function addModel(dbAdapter) {
 
     /**
      * Sets the user's first interaction time. Does nothing if the user already
-     * has a first interaction time defined. It is also does nothing for groups.
+     * has a first interaction time defined. Also, it does not do anything for
+     * groups.
      * @returns {Promise<boolean>}
      */
     async setFirstInteraction() {

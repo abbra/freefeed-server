@@ -19,7 +19,7 @@ export function initHandlers(jobManager: JobManager) {
 }
 
 const debugLog = createDebug('freefeed:welcomeDirects');
-const errorLog = createDebug('freefeed:welcomeDirects:errors');
+const errorLog = debugLog.extend('errors');
 
 export type JobPayload = {
   id: string;
@@ -30,19 +30,23 @@ export type JobPayload = {
   criterion?: { type: string };
 };
 
-const entrySchema = z.object({
-  id: z.string(),
-  delay: z.string().duration().default('PT0S'),
-  skipDays: z.number().int().positive().optional(),
-  criterion: z
-    .object({
-      type: z.string(),
-      // ...some other arguments
-    })
-    .optional(),
-  body: z.string(),
-  comment: z.string().optional(),
-});
+const entrySchema = z
+  .object({
+    id: z.string(),
+    delay: z.string().duration().default('PT0S'),
+    skipDays: z.number().int().positive().optional(),
+    criterion: z
+      .object({
+        type: z.string(),
+        // ...some other arguments
+      })
+      .optional(),
+    body: z.string(),
+    comment: z.string().optional(),
+  })
+  .strict();
+
+type EntrySchema = z.infer<typeof entrySchema>;
 
 export async function scheduleWelcomeDirects(user: User): Promise<boolean> {
   const { senderAccount, scheduleFile } = currentConfig().welcomeDirects;
@@ -59,7 +63,7 @@ export async function scheduleWelcomeDirects(user: User): Promise<boolean> {
     throw new Error(`User "${senderAccount}" does not exist`);
   }
 
-  let entries: z.infer<typeof entrySchema>[];
+  let entries: EntrySchema[];
 
   try {
     const yamlData = await readFile(scheduleFile, 'utf-8');
@@ -83,7 +87,7 @@ export async function scheduleWelcomeDirects(user: User): Promise<boolean> {
   return true;
 }
 
-async function scheduleEntry(user: User, sender: User, entry: z.infer<typeof entrySchema>) {
+async function scheduleEntry(user: User, sender: User, entry: EntrySchema) {
   const tz = currentConfig().ianaTimeZone;
   let time = DateTime.fromJSDate(user.firstInteractionAt ?? new Date()).setZone(tz);
 
