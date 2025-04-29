@@ -7,8 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.24.0] - Not released
 ### Added
-- The User model now has the `firstInteractionAt` field. This field is used to
-  track when the user has interacted with the platform (namely, loaded their
+- The User model now includes the `firstInteractionAt` field. This field tracks
+  when a user interacts with the platform (specifically, when they load their
   home feed) for the first time.
 - The server can be configured to send a series of direct messages to new users.
 
