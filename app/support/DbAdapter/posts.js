@@ -505,6 +505,7 @@ const POST_COLUMNS = {
   isPropagable: 'is_propagable',
   feedIntIds: 'feed_ids',
   destinationFeedIds: 'destination_feed_ids',
+  toDelete: 'to_delete',
 };
 
 const POST_COLUMNS_MAPPING = {
@@ -562,6 +563,7 @@ export const POST_FIELDS = {
   is_protected: 'isProtected',
   is_propagable: 'isPropagable',
   friendfeed_url: 'friendfeedUrl',
+  to_delete: 'toDelete',
 };
 
 const POST_FIELDS_MAPPING = {

@@ -157,6 +157,7 @@ export class Post {
   userId: UUID;
   body: string;
   destinationFeedIds: number[];
+  toDelete: boolean;
   constructor(params: {
     userId: UUID;
     body: string;

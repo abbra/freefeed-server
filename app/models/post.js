@@ -48,6 +48,7 @@ export function addModel(dbAdapter) {
     isPrivate;
     isProtected;
     isPropagable;
+    toDelete;
 
     constructor(params) {
       this.id = params.id;
@@ -66,6 +67,7 @@ export function addModel(dbAdapter) {
       this.isPrivate = params.isPrivate || '0';
       this.isProtected = params.isProtected || '0';
       this.isPropagable = params.isPropagable || '0';
+      this.toDelete = params.toDelete || false;
 
       if (params.friendfeedUrl) {
         this.friendfeedUrl = params.friendfeedUrl;
