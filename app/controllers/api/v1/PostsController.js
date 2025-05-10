@@ -244,8 +244,8 @@ export default class PostsController {
       let postStillAvailable = false;
 
       if (feedsToRemain.length === 0) {
-        // Complete removal
-        await post.destroy(user);
+        // Start the complete removal process
+        await post.inactivate(user);
         monitor.increment('posts.destroys');
       } else {
         // Partial removal: remove post only from several feeds

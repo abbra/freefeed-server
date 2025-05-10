@@ -165,7 +165,8 @@ export class Post {
     commentsDisabled?: '0' | '1';
   });
   create(): Promise<this>;
-  destroy(destroyedBy?: User): Promise<void>;
+  inactivate(destroyedBy?: User): Promise<boolean>;
+  destroy(): Promise<void>;
   removeLike(user: User): Promise<boolean>;
   getPostedTo(): Promise<Timeline[]>;
   onlyUsersCanSeePost(fromUsers: User[]): Promise<User[]>;

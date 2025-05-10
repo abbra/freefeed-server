@@ -312,30 +312,51 @@ export function addModel(dbAdapter) {
       return this;
     }
 
-    async destroy(destroyedBy = null) {
+    /**
+     * Inactivate post: mark it to be deleted, but don't actually delete it.
+     *
+     * @param {User} [deletedBy]
+     * @return {Promise<boolean>}
+     */
+    async inactivate(deletedBy) {
+      if (this.toDelete) {
+        return false;
+      }
+
       const uuids = await dbAdapter.getPostLongIds(getUpdatedShortIds(this.body));
       uuids.push(...getUpdatedUUIDs(this.body));
 
-      const [realtimeRooms, comments, groups, notifyBacklinked, onlyForUsers] = await Promise.all([
+      const [realtimeRooms, groups, notifyBacklinked, onlyForUsers] = await Promise.all([
         getRoomsOfPost(this),
-        this.getComments(),
         this.getGroupsPostedTo(),
         notifyBacklinkedLater(this, pubSub, uuids),
         // We need to save the post viewers before destroying the post
         this.usersCanSee(),
       ]);
 
-      // remove all comments
-      await Promise.all(comments.map((comment) => comment.destroy()));
-
-      await dbAdapter.withdrawPostFromFeeds(this.feedIntIds, this.id);
-      await dbAdapter.deletePost(this.id);
+      await dbAdapter.updatePost(this.id, { toDelete: true });
+      this.toDelete = true;
 
       await Promise.all([
         pubSub.destroyPost(this.id, realtimeRooms, onlyForUsers),
-        destroyedBy ? EventService.onPostDestroyed(this, destroyedBy, { groups }) : null,
+        deletedBy ? EventService.onPostDestroyed(this, deletedBy, { groups }) : null,
         notifyBacklinked(),
       ]);
+
+      return true;
+    }
+
+    /**
+     * Actually destroy the post
+     *
+     * @return {Promise<void>}
+     */
+    async destroy() {
+      const comments = await this.getComments();
+      // remove all comments
+      await Promise.all(comments.map((comment) => comment.destroy()));
+      await dbAdapter.withdrawPostFromFeeds(this.feedIntIds, this.id);
+      await dbAdapter.deletePostRecord(this.id);
     }
 
     getShortId() {

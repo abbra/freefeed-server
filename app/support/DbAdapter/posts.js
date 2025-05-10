@@ -161,7 +161,7 @@ const postsTrait = (superClass) =>
       return this.database('posts').where('uid', postId).update({ bumped_at });
     }
 
-    async deletePost(postId) {
+    async deletePostRecord(postId) {
       await this.database('posts').where({ uid: postId }).delete();
       return await Promise.all([this._deletePostLikes(postId), this._deletePostComments(postId)]);
     }

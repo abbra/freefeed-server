@@ -213,6 +213,7 @@ export class DbAdapter {
   getPostsByIds(ids: UUID[]): Promise<Post[]>;
   getPostsByIntIds(ids: number[]): Promise<Post[]>;
   filterSuspendedPosts(ids: UUID[]): Promise<UUID[]>;
+  withdrawPostFromFeeds(feedIntIds: number[], postUUID: UUID): Promise<void>;
   withdrawPostFromDestFeed(feedIntId: number, postUUID: UUID): Promise<boolean>;
   getPostsPresentsInTimeline(postIds: UUID[], feedIntId: number): Promise<UUID[]>;
   getUserPostsCount(userId: UUID): Promise<number>;
