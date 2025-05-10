@@ -144,7 +144,7 @@ const postsTrait = (superClass) =>
           posts p
           join users u on p.user_id = u.uid
         where
-          p.uid = any(:postIds) and u.gone_status is null`,
+          p.uid = any(:postIds) and u.gone_status is null and not p.to_delete`,
         { postIds },
       );
     }
@@ -350,6 +350,7 @@ const postsTrait = (superClass) =>
         ${bannedUsersFilter}
         ${usersWhoBannedMeFilter}
         and authors.gone_status is null
+        and not posts.to_delete
       ORDER BY "posts"."bumped_at" DESC
       OFFSET ${offset} LIMIT ${limit}`;
 

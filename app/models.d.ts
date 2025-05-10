@@ -179,6 +179,7 @@ export class Post {
   getUserSpecificProps(user: User): Promise<PostUserState>;
   linkAttachments(attachments: UUID[]): Promise<void>;
   getComments(): Promise<Comment[]>;
+  isDeleting(): Promise<boolean>;
 }
 
 export class Timeline {

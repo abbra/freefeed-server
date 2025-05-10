@@ -906,13 +906,7 @@ export default class PubsubListener {
  * @return {Promise<string[]>}
  */
 export async function getRoomsOfPost(post) {
-  if (!post) {
-    return [];
-  }
-
-  const author = await dbAdapter.getUserById(post.userId);
-
-  if (!author.isActive) {
+  if (!post || (await post.isDeleting())) {
     return [];
   }
 

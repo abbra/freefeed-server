@@ -5,7 +5,8 @@ This document describes an algorithm that determines whether a given user
 
 ## Posts
 
-Post is not visible to anyone when its author is in any *gone status*.
+Post is not visible to anyone when its author is in any *gone status* or the
+post itself is in *to_delete* status.
 
 ### Anonymous viewer
 

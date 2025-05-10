@@ -44,14 +44,7 @@ export const opengraph = compose([
     const post = await dbAdapter.getPostById(postId);
 
     // OpenGraph is available for public posts that are not protected
-    if (!post || post.isProtected === '1') {
-      ctx.body = '';
-      return;
-    }
-
-    const author = await dbAdapter.getUserById(post.userId);
-
-    if (!author.isActive) {
+    if (!post || post.isProtected === '1' || (await post.isDeleting())) {
       ctx.body = '';
       return;
     }
@@ -93,6 +86,7 @@ export const opengraph = compose([
 
     const body = _.escape(post.body);
 
+    const author = await post.getCreatedBy();
     let og = `<meta property="og:title" content="${author.username} at ${config.siteTitle}" />
       <meta property="og:description" content="${body}" />
       <meta property="og:type" content="article" />`;

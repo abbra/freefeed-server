@@ -14,11 +14,15 @@ const visibilityTrait = (superClass) =>
      * See doc/visibility-rules.md for the rules details.
      */
     async postsVisibilitySQL(viewerId = null, { postsTable = 'p', postAuthorsTable = 'u' } = {}) {
+      const notToDelete = andJoin([
+        // Gone post's authors
+        `${postAuthorsTable}.gone_status is null`,
+        // Posts in 'to_delete' state
+        `not ${postsTable}.to_delete`,
+      ]);
+
       if (!viewerId) {
-        return andJoin([
-          `${postAuthorsTable}.gone_status is null`,
-          `not ${postsTable}.is_protected`,
-        ]);
+        return andJoin([`not ${postsTable}.is_protected`, notToDelete]);
       }
 
       const [
@@ -45,17 +49,16 @@ const visibilityTrait = (superClass) =>
           this.getUsersNamedFeedsIntIds(groupsWithDisabledBans, ['Posts']),
           this.getUsersNamedFeedsIntIds(managedGroupsWithDisabledBans, ['Posts']),
         ]);
-
       const bansSQL = andJoin([
         // 1. Viewer should see posts of banned users in feedsWithDisabledBans
         orJoin([
-          sqlNotIn('p.user_id', bannedByViewer),
-          sqlIntarrayIn('p.destination_feed_ids', feedsOfGroupsWithDisabledBans),
+          sqlNotIn(`${postsTable}.user_id`, bannedByViewer),
+          sqlIntarrayIn(`${postsTable}.destination_feed_ids`, feedsOfGroupsWithDisabledBans),
         ]),
         // 2. Viewer should see posts of users banned him in feedsOfManagedGroupsWithDisabledBans
         orJoin([
-          sqlNotIn('p.user_id', viewerBannedBy),
-          sqlIntarrayIn('p.destination_feed_ids', feedsOfManagedGroupsWithDisabledBans),
+          sqlNotIn(`${postsTable}.user_id`, viewerBannedBy),
+          sqlIntarrayIn(`${postsTable}.destination_feed_ids`, feedsOfManagedGroupsWithDisabledBans),
         ]),
       ]);
 
@@ -63,14 +66,13 @@ const visibilityTrait = (superClass) =>
         // Privacy
         viewerId
           ? orJoin([
-              'not p.is_private',
-              sqlIntarrayIn('p.destination_feed_ids', visiblePrivateFeedIntIds),
+              `not ${postsTable}.is_private`,
+              sqlIntarrayIn(`${postsTable}.destination_feed_ids`, visiblePrivateFeedIntIds),
             ])
           : 'not p.is_protected',
         // Bans
         bansSQL,
-        // Gone post's authors
-        'u.gone_status is null',
+        notToDelete,
       ]);
     }
 

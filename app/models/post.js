@@ -13,6 +13,7 @@ import {
   notifyBacklinkedLater,
   notifyBacklinkedNow,
 } from '../support/backlinks';
+import { List } from '../support/open-lists';
 
 import {
   HOMEFEED_MODE_FRIENDS_ONLY,
@@ -24,7 +25,6 @@ import {
  * @typedef { import("../models").User } User
  * @typedef { import("../models").Timeline } Timeline
  * @typedef { import("../support/DbAdapter").DbAdapter } DbAdapter
- * @typedef { import("../support/open-lists").List } List
  */
 
 /**
@@ -835,10 +835,26 @@ export function addModel(dbAdapter) {
     }
 
     /**
+     * Post still exists in the database, but is treated as deleted in any way.
+     * It can be restored in the future.
+     *
+     * @returns {Promise<boolean>}
+     */
+    async isDeleting() {
+      if (this.toDelete) {
+        return true;
+      }
+
+      const author = await dbAdapter.getUserById(this.userId);
+      return !author.isActive;
+    }
+
+    /**
      * isVisibleFor checks visibility of the post for the given viewer
      * or for anonymous if viewer is null.
      *
      *  Viewer CAN NOT see post if:
+     * - post is being deleted or
      * - viewer is anonymous and post is not public or
      * - viewer is authorized and
      *   - post author banned viewer or was banned by viewer or
@@ -879,6 +895,10 @@ export function addModel(dbAdapter) {
      * @returns {Promise<List<import('../support/types').UUID>>}
      */
     async usersCanSee() {
+      if (await this.isDeleting()) {
+        return List.empty();
+      }
+
       return await dbAdapter.getUsersWhoCanSeePost({
         authorId: this.userId,
         destFeeds: this.destinationFeedIds,
