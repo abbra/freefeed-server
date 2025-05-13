@@ -256,6 +256,35 @@ export class DbAdapter {
   getUserNamedFeed(userId: UUID, feedName: string): Promise<Nullable<Timeline>>;
   getTimelinesByIntIds(intIds: number[]): Promise<Timeline[]>;
 
+  getTimelinePostsIds(
+    timelineIntIds?: number[],
+    viewerId?: UUID | null,
+    params?: Partial<{
+      limit: number;
+      offset: number;
+      sort: 'created' | 'bumped';
+      withLocalBumps: boolean;
+      withoutDirects: boolean;
+      createdBefore: ISO8601DateTimeString | null;
+      createdAfter: ISO8601DateTimeString | null;
+      activityFeedIds: number[];
+      activityOnPropagable: boolean;
+      activityHideIds: number[];
+      authorsIds: List<UUID>;
+    }>,
+  ): Promise<UUID[]>;
+
+  search(
+    query: string,
+    options?: Partial<{
+      viewerId: UUID | null;
+      limit: number;
+      offset: number;
+      sort: 'bumped' | 'created';
+      maxQueryComplexity: number;
+    }>,
+  ): Promise<UUID[]>;
+
   // Visibility
   postsVisibilitySQL(
     viewerId?: UUID,
