@@ -210,6 +210,10 @@ declare module 'config' {
         sendAt: string;
       };
     };
+
+    undoIntervals: {
+      default: ISO8601DurationString;
+    } & { [k: string]: ISO8601DurationString };
   };
 
   export type TranslationLimits = {

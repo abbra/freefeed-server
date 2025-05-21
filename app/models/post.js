@@ -14,6 +14,7 @@ import {
   notifyBacklinkedNow,
 } from '../support/backlinks';
 import { List } from '../support/open-lists';
+import { schedulePostDeletion } from '../jobs/delete-post';
 
 import {
   HOMEFEED_MODE_FRIENDS_ONLY,
@@ -344,6 +345,8 @@ export function addModel(dbAdapter) {
         deletedBy ? EventService.onPostDestroyed(this, deletedBy, { groups }) : null,
         // Send a realtime event about linked posts update
         notifyBacklinked(),
+        // Schedule post deletion
+        schedulePostDeletion(this.id),
       ]);
 
       return true;

@@ -560,4 +560,8 @@ config.dailyMails = {
   },
 };
 
+config.undoIntervals = {
+  default: 'PT5M',
+};
+
 module.exports = config;

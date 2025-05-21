@@ -1,5 +1,8 @@
+import config from 'config';
 import { beforeEach, describe, it } from 'mocha';
-import expect from 'unexpected';
+import unexpected from 'unexpected';
+import unexpectedDate from 'unexpected-date';
+import { Duration } from 'luxon';
 
 import cleanDB from '../../../dbCleaner';
 import { dbAdapter, Post, User, Group } from '../../../../app/models';
@@ -8,6 +11,15 @@ import { createPost } from '../../helpers/posts-and-comments';
 import { postAccessRequired } from '../../../../app/controllers/middlewares';
 import { getRoomsOfPost } from '../../../../app/pubsub-listener';
 import { EVENT_TYPES } from '../../../../app/support/EventTypes';
+import { DELETE_POST } from '../../../../app/jobs/delete-post';
+import { initJobProcessing } from '../../../../app/jobs';
+
+const expect = unexpected.clone();
+expect.use(unexpectedDate);
+
+const undoIntervalMs = Duration.fromISO(
+  config.undoIntervals[DELETE_POST] ?? config.undoIntervals.default,
+).as('milliseconds');
 
 describe('Posts in to-delete state', () => {
   beforeEach(() => cleanDB(dbAdapter.database));
@@ -52,6 +64,43 @@ describe('Posts in to-delete state', () => {
 
     it(`should not appear in search results`, async () => {
       expect(await dbAdapter.search('body', { viewerId: luna.id }), 'to be empty');
+    });
+
+    describe('Job processing', () => {
+      it(`should be scheduled to be deleted`, async () => {
+        const jobs = await dbAdapter.getAllJobs([DELETE_POST]);
+        expect(jobs, 'to satisfy', [
+          {
+            name: DELETE_POST,
+            payload: { postId: post.id },
+          },
+        ]);
+        expect(
+          jobs[0].unlockAt,
+          'to be close to',
+          new Date(jobs[0].createdAt.getTime() + undoIntervalMs),
+        );
+      });
+
+      it(`should actually be deleted after job processing`, async () => {
+        const [job] = await dbAdapter.getAllJobs([DELETE_POST]);
+        job.setUnlockAt(0); // Unlock now
+
+        const jm = await initJobProcessing();
+        await jm.fetchAndProcess(1);
+        expect(await dbAdapter.getPostById(post.id), 'to be null');
+      });
+
+      it(`should not delete restored post`, async () => {
+        const [job] = await dbAdapter.getAllJobs([DELETE_POST]);
+        job.setUnlockAt(0); // Unlock now
+
+        await post.activate(luna);
+
+        const jm = await initJobProcessing();
+        await jm.fetchAndProcess(1);
+        expect(await dbAdapter.getPostById(post.id), 'not to be null');
+      });
     });
   });
 

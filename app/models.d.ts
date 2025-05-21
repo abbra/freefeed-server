@@ -305,6 +305,8 @@ export class Job<T = unknown> {
   failures: number;
   uniqKey: string | null;
   readonly kept: boolean;
+  createdAt: Date;
+  unlockAt: Date;
   static create<P>(name: string, payload?: P, params?: JobParams): Promise<Job<P>>;
   setUnlockAt(unlockAt?: Date | number, failure?: boolean | null): Promise<void>;
   keep(unlockAt?: Date | number): Promise<void>;

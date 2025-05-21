@@ -8,6 +8,7 @@ import { initHandlers as initUserGoneHandlers } from './user-gone';
 import { initHandlers as initAttachmentsSanitizeHandlers } from './attachments-sanitize';
 import { initHandlers as initAttachmentPrepareVideoHandlers } from './attachment-prepare-video';
 import { initHandlers as initAttachmentRecreatePreviewsHandlers } from './attachment-recreate-previews';
+import { initHandlers as initDeletePostsHandlers } from './delete-post';
 import { keepJobLockedMiddleware, sentryMiddleware } from './middlewares';
 
 export async function initJobProcessing(app) {
@@ -20,6 +21,7 @@ export async function initJobProcessing(app) {
       initAttachmentPrepareVideoHandlers,
       initAttachmentRecreatePreviewsHandlers,
       initWelcomeDirectsHandlers,
+      initDeletePostsHandlers,
     ].map((h) => h(jobManager, app)),
   );
 
