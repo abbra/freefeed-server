@@ -338,9 +338,46 @@ export function addModel(dbAdapter) {
       this.toDelete = true;
 
       await Promise.all([
+        // Send a realtime event about post deletion
         pubSub.destroyPost(this.id, realtimeRooms, onlyForUsers),
+        // Create a 'post deleted by' notification
         deletedBy ? EventService.onPostDestroyed(this, deletedBy, { groups }) : null,
+        // Send a realtime event about linked posts update
         notifyBacklinked(),
+      ]);
+
+      return true;
+    }
+
+    /**
+     * Restore inactivated post
+     *
+     * @param {User} [restoredBy]
+     * @returns {Promise<boolean>}
+     */
+    async activate(restoredBy) {
+      if (!this.toDelete) {
+        return false;
+      }
+
+      await dbAdapter.updatePost(this.id, { toDelete: false });
+      this.toDelete = false;
+
+      // The post restoration looks like a new post creation for client (in some
+      // ways), so we need to send some notifications
+
+      const groups = await this.getGroupsPostedTo();
+
+      const uuids = await dbAdapter.getPostLongIds(getUpdatedShortIds(this.body));
+      uuids.push(...getUpdatedUUIDs(this.body));
+
+      await Promise.all([
+        // Create a 'post restored' notification
+        restoredBy ? EventService.onPostRestored(this, restoredBy, { groups }) : null,
+        // Send a realtime event
+        pubSub.newPost(this.id),
+        // Send a realtime event about linked posts update
+        notifyBacklinkedNow(this, pubSub, uuids),
       ]);
 
       return true;

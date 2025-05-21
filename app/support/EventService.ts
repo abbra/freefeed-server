@@ -229,6 +229,56 @@ export class EventService {
     await processBacklinks(post, prevBody);
   }
 
+  static async onPostRestored(post: Post, restoredBy: User, params: { groups?: Group[] } = {}) {
+    const { groups: postGroups = [] } = params;
+
+    // Do not send notifications if restored by the post author
+    if (restoredBy.id === post.userId) {
+      return;
+    }
+
+    const postAuthor = await dbAdapter.getUserById(post.userId);
+
+    // Message to the post author
+    await createEvent(
+      postAuthor!.intId,
+      EVENT_TYPES.POST_RESTORED,
+      restoredBy.intId,
+      postAuthor!.intId,
+      postGroups.length === 0 ? null : postGroups[0].intId,
+      post.id,
+      null,
+      postAuthor!.intId,
+    );
+
+    if (postGroups.length === 0) {
+      return;
+    }
+
+    const groupAdminLists = await Promise.all(postGroups.map((g) => g.getAdministrators()));
+    const groupAdmins = _.uniqBy(_.flatten(groupAdminLists), 'id');
+
+    // Messages to other groups admins (but not to post author and not to restorer)
+    const otherAdmins = groupAdmins.filter((a) => a.id !== restoredBy.id && a.id !== post.userId);
+
+    await Promise.all(
+      otherAdmins.map(async (a) => {
+        const managedGroups = await a.getManagedGroups();
+        const groups = _.intersectionBy(managedGroups, postGroups, 'id');
+        return createEvent(
+          a.intId,
+          EVENT_TYPES.POST_RESTORED_BY_ANOTHER_ADMIN,
+          restoredBy.intId,
+          postAuthor!.intId,
+          groups[0].intId,
+          post.id,
+          null,
+          postAuthor!.intId,
+        );
+      }),
+    );
+  }
+
   static async onPostCommentsListened(user: User, post: Post, enabled: boolean) {
     const [postAuthor, destFeeds] = await Promise.all([post.getCreatedBy(), post.getPostedTo()]);
     let groupIntId: number | null = null;

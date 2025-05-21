@@ -166,6 +166,7 @@ export class Post {
   });
   create(): Promise<this>;
   inactivate(destroyedBy?: User): Promise<boolean>;
+  activate(restoredBy?: User): Promise<boolean>;
   destroy(): Promise<void>;
   removeLike(user: User): Promise<boolean>;
   getPostedTo(): Promise<Timeline[]>;
