@@ -1,8 +1,6 @@
-import config from 'config';
 import { beforeEach, describe, it } from 'mocha';
 import unexpected from 'unexpected';
 import unexpectedDate from 'unexpected-date';
-import { Duration } from 'luxon';
 
 import cleanDB from '../../../dbCleaner';
 import { dbAdapter, Post, User, Group } from '../../../../app/models';
@@ -13,13 +11,10 @@ import { getRoomsOfPost } from '../../../../app/pubsub-listener';
 import { EVENT_TYPES } from '../../../../app/support/EventTypes';
 import { DELETE_POST } from '../../../../app/jobs/delete-post';
 import { initJobProcessing } from '../../../../app/jobs';
+import { getExpirationIntervalSec, UNDO_POST_DELETE } from '../../../../app/support/undo/actions';
 
 const expect = unexpected.clone();
 expect.use(unexpectedDate);
-
-const undoIntervalMs = Duration.fromISO(
-  config.undoIntervals[DELETE_POST] ?? config.undoIntervals.default,
-).as('milliseconds');
 
 describe('Posts in to-delete state', () => {
   beforeEach(() => cleanDB(dbAdapter.database));
@@ -78,7 +73,7 @@ describe('Posts in to-delete state', () => {
         expect(
           jobs[0].unlockAt,
           'to be close to',
-          new Date(jobs[0].createdAt.getTime() + undoIntervalMs),
+          new Date(jobs[0].createdAt.getTime() + getExpirationIntervalSec(UNDO_POST_DELETE) * 1000),
         );
       });
 

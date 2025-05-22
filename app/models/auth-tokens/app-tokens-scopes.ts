@@ -166,6 +166,7 @@ export const appTokensScopes = [
       'POST /vN/comments/:commentId/unlike',
       'POST /vN/posts/:postId/leave',
       'POST /vN/posts/:postId/notifyOfAllComments',
+      'POST /vN/undo/:subject',
     ],
   },
   {

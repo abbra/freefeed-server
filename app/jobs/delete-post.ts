@@ -1,20 +1,16 @@
-import { Duration } from 'luxon';
-
 import { dbAdapter, Job, JobManager } from '../models';
-import { currentConfig } from '../support/app-async-context';
 import { UUID } from '../support/types';
+import { getExpirationIntervalSec, UNDO_POST_DELETE } from '../support/undo/actions';
 
 export const DELETE_POST = 'DELETE_POST';
 
 export async function schedulePostDeletion(postId: UUID) {
-  const { undoIntervals } = currentConfig();
-  const interval = undoIntervals[DELETE_POST] || undoIntervals.default;
   await Job.create(
     DELETE_POST,
     { postId },
     {
       uniqKey: postId,
-      unlockAt: Duration.fromISO(interval).as('seconds'),
+      unlockAt: getExpirationIntervalSec(UNDO_POST_DELETE),
     },
   );
 }
