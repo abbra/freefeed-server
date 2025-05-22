@@ -94,6 +94,8 @@ export function addModel(dbAdapter) {
 
       this.goneAt = params.goneAt;
 
+      this.firstInteractionAt = params.firstInteractionAt ?? null;
+
       this.profilePictureUuid = params.profilePictureUuid || '';
       this.subscribedFeedIds = params.subscribedFeedIds || [];
       this.privateMeta = params.privateMeta;
@@ -1324,6 +1326,21 @@ export function addModel(dbAdapter) {
     async notifyOfAllCommentsOfPost(post, enabled) {
       await dbAdapter.setCommentEventsStatusForPost(post.id, this.id, enabled);
       await EventService.onPostCommentsListened(this, post, enabled);
+    }
+
+    /**
+     * Sets the user's first interaction time. Does nothing if the user already
+     * has a first interaction time defined. Also, it does not do anything for
+     * groups.
+     * @returns {Promise<boolean>}
+     */
+    async setFirstInteraction() {
+      if (this.firstInteractionAt || this.isGroup()) {
+        return false;
+      }
+
+      this.firstInteractionAt = await dbAdapter.setFirstUserInteraction(this.id);
+      return this.firstInteractionAt !== null;
     }
   };
 }

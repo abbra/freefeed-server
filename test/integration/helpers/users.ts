@@ -1,4 +1,4 @@
-import { User } from '../../../app/models';
+import { Group, User } from '../../../app/models';
 
 export async function createUser(username: string): Promise<User> {
   const user = new User({ username, password: 'pw' });
@@ -13,4 +13,10 @@ export function createUsers(usernames: string[]): Promise<User[]> {
 export function createNUsers(count: number): Promise<User[]> {
   const usernames = Array.from({ length: count }, (_, i) => `user${i}`);
   return createUsers(usernames);
+}
+
+export async function createGroup(groupName: string, creator: User): Promise<Group> {
+  const group = new Group({ username: groupName });
+  await group.create(creator.id);
+  return group;
 }

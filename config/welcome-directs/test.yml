@@ -1,0 +1,32 @@
+# Welcome Directs Schedule
+
+sender: welcome
+schedule:
+  -
+    id: greeting_at_start
+    body: >
+      Hi and welcome to FreeFeed!
+      I am a welcome bot and this is your personal welcome message.
+    comment: >
+      Please ask in @support group for help
+
+  -
+    id: no_posts
+    delay: "PT10M"
+    criterion:
+      type: noPosts
+    body: >
+      Hello again, I see you haven't created any posts in the last 10 minutes!
+    comment: >
+      Don't worry, you can create posts at any time.
+
+  -
+    id: no_subscriptions
+    skipDays: 1
+    delay: "PT10H"
+    criterion:
+      type: noSubscriptions
+      maxSubscriptions: 2
+      ignore: ["welcome", "ruwelcome", "irwelcome", "freefeed", "support"]
+    body: >
+      Hi, I see you haven't subscribed to anyone yet.

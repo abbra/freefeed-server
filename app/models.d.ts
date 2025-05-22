@@ -43,6 +43,7 @@ export class User {
   invitationId: number | null;
   goneStatus: keyof typeof GONE_NAMES | null;
   goneStatusName: string;
+  firstInteractionAt: Date | null;
   constructor(params: unknown);
   create(): Promise<this>;
   update(params: unknown): Promise<void>;
@@ -65,6 +66,7 @@ export class User {
   isValidEmail(): Promise<boolean>;
   static validateEmail(email: string | null): Promise<void>;
   newComment(params: { body: string; postId: UUID }): Comment;
+  getFriends(): Promise<(User | Group)[]>;
 
   getGenericTimeline(name: (typeof User.feedNames)[number]): Promise<Timeline | null>;
   getGenericTimelineId(name: (typeof User.feedNames)[number]): Promise<UUID | null>;
@@ -111,6 +113,8 @@ export class User {
     subscriptions: number;
   }>;
   notifyOfAllCommentsOfPost(post: Post, enabled: boolean): Promise<void>;
+
+  setFirstInteraction(): Promise<boolean>;
 }
 
 export class Group {
@@ -137,6 +141,8 @@ export class Group {
 
   enableBansFor(userId: UUID, initiatorId?: UUID): Promise<void>;
   disableBansFor(userId: UUID, initiatorId?: UUID): Promise<void>;
+
+  setFirstInteraction(): Promise<boolean>;
 }
 
 type PostUserState = {
@@ -171,6 +177,7 @@ export class Post {
   getCommentsListeners(): Promise<UUID[]>;
   getUserSpecificProps(user: User): Promise<PostUserState>;
   linkAttachments(attachments: UUID[]): Promise<void>;
+  getComments(): Promise<Comment[]>;
 }
 
 export class Timeline {

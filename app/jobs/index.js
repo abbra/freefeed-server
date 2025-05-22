@@ -1,6 +1,7 @@
 import config from 'config';
 
 import { JobManager } from '../models';
+import { initHandlers as initWelcomeDirectsHandlers } from '../support/welcome-directs';
 
 import { initHandlers as initPeriodicHandlers } from './periodic';
 import { initHandlers as initUserGoneHandlers } from './user-gone';
@@ -18,6 +19,7 @@ export async function initJobProcessing(app) {
       initAttachmentsSanitizeHandlers,
       initAttachmentPrepareVideoHandlers,
       initAttachmentRecreatePreviewsHandlers,
+      initWelcomeDirectsHandlers,
     ].map((h) => h(jobManager, app)),
   );
 
