@@ -218,6 +218,7 @@ declare module 'config' {
   };
 
   export type PreviewsConfiguration = {
+    imagePreviewQuality: number;
     imagePreviewAreas: { [k: string]: number };
     legacyImagePreviewSizes: {
       [k: string]: {
