@@ -26,7 +26,7 @@ export const undo = compose([
 
     const data = verifyUndoToken(token, user.id);
 
-    if (!data || data.sub !== `undo:${subject}`) {
+    if (!data || data.sub !== subject) {
       throw new ForbiddenException('Invalid or expired undo token');
     }
 
