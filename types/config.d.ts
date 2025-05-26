@@ -211,9 +211,9 @@ declare module 'config' {
       };
     };
 
-    undoIntervals: {
-      default: ISO8601DurationString;
-    } & { [k: string]: ISO8601DurationString };
+    undo: {
+      undoInterval: ISO8601DurationString;
+    };
   };
 
   export type TranslationLimits = {

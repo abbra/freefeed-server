@@ -1,16 +1,17 @@
+import { JwtPayload } from 'jsonwebtoken';
 import compose from 'koa-compose';
 import { z } from 'zod';
 
-import { authRequired, inputSchemaRequired, monitored } from '../../middlewares';
-import { Ctx } from '../../../support/types';
 import { dbAdapter, User } from '../../../models';
-import { verifyUndoToken } from '../../../support/undo/token';
 import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
 } from '../../../support/exceptions';
-import { UNDO_POST_DELETE } from '../../../support/undo/actions';
+import { Ctx } from '../../../support/types';
+import { verifyUndoToken } from '../../../support/undo/entry';
+import { authRequired, inputSchemaRequired, monitored } from '../../middlewares';
+import { UNDO_POST_DELETE } from '../../../support/undo/post-delete';
 
 const undoInputSchema = z.object({ token: z.string().jwt() });
 type UndoInput = z.infer<typeof undoInputSchema>;
@@ -24,9 +25,11 @@ export const undo = compose([
     const { token } = ctx.request.body as UndoInput;
     const { subject } = ctx.params as { subject: string };
 
-    const data = verifyUndoToken(token, user.id);
+    let data: JwtPayload;
 
-    if (!data || data.sub !== subject) {
+    try {
+      data = await verifyUndoToken(token, user.id, subject);
+    } catch {
       throw new ForbiddenException('Invalid or expired undo token');
     }
 

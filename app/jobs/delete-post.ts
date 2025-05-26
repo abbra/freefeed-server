@@ -1,6 +1,6 @@
 import { dbAdapter, Job, JobManager } from '../models';
 import { UUID } from '../support/types';
-import { getExpirationIntervalSec, UNDO_POST_DELETE } from '../support/undo/actions';
+import { UndoPostDelete } from '../support/undo/post-delete';
 
 export const DELETE_POST = 'DELETE_POST';
 
@@ -10,7 +10,7 @@ export async function schedulePostDeletion(postId: UUID) {
     { postId },
     {
       uniqKey: postId,
-      unlockAt: getExpirationIntervalSec(UNDO_POST_DELETE),
+      unlockAt: UndoPostDelete.ttlSec,
     },
   );
 }

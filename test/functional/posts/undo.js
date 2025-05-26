@@ -10,11 +10,11 @@ import {
   justCreatePost,
   performJSONRequest,
 } from '../functional_test_helper';
-import { getExpirationIntervalSec, UNDO_POST_DELETE } from '../../../app/support/undo/actions';
 import { getSingleton } from '../../../app/app';
 import { eventNames, PubSubAdapter } from '../../../app/support/PubSubAdapter';
 import { connect as redisConnect } from '../../../app/setup/database';
 import Session from '../realtime-session';
+import { UNDO_POST_DELETE, UndoPostDelete } from '../../../app/support/undo/post-delete';
 
 describe('Undo post actions', () => {
   beforeEach(() => cleanDB(dbAdapter.database));
@@ -52,7 +52,7 @@ describe('Undo post actions', () => {
             subject: UNDO_POST_DELETE,
             message: 'You deleted your post',
             extra: { author: 'luna' },
-            expiresInSec: getExpirationIntervalSec(UNDO_POST_DELETE),
+            expiresInSec: UndoPostDelete.ttlSec,
             token: expect.it('to be a string'),
           },
         ],
@@ -137,7 +137,7 @@ describe('Undo post actions', () => {
             subject: UNDO_POST_DELETE,
             message: `You deleted luna's post`,
             extra: { author: 'luna' },
-            expiresInSec: getExpirationIntervalSec(UNDO_POST_DELETE),
+            expiresInSec: UndoPostDelete.ttlSec,
             token: expect.it('to be a string'),
           },
         ],

@@ -11,7 +11,7 @@ import { getRoomsOfPost } from '../../../../app/pubsub-listener';
 import { EVENT_TYPES } from '../../../../app/support/EventTypes';
 import { DELETE_POST } from '../../../../app/jobs/delete-post';
 import { initJobProcessing } from '../../../../app/jobs';
-import { getExpirationIntervalSec, UNDO_POST_DELETE } from '../../../../app/support/undo/actions';
+import { UndoPostDelete } from '../../../../app/support/undo/post-delete';
 
 const expect = unexpected.clone();
 expect.use(unexpectedDate);
@@ -73,7 +73,7 @@ describe('Posts in to-delete state', () => {
         expect(
           jobs[0].unlockAt,
           'to be close to',
-          new Date(jobs[0].createdAt.getTime() + getExpirationIntervalSec(UNDO_POST_DELETE) * 1000),
+          new Date(jobs[0].createdAt.getTime() + UndoPostDelete.ttlSec * 1000),
         );
       });
 
