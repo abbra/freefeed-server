@@ -63,25 +63,25 @@ export function verifyUndoToken(
   issuer: UUID,
   expectedSubject?: string,
 ): Promise<JwtPayload> {
-  const { promise, resolve, reject } = Promise.withResolvers<JwtPayload>();
-  verify(
-    token,
-    currentConfig().secret,
-    {
-      audience: tokenAudience,
-      issuer,
-    },
-    (error, decoded) => {
-      if (error) {
-        reject(error);
-      } else if (decoded) {
-        if (expectedSubject && (decoded as JwtPayload).sub !== expectedSubject) {
-          reject(new Error('Wrong subject in token'));
-        }
+  return new Promise<JwtPayload>((resolve, reject) => {
+    verify(
+      token,
+      currentConfig().secret,
+      {
+        audience: tokenAudience,
+        issuer,
+      },
+      (error, decoded) => {
+        if (error) {
+          reject(error);
+        } else if (decoded) {
+          if (expectedSubject && (decoded as JwtPayload).sub !== expectedSubject) {
+            reject(new Error('Wrong subject in token'));
+          }
 
-        resolve(decoded as JwtPayload);
-      }
-    },
-  );
-  return promise;
+          resolve(decoded as JwtPayload);
+        }
+      },
+    );
+  });
 }
