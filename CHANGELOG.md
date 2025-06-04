@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   changed from 75 to 90.
 
 ### Added
+- The ability to undo actions.
+  - The destructive actions (like post deletion) now returns an _undo_ field in
+    the response. This field is a list of objects with the following shape: `{
+    subject: string; message: string; token: string; expiresInSec: number;
+    extra?: object }`. The undo token is valid for `expiresInSec` seconds
+    (default is 300 seconds) and can be used to undo the action.
+  - New API endpoint `POST /vN/undo/:subject` allows undoing actions. The
+    request body is just the `{ "token": "UNDO TOKEN" }`. The reply is
+    subject-dependent, for the post deletion it returns `{ "postId": "POST ID"
+    }`.
+  - For now, only the post deletion can be undone, but the plan is to add more.
 - The User model now includes the `firstInteractionAt` field. This field tracks
   when a user interacts with the platform (specifically, when they load their
   home feed) for the first time.
