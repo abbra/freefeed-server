@@ -275,6 +275,7 @@ export class Comment {
   hideType: 0 | 1 | 2 | 3 | 4;
   postId: UUID;
   seqNumber: number;
+  toDelete: boolean;
   static hiddenBody(hideType: number): string;
   constructor(params: { userId: UUID; body: string; postId: UUID });
   create(): Promise<void>;

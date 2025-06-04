@@ -36,6 +36,7 @@ export function addModel(dbAdapter) {
     createdAt;
     updatedAt;
     seqNumber;
+    toDelete;
 
     static hiddenBody(hideType) {
       switch (hideType) {
@@ -63,6 +64,7 @@ export function addModel(dbAdapter) {
       this.postId = params.postId;
       this.hideType = params.hideType || Comment.VISIBLE;
       this.seqNumber = params.seqNumber;
+      this.toDelete = params.toDelete || false;
 
       if (parseInt(params.createdAt, 10)) {
         this.createdAt = params.createdAt;
