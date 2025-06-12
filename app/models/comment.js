@@ -215,7 +215,7 @@ export function addModel(dbAdapter) {
     }
 
     canBeDestroyed() {
-      return this.hideType !== Comment.DELETED;
+      return !this.toDelete && this.hideType !== Comment.DELETED;
     }
 
     async destroy(destroyedBy = null) {

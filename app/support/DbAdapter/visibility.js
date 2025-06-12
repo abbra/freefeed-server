@@ -196,6 +196,7 @@ const visibilityTrait = (superClass) =>
          from comments c
             join posts p on p.uid = c.post_id
             where c.uid = any(:commentIds)
+            and not c.to_delete
           `,
         { commentIds },
       );

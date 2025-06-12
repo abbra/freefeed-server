@@ -35,7 +35,8 @@ The post visibility rules calculates in the following places:
 
 ## Comments, Likes and Comment likes
 
-Comments, Likes and Comment likes (hereinafter "actions") shares the same logic.
+Comments, Likes and Comment likes (hereinafter "actions") mostly shares the same
+logic.
 
 Actions on the given post is not visible for viewer if the post is not visible.
 
@@ -49,6 +50,10 @@ banned by the action author, with the following exceptions:
   * The post is published to a group where the viewer *is admin* and had
     disabled bans;
   * The post is authored by the viewer.
+
+### Comments specific rules
+
+Comment is not visible to anyone when it is in *to_delete* status.
 
 If the post is visible but the comment is not, the comment may appear as a stub
 (with 'hideType' field value of HIDDEN_AUTHOR_BANNED or HIDDEN_VIEWER_BANNED).

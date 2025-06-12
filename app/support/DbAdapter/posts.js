@@ -223,7 +223,7 @@ const postsTrait = (superClass) =>
 
         // Check for another comments from this commentator
         const { rows } = await trx.raw(
-          `select 1 from comments where post_id = :postId and user_id = :commentatorId limit 1`,
+          `select 1 from comments where not to_delete and post_id = :postId and user_id = :commentatorId limit 1`,
           { postId, commentatorId },
         );
 

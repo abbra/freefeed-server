@@ -414,6 +414,7 @@ const timelinesPostsTrait = (superClass) =>
         excludeBannedByViewer ? sqlNot(bannedByViewerSQL) : 'true',
         excludeBannedByAuthor ? sqlNot(bannedByAuthorSQL) : 'true',
         sqlNotIn('c.hide_type', otherExcludedTypes),
+        'not c.to_delete',
       ]);
 
       const allCommentsSQL = pgFormat(
