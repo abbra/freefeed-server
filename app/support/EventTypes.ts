@@ -32,6 +32,8 @@ export const EVENT_TYPES = {
 
   COMMENT_MODERATED: 'comment_moderated',
   COMMENT_MODERATED_BY_ANOTHER_ADMIN: 'comment_moderated_by_another_admin',
+  COMMENT_RESTORED: 'comment_restored',
+  COMMENT_RESTORED_BY_ANOTHER_ADMIN: 'comment_restored_by_another_admin',
   POST_MODERATED: 'post_moderated',
   POST_MODERATED_BY_ANOTHER_ADMIN: 'post_moderated_by_another_admin',
   POST_RESTORED: 'post_restored',

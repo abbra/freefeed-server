@@ -464,7 +464,7 @@ export function addModel(dbAdapter) {
     /**
      * Return all groups post posted to or empty array
      *
-     * @returns {Array.<User>}
+     * @returns {Promise<Group[]>}
      */
     async getGroupsPostedTo() {
       return await dbAdapter.getPostGroups(this.id);

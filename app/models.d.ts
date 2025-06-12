@@ -157,6 +157,7 @@ export class Post {
   userId: UUID;
   body: string;
   destinationFeedIds: number[];
+  feedIntIds: number[];
   toDelete: boolean;
   constructor(params: {
     userId: UUID;
@@ -279,7 +280,9 @@ export class Comment {
   static hiddenBody(hideType: number): string;
   constructor(params: { userId: UUID; body: string; postId: UUID });
   create(): Promise<void>;
-  destroy(destroyedBy?: User): Promise<boolean>;
+  inactivate(destroyedBy?: User): Promise<boolean>;
+  activate(restoredBy: User): Promise<boolean>;
+  destroy(): Promise<boolean>;
   getPost(): Promise<Post>;
   removeLike(user: User): Promise<boolean>;
   getCreatedBy(): Promise<User>;

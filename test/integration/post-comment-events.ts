@@ -140,7 +140,7 @@ describe(`'post_comment' event emitting`, () => {
           const post = await createPost(mars, 'Hello, world!');
           const lunaComment = await createComment(luna, post, 'Comment from Luna');
           await createComment(mars, post, 'Comment from Mars #1');
-          await lunaComment.destroy(luna);
+          await lunaComment.inactivate(luna);
           await createComment(mars, post, 'Comment from Mars #2');
 
           await expectUserEventsToBe(luna, [

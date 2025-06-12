@@ -15,6 +15,7 @@ import {
   notifyBacklinkedNow,
 } from '../support/backlinks';
 import { List } from '../support/open-lists';
+import { scheduleCommentDeletion } from '../jobs/delete-comment';
 
 export function addModel(dbAdapter) {
   class Comment {
@@ -214,11 +215,17 @@ export function addModel(dbAdapter) {
       });
     }
 
-    canBeDestroyed() {
-      return !this.toDelete && this.hideType !== Comment.DELETED;
-    }
+    /**
+     * Inactivate comment: mark it to be deleted, but don't actually delete it.
+     *
+     * @param {User} [deletedBy]
+     * @return {Promise<boolean>}
+     */
+    async inactivate(deletedBy = null) {
+      if (this.toDelete) {
+        return false;
+      }
 
-    async destroy(destroyedBy = null) {
       const uuids = await dbAdapter.getPostLongIds(getUpdatedShortIds(this.body));
       uuids.push(...getUpdatedUUIDs(this.body));
 
@@ -226,11 +233,8 @@ export function addModel(dbAdapter) {
       const realtimeRooms = await getRoomsOfPost(post);
       const notifyBacklinked = await notifyBacklinkedLater(this, pubSub, uuids);
 
-      const deleted = await dbAdapter.deleteComment(this.id, this.postId);
-
-      if (!deleted) {
-        return false;
-      }
+      await dbAdapter.updateComment(this.id, { toDelete: true });
+      this.toDelete = true;
 
       if (this.userId) {
         await dbAdapter.withdrawPostFromCommentsFeedIfNoMoreComments(this.postId, this.userId);
@@ -238,11 +242,55 @@ export function addModel(dbAdapter) {
 
       await Promise.all([
         pubSub.destroyComment(this.id, this.postId, realtimeRooms),
-        destroyedBy ? EventService.onCommentDestroyed(this, destroyedBy) : null,
+        deletedBy ? EventService.onCommentDestroyed(this, deletedBy) : null,
         notifyBacklinked(),
+        // Schedule comment deletion
+        scheduleCommentDeletion(this.id),
       ]);
 
       return true;
+    }
+
+    /**
+     * Restore inactivated comment
+     *
+     * @param {User} [restoredBy]
+     * @returns {Promise<boolean>}
+     */
+    async activate(restoredBy = null) {
+      if (!this.toDelete) {
+        return false;
+      }
+
+      await dbAdapter.updateComment(this.id, { toDelete: false });
+      this.toDelete = false;
+
+      // The comment restoration looks like a new comment creation for client
+      // (in some ways), so we need to send some notifications
+
+      const post = await dbAdapter.getPostById(this.postId);
+      const authorCommentsFeed = await dbAdapter.getUserNamedFeed(this.userId, 'Comments');
+
+      await dbAdapter.insertPostIntoFeeds([authorCommentsFeed.intId], post.id);
+
+      const uuids = await dbAdapter.getPostLongIds(getUpdatedShortIds(this.body));
+      uuids.push(...getUpdatedUUIDs(this.body));
+
+      await Promise.all([
+        pubSub.newComment(this),
+        EventService.onCommentRestored(this, restoredBy),
+        notifyBacklinkedNow(this, pubSub, uuids),
+      ]);
+
+      return true;
+    }
+
+    canBeDestroyed() {
+      return !this.toDelete && this.hideType !== Comment.DELETED;
+    }
+
+    async destroy() {
+      return await dbAdapter.deleteComment(this.id, this.postId);
     }
 
     getCreatedBy() {
