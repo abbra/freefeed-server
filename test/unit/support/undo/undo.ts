@@ -22,9 +22,9 @@ describe('Undo entries', () => {
     expect(action, 'to satisfy', {
       subject: entry.subject,
       message: "You deleted Luna's post",
+      messageParams: { authorName },
       token: expect.it('to be a string'),
       expiresInSec: UndoPostDelete.ttlSec,
-      extra: { authorName },
     });
 
     const payload = await verifyUndoToken(action.token, userId, UNDO_POST_DELETE);
@@ -49,9 +49,9 @@ describe('Undo entries', () => {
     expect(action, 'to satisfy', {
       subject: entry.subject,
       message: "You deleted Luna's comment",
+      messageParams: { authorName },
       token: expect.it('to be a string'),
       expiresInSec: UndoPostDelete.ttlSec,
-      extra: { authorName },
     });
 
     const payload = await verifyUndoToken(action.token, userId, UNDO_COMMENT_DELETE);

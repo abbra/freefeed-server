@@ -53,7 +53,7 @@ describe('Undo post actions', () => {
           {
             subject: UNDO_POST_DELETE,
             message: 'You deleted your post',
-            extra: { author: 'luna' },
+            messageParams: { author: 'luna' },
             expiresInSec: UndoPostDelete.ttlSec,
             token: expect.it('to be a string'),
           },
@@ -138,7 +138,7 @@ describe('Undo post actions', () => {
           {
             subject: UNDO_POST_DELETE,
             message: `You deleted luna's post`,
-            extra: { author: 'luna' },
+            messageParams: { author: 'luna' },
             expiresInSec: UndoPostDelete.ttlSec,
             token: expect.it('to be a string'),
           },
@@ -188,7 +188,7 @@ describe('Undo post actions', () => {
           {
             subject: UNDO_COMMENT_DELETE,
             message: 'You deleted your comment',
-            extra: { author: 'luna' },
+            messageParams: { author: 'luna' },
             expiresInSec: UndoCommentDelete.ttlSec,
             token: expect.it('to be a string'),
           },
@@ -274,7 +274,7 @@ describe('Undo post actions', () => {
           {
             subject: UNDO_COMMENT_DELETE,
             message: `You deleted luna's comment`,
-            extra: { author: 'luna' },
+            messageParams: { author: 'luna' },
             expiresInSec: UndoCommentDelete.ttlSec,
             token: expect.it('to be a string'),
           },

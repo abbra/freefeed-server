@@ -7,7 +7,7 @@ import { UUID } from '../types';
 export type SerializedUndoEntry<Subj extends string> = {
   subject: Subj;
   message: string;
-  extra?: object;
+  messageParams?: object;
   token: string;
   expiresInSec: number;
 };
@@ -37,12 +37,12 @@ export abstract class UndoEntry<Subj extends string, Payload extends {} = {}> {
     issuer: UUID,
     tokenPayload: Payload,
     message: string,
-    extra?: object,
+    messageParams?: object,
   ): SerializedUndoEntry<Subj> {
     return {
       subject: this.subject,
       message,
-      extra,
+      messageParams,
       token: this.createToken(issuer, tokenPayload),
       expiresInSec: UndoEntry.ttlSec,
     };
