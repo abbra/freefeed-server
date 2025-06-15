@@ -157,6 +157,8 @@ export class Post {
   userId: UUID;
   body: string;
   destinationFeedIds: number[];
+  feedIntIds: number[];
+  toDelete: boolean;
   constructor(params: {
     userId: UUID;
     body: string;
@@ -164,7 +166,9 @@ export class Post {
     commentsDisabled?: '0' | '1';
   });
   create(): Promise<this>;
-  destroy(destroyedBy?: User): Promise<void>;
+  inactivate(destroyedBy?: User): Promise<boolean>;
+  activate(restoredBy?: User): Promise<boolean>;
+  destroy(): Promise<void>;
   removeLike(user: User): Promise<boolean>;
   getPostedTo(): Promise<Timeline[]>;
   onlyUsersCanSeePost(fromUsers: User[]): Promise<User[]>;
@@ -178,6 +182,7 @@ export class Post {
   getUserSpecificProps(user: User): Promise<PostUserState>;
   linkAttachments(attachments: UUID[]): Promise<void>;
   getComments(): Promise<Comment[]>;
+  isDeleting(): Promise<boolean>;
 }
 
 export class Timeline {
@@ -271,10 +276,13 @@ export class Comment {
   hideType: 0 | 1 | 2 | 3 | 4;
   postId: UUID;
   seqNumber: number;
+  toDelete: boolean;
   static hiddenBody(hideType: number): string;
   constructor(params: { userId: UUID; body: string; postId: UUID });
   create(): Promise<void>;
-  destroy(destroyedBy?: User): Promise<boolean>;
+  inactivate(destroyedBy?: User): Promise<boolean>;
+  activate(restoredBy: User): Promise<boolean>;
+  destroy(): Promise<boolean>;
   getPost(): Promise<Post>;
   removeLike(user: User): Promise<boolean>;
   getCreatedBy(): Promise<User>;
@@ -301,6 +309,8 @@ export class Job<T = unknown> {
   failures: number;
   uniqKey: string | null;
   readonly kept: boolean;
+  createdAt: Date;
+  unlockAt: Date;
   static create<P>(name: string, payload?: P, params?: JobParams): Promise<Job<P>>;
   setUnlockAt(unlockAt?: Date | number, failure?: boolean | null): Promise<void>;
   keep(unlockAt?: Date | number): Promise<void>;

@@ -18,6 +18,7 @@ import {
   inputSchemaRequired,
 } from '../../middlewares';
 import { show as showPost } from '../v2/PostsController';
+import { UndoPostDelete } from '../../../support/undo/post-delete';
 
 import { postCreateInputSchema, postUpdateInputSchema } from './data-schemes';
 
@@ -242,11 +243,23 @@ export default class PostsController {
       // Now we should determine what feeds will remain in the post
       const feedsToRemain = differenceBy(postDestinations, fromFeeds, 'id');
       let postStillAvailable = false;
+      const undo = [];
 
       if (feedsToRemain.length === 0) {
-        // Complete removal
-        await post.destroy(user);
-        monitor.increment('posts.destroys');
+        // Start the complete removal process
+        if (await post.inactivate(user)) {
+          const author = await dbAdapter.getUserById(post.userId);
+          undo.push(
+            new UndoPostDelete(post.id).serialize(
+              user.id,
+              author.id === user.id
+                ? 'You deleted your post'
+                : `You deleted ${author.username}'s post`,
+              { author: author.username },
+            ),
+          );
+          monitor.increment('posts.destroys');
+        }
       } else {
         // Partial removal: remove post only from several feeds
         await post.update({
@@ -258,7 +271,7 @@ export default class PostsController {
         postStillAvailable = await updatedPost.isVisibleFor(user);
       }
 
-      ctx.body = { postStillAvailable };
+      ctx.body = { postStillAvailable, undo };
     },
   ]);
 

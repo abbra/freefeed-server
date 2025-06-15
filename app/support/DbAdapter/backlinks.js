@@ -38,6 +38,7 @@ const backlinksTrait = (superClass) =>
         const visibleComments = await this.database.getCol(
           `select uid from comments where
             uid = any(:allComments) 
+            and not to_delete
             and hide_type = :visible 
             and not (user_id = any(:bannedByViewer))
             `,
@@ -102,7 +103,11 @@ const backlinksTrait = (superClass) =>
 
       const commentsVisibilitySQL = orJoin([
         'c.uid is null',
-        andJoin([pgFormat('c.hide_type=%L', Comment.VISIBLE), notBannedSQLFabric('c')]),
+        andJoin([
+          'not c.to_delete',
+          pgFormat('c.hide_type=%L', Comment.VISIBLE),
+          notBannedSQLFabric('c'),
+        ]),
       ]);
 
       const allFilters = andJoin([

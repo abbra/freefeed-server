@@ -157,7 +157,7 @@ export class DataProvider {
 
     const commentsAsQuads = async function (postUuid: string, postResourceId: string) {
       const comments: CommentsResult = await knex.raw(
-        'SELECT "u"."uid", "u"."username", "u"."screen_name", "c"."uid" AS "comment_uuid", "c"."id" AS "comment_id", "c"."body", "c"."created_at", "c"."updated_at" FROM "users" AS "u" INNER JOIN "comments" AS "c" ON "c"."user_id" = "u"."uid" WHERE "c"."post_id" = ? AND "c"."hide_type" = 0',
+        'SELECT "u"."uid", "u"."username", "u"."screen_name", "c"."uid" AS "comment_uuid", "c"."id" AS "comment_id", "c"."body", "c"."created_at", "c"."updated_at" FROM "users" AS "u" INNER JOIN "comments" AS "c" ON "c"."user_id" = "u"."uid" WHERE "c"."post_id" = ? AND not "c"."to_delete" AND "c"."hide_type" = 0',
         [postUuid],
       );
       const cPromises = comments.rows.map(async (comment) => {

@@ -26,7 +26,7 @@ describe('EventService: action over inaccessible post', () => {
     });
 
     it(`should create notification for Mars when Luna deletes Mars'es comment`, async () => {
-      await marsComment.destroy(luna);
+      await marsComment.inactivate(luna);
       const events = await dbAdapter.getUserEvents(mars.intId, [EVENT_TYPES.COMMENT_MODERATED]);
       expect(events, 'to have length', 1);
     });

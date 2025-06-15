@@ -5,7 +5,8 @@ import { NotAuthorizedException } from '../../support/exceptions';
 /**
  * Middleware that monitors requests count and duration
  *
- * @param {string|{timer: string, requests: string}} monitorName
+ * @typedef {string|{timer: string, requests: string}} MonitorName
+ * @param {MonitorName | (ctx: import('koa').Context) => MonitorName} monitorName
  * @param {typeof monitorDog} monitor
  */
 export function monitored(monitorName, tags = {}, monitor = monitorDog) {
@@ -18,6 +19,10 @@ export function monitored(monitorName, tags = {}, monitor = monitorDog) {
     ctx.state.isMonitored = true;
 
     let timerName, requestsName;
+
+    if (typeof monitorName === 'function') {
+      monitorName = monitorName(ctx);
+    }
 
     if (typeof monitorName === 'string') {
       timerName = `${monitorName}-time`;

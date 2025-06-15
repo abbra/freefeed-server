@@ -492,7 +492,7 @@ export default class PubsubListener {
   onCommentNew = async ({ commentId }) => {
     const comment = await dbAdapter.getCommentById(commentId);
 
-    if (!comment) {
+    if (!comment || comment.to_delete) {
       // might be outdated event
       return;
     }
@@ -510,6 +510,11 @@ export default class PubsubListener {
 
   onCommentUpdate = async (data) => {
     const comment = await dbAdapter.getCommentById(data.commentId);
+
+    if (!comment || comment.to_delete) {
+      return;
+    }
+
     const post = await dbAdapter.getPostById(comment.postId);
     const json = await serializeCommentFull(comment);
 
@@ -906,13 +911,7 @@ export default class PubsubListener {
  * @return {Promise<string[]>}
  */
 export async function getRoomsOfPost(post) {
-  if (!post) {
-    return [];
-  }
-
-  const author = await dbAdapter.getUserById(post.userId);
-
-  if (!author.isActive) {
+  if (!post || (await post.isDeleting())) {
     return [];
   }
 

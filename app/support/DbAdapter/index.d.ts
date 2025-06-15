@@ -17,7 +17,7 @@ import { T_EVENT_TYPE } from '../EventTypes';
 import { AdminAction, AdminRole } from '../../models/admins';
 import { InvitationCreationCriterion } from '../types/invitations';
 import { RefusalReason } from '../../models/invitations';
-import { List } from '../open-lists';
+import { List, ListLike } from '../open-lists';
 
 import { type UserStats } from './user-stats-dynamic';
 import {
@@ -213,10 +213,27 @@ export class DbAdapter {
   getPostsByIds(ids: UUID[]): Promise<Post[]>;
   getPostsByIntIds(ids: number[]): Promise<Post[]>;
   filterSuspendedPosts(ids: UUID[]): Promise<UUID[]>;
+  withdrawPostFromFeeds(feedIntIds: number[], postUUID: UUID): Promise<void>;
   withdrawPostFromDestFeed(feedIntId: number, postUUID: UUID): Promise<boolean>;
   getPostsPresentsInTimeline(postIds: UUID[], feedIntId: number): Promise<UUID[]>;
   getUserPostsCount(userId: UUID): Promise<number>;
-  getTimelinePostsIds(timelineIntIds?: number[], viewerId?: UUID, params?: object): Promise<UUID[]>;
+  getTimelinePostsIds(
+    timelineIntIds?: number[],
+    viewerId?: UUID | null,
+    params?: Partial<{
+      limit: number;
+      offset: number;
+      sort: 'created' | 'bumped';
+      withLocalBumps: boolean;
+      withoutDirects: boolean;
+      createdBefore: ISO8601DateTimeString | null;
+      createdAfter: ISO8601DateTimeString | null;
+      activityFeedIds: number[];
+      activityOnPropagable: boolean;
+      activityHideIds: number[];
+      authorsIds: ListLike<UUID>;
+    }>,
+  ): Promise<UUID[]>;
 
   // Likes
   unlikePost(postId: UUID, userId: UUID): Promise<boolean>;
@@ -254,6 +271,17 @@ export class DbAdapter {
   getAllUserNamedFeed(userId: UUID, feedName: string): Promise<Timeline[]>;
   getUserNamedFeed(userId: UUID, feedName: string): Promise<Nullable<Timeline>>;
   getTimelinesByIntIds(intIds: number[]): Promise<Timeline[]>;
+
+  search(
+    query: string,
+    options?: Partial<{
+      viewerId: UUID | null;
+      limit: number;
+      offset: number;
+      sort: 'bumped' | 'created';
+      maxQueryComplexity: number;
+    }>,
+  ): Promise<UUID[]>;
 
   // Visibility
   postsVisibilitySQL(

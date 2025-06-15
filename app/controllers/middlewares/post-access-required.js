@@ -28,9 +28,8 @@ export function postAccessRequired(acceptShortId = false) {
     }
 
     const post = await dbAdapter.getPostById(postId);
-    const author = post ? await dbAdapter.getUserById(post.userId) : null;
 
-    if (!post || !author.isActive) {
+    if (!post || (await post.isDeleting())) {
       throw notFound();
     }
 
