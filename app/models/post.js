@@ -378,7 +378,7 @@ export function addModel(dbAdapter) {
         // Create a 'post restored' notification
         restoredBy ? EventService.onPostRestored(this, restoredBy, { groups }) : null,
         // Send a realtime event
-        pubSub.newPost(this.id),
+        pubSub.restorePost(this.id),
         // Send a realtime event about linked posts update
         notifyBacklinkedNow(this, pubSub, uuids),
       ]);

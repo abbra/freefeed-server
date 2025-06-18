@@ -277,7 +277,7 @@ export function addModel(dbAdapter) {
       uuids.push(...getUpdatedUUIDs(this.body));
 
       await Promise.all([
-        pubSub.newComment(this),
+        pubSub.restoreComment(this.id),
         EventService.onCommentRestored(this, restoredBy),
         notifyBacklinkedNow(this, pubSub, uuids),
       ]);

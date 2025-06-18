@@ -3,6 +3,7 @@ export const eventNames = {
   POST_CREATED: 'post:new',
   POST_UPDATED: 'post:update',
   POST_DESTROYED: 'post:destroy',
+  POST_RESTORED: 'post:restore',
   POST_HIDDEN: 'post:hide',
   POST_UNHIDDEN: 'post:unhide',
   POST_SAVED: 'post:save',
@@ -10,6 +11,7 @@ export const eventNames = {
   COMMENT_CREATED: 'comment:new',
   COMMENT_UPDATED: 'comment:update',
   COMMENT_DESTROYED: 'comment:destroy',
+  COMMENT_RESTORED: 'comment:restore',
   LIKE_ADDED: 'like:new',
   LIKE_REMOVED: 'like:remove',
   COMMENT_LIKE_ADDED: 'comment_like:new',
@@ -50,6 +52,10 @@ export class PubSubAdapter {
     return this.publish(eventNames.POST_DESTROYED, payload);
   }
 
+  postRestored(payload: string) {
+    return this.publish(eventNames.POST_RESTORED, payload);
+  }
+
   postHidden(payload: string) {
     return this.publish(eventNames.POST_HIDDEN, payload);
   }
@@ -78,6 +84,10 @@ export class PubSubAdapter {
 
   commentDestroyed(payload: string) {
     return this.publish(eventNames.COMMENT_DESTROYED, payload);
+  }
+
+  commentRestored(payload: string) {
+    return this.publish(eventNames.COMMENT_RESTORED, payload);
   }
 
   ///////////////////////////////////////////////////

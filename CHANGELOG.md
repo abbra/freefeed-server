@@ -29,6 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     }`, and for the comment deletion it returns `{ "commentId": "COMMENT ID" }`.
   - For now, only the post and comment deletion can be undone (with 'postDelete'
     and 'commentDelete' subjects), but the plan is to add more.
+  - When the post/comment deletion is undone, the
+    'post:restore'/'comment:restore' realtime messages are sent. Their payloads
+    are the same as for the '*:new' messages.
 - The User model now includes the `firstInteractionAt` field. This field tracks
   when a user interacts with the platform (specifically, when they load their
   home feed) for the first time.

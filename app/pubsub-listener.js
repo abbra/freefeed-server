@@ -218,17 +218,19 @@ export default class PubsubListener {
     const messageRoutes = {
       [eventNames.USER_UPDATE]: this.onUserUpdate,
 
-      [eventNames.POST_CREATED]: this.onPostNew,
+      [eventNames.POST_CREATED]: this.makeOnPostNew(eventNames.POST_CREATED),
       [eventNames.POST_UPDATED]: this.onPostUpdate,
       [eventNames.POST_DESTROYED]: this.onPostDestroy,
+      [eventNames.POST_RESTORED]: this.makeOnPostNew(eventNames.POST_RESTORED),
       [eventNames.POST_HIDDEN]: this.onPostHide,
       [eventNames.POST_UNHIDDEN]: this.onPostUnhide,
       [eventNames.POST_SAVED]: this.onPostSave,
       [eventNames.POST_UNSAVED]: this.onPostUnsave,
 
-      [eventNames.COMMENT_CREATED]: this.onCommentNew,
+      [eventNames.COMMENT_CREATED]: this.makeOnCommentNew(eventNames.COMMENT_CREATED),
       [eventNames.COMMENT_UPDATED]: this.onCommentUpdate,
       [eventNames.COMMENT_DESTROYED]: this.onCommentDestroy,
+      [eventNames.COMMENT_RESTORED]: this.makeOnCommentNew(eventNames.COMMENT_RESTORED),
 
       [eventNames.LIKE_ADDED]: this.onLikeNew,
       [eventNames.LIKE_REMOVED]: this.onLikeRemove,
@@ -441,13 +443,14 @@ export default class PubsubListener {
     await this.broadcastMessage(rooms, type, json, { onlyForUsers: List.from(onlyForUsers) });
   };
 
-  onPostNew = async ({ postId }) => {
-    const post = await dbAdapter.getPostById(postId);
-    const json = { postId };
-    const type = eventNames.POST_CREATED;
-    const rooms = await getRoomsOfPost(post);
-    await this.broadcastMessage(rooms, type, json, { post, emitter: this._postEventEmitter });
-  };
+  makeOnPostNew =
+    (type) =>
+    async ({ postId }) => {
+      const post = await dbAdapter.getPostById(postId);
+      const json = { postId };
+      const rooms = await getRoomsOfPost(post);
+      await this.broadcastMessage(rooms, type, json, { post, emitter: this._postEventEmitter });
+    };
 
   onPostUpdate = async ({
     postId,
@@ -489,24 +492,25 @@ export default class PubsubListener {
     await this.broadcastMessage(rooms, eventNames.POST_UPDATED, { postId }, broadcastOptions);
   };
 
-  onCommentNew = async ({ commentId }) => {
-    const comment = await dbAdapter.getCommentById(commentId);
+  makeOnCommentNew =
+    (type) =>
+    async ({ commentId }) => {
+      const comment = await dbAdapter.getCommentById(commentId);
 
-    if (!comment || comment.to_delete) {
-      // might be outdated event
-      return;
-    }
+      if (!comment || comment.toDelete) {
+        // might be outdated event
+        return;
+      }
 
-    const post = await dbAdapter.getPostById(comment.postId);
-    const json = await serializeCommentFull(comment);
+      const post = await dbAdapter.getPostById(comment.postId);
+      const json = await serializeCommentFull(comment);
 
-    const type = eventNames.COMMENT_CREATED;
-    const rooms = await getRoomsOfPost(post);
-    await this.broadcastMessage(rooms, type, json, {
-      post,
-      emitter: this._commentLikeEventEmitter,
-    });
-  };
+      const rooms = await getRoomsOfPost(post);
+      await this.broadcastMessage(rooms, type, json, {
+        post,
+        emitter: this._commentLikeEventEmitter,
+      });
+    };
 
   onCommentUpdate = async (data) => {
     const comment = await dbAdapter.getCommentById(data.commentId);

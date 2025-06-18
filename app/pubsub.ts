@@ -59,6 +59,11 @@ export default class pubSub {
     await this.publisher.postDestroyed(payload);
   }
 
+  async restorePost(postId: UUID) {
+    const payload = JSON.stringify({ postId });
+    await this.publisher.postRestored(payload);
+  }
+
   async updatePost(
     postId: UUID,
     {
@@ -79,6 +84,11 @@ export default class pubSub {
   async destroyComment(commentId: UUID, postId: UUID, rooms: string) {
     const payload = JSON.stringify({ postId, commentId, rooms });
     await this.publisher.commentDestroyed(payload);
+  }
+
+  async restoreComment(commentId: UUID) {
+    const payload = JSON.stringify({ commentId });
+    await this.publisher.commentRestored(payload);
   }
 
   async updateComment(commentId: UUID) {

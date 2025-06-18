@@ -92,7 +92,7 @@ describe('Undo post actions', () => {
         authHeaders(luna),
       );
       expect(resp, 'to satisfy', { __httpCode: 200, postId: post.id });
-      expect(await rtSession.haveCollected(eventNames.POST_CREATED), 'to satisfy', {
+      expect(await rtSession.haveCollected(eventNames.POST_RESTORED), 'to satisfy', {
         posts: { id: post.id },
       });
 
@@ -228,7 +228,7 @@ describe('Undo post actions', () => {
         authHeaders(luna),
       );
       expect(resp, 'to satisfy', { __httpCode: 200, commentId: comment.id });
-      expect(await rtSession.haveCollected(eventNames.COMMENT_CREATED), 'to satisfy', {
+      expect(await rtSession.haveCollected(eventNames.COMMENT_RESTORED), 'to satisfy', {
         comments: { id: comment.id },
       });
 
