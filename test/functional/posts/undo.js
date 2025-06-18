@@ -91,7 +91,7 @@ describe('Undo post actions', () => {
         { token },
         authHeaders(luna),
       );
-      expect(resp, 'to satisfy', { __httpCode: 200, postId: post.id });
+      expect(resp, 'to satisfy', { __httpCode: 200, posts: { id: post.id, body: post.body } });
       expect(await rtSession.haveCollected(eventNames.POST_RESTORED), 'to satisfy', {
         posts: { id: post.id },
       });
@@ -160,7 +160,7 @@ describe('Undo post actions', () => {
         { token },
         authHeaders(mars),
       );
-      expect(resp, 'to satisfy', { __httpCode: 200, postId: post.id });
+      expect(resp, 'to satisfy', { __httpCode: 200, posts: { id: post.id, body: post.body } });
 
       // Post should be available again
       expect(await isPostAvailable(post.id), 'to be true');
@@ -227,7 +227,10 @@ describe('Undo post actions', () => {
         { token },
         authHeaders(luna),
       );
-      expect(resp, 'to satisfy', { __httpCode: 200, commentId: comment.id });
+      expect(resp, 'to satisfy', {
+        __httpCode: 200,
+        comments: { id: comment.id, body: comment.body },
+      });
       expect(await rtSession.haveCollected(eventNames.COMMENT_RESTORED), 'to satisfy', {
         comments: { id: comment.id },
       });
@@ -296,7 +299,10 @@ describe('Undo post actions', () => {
         { token },
         authHeaders(mars),
       );
-      expect(resp, 'to satisfy', { __httpCode: 200, commentId: comment.id });
+      expect(resp, 'to satisfy', {
+        __httpCode: 200,
+        comments: { id: comment.id, body: comment.body },
+      });
 
       // Comment should be available again
       expect(await isCommentAvailable(comment.id), 'to be true');

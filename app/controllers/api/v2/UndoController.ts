@@ -13,6 +13,8 @@ import { verifyUndoToken } from '../../../support/undo/entry';
 import { authRequired, inputSchemaRequired, monitored } from '../../middlewares';
 import { UNDO_POST_DELETE } from '../../../support/undo/post-delete';
 import { UNDO_COMMENT_DELETE } from '../../../support/undo/comment-delete';
+import { serializeSinglePost } from '../../../serializers/v2/post';
+import { serializeCommentFull } from '../../../serializers/v2/comment';
 
 const undoInputSchema = z.object({ token: z.string().jwt() });
 type UndoInput = z.infer<typeof undoInputSchema>;
@@ -21,8 +23,8 @@ export const undo = compose([
   authRequired(),
   inputSchemaRequired(undoInputSchema),
   monitored((ctx) => `undo:${ctx.params.subject}`),
-  async (ctx: Ctx<{ user: User }>) => {
-    const { user } = ctx.state;
+  async (ctx: Ctx<{ user: User; apiVersion: number }>) => {
+    const { user, apiVersion } = ctx.state;
     const { token } = ctx.request.body as UndoInput;
     const { subject } = ctx.params as { subject: string };
 
@@ -44,7 +46,7 @@ export const undo = compose([
       }
 
       await post.activate(user);
-      ctx.body = { postId: post.id };
+      ctx.body = await serializeSinglePost(post.id, user.id, { apiVersion });
     } else if (subject === UNDO_COMMENT_DELETE) {
       const comment = await dbAdapter.getCommentById(data.commentId);
 
@@ -53,7 +55,7 @@ export const undo = compose([
       }
 
       await comment.activate(user);
-      ctx.body = { commentId: comment.id };
+      ctx.body = await serializeCommentFull(comment, user.id);
     } else {
       throw new BadRequestException(`Unknown undo subject: ${subject}`);
     }

@@ -24,9 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     the parameters are `{ author: string|null }` with the post/comment author's
     username (it can be `null` for archived or hidden comments).
   - New API endpoint `POST /vN/undo/:subject` allows undoing actions. The
-    request body is just the `{ "token": "UNDO TOKEN" }`. The reply is
-    subject-dependent, for the post deletion it returns `{ "postId": "POST ID"
-    }`, and for the comment deletion it returns `{ "commentId": "COMMENT ID" }`.
+    request body is just the `{ "token": "UNDO TOKEN" }`.
+    
+    The reply is subject-dependent, for the post/comment deletion it returns the
+    same response as for the get-by-id requests.
   - For now, only the post and comment deletion can be undone (with 'postDelete'
     and 'commentDelete' subjects), but the plan is to add more.
   - When the post/comment deletion is undone, the
