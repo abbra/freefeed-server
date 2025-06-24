@@ -8,6 +8,7 @@ import mime, { lookup } from 'mime-types';
 import mv from 'mv';
 import Raven from 'raven';
 import monitor from 'monitor-dog';
+import { uniq } from 'lodash';
 
 import { s3Client } from '../support/s3';
 import { sanitizeMediaMetadata, SANITIZE_NONE, SANITIZE_VERSION } from '../support/sanitize-media';
@@ -375,7 +376,7 @@ export function addModel(dbAdapter) {
         await this.deleteFiles(pathsToDelete);
       } finally {
         // Remove the rest of local files
-        const paths = [originalPath, ...Object.values(files).map(({ path }) => path)];
+        const paths = uniq([originalPath, ...Object.values(files).map(({ path }) => path)]);
         await Promise.all(paths.map((path) => unlinkIfExists(path)));
       }
     }

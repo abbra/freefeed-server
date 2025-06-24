@@ -143,7 +143,11 @@ const searchTrait = (superClass) =>
         const notBannedSQLFabric = await this.notBannedActionsSQLFabric(viewerId);
         commentsRestrictionSQL = orJoin([
           'c.id is null',
-          andJoin([pgFormat('c.hide_type=%L', Comment.VISIBLE), notBannedSQLFabric('c')]),
+          andJoin([
+            'not c.to_delete',
+            pgFormat('c.hide_type=%L', Comment.VISIBLE),
+            notBannedSQLFabric('c'),
+          ]),
         ]);
       }
 

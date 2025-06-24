@@ -1,12 +1,15 @@
 import config from 'config';
 
 import { JobManager } from '../models';
+import { initHandlers as initWelcomeDirectsHandlers } from '../support/welcome-directs';
 
 import { initHandlers as initPeriodicHandlers } from './periodic';
 import { initHandlers as initUserGoneHandlers } from './user-gone';
 import { initHandlers as initAttachmentsSanitizeHandlers } from './attachments-sanitize';
 import { initHandlers as initAttachmentPrepareVideoHandlers } from './attachment-prepare-video';
 import { initHandlers as initAttachmentRecreatePreviewsHandlers } from './attachment-recreate-previews';
+import { initHandlers as initDeletePostsHandlers } from './delete-post';
+import { initHandlers as initDeleteCommentsHandlers } from './delete-comment';
 import { keepJobLockedMiddleware, sentryMiddleware } from './middlewares';
 
 export async function initJobProcessing(app) {
@@ -18,6 +21,9 @@ export async function initJobProcessing(app) {
       initAttachmentsSanitizeHandlers,
       initAttachmentPrepareVideoHandlers,
       initAttachmentRecreatePreviewsHandlers,
+      initWelcomeDirectsHandlers,
+      initDeletePostsHandlers,
+      initDeleteCommentsHandlers,
     ].map((h) => h(jobManager, app)),
   );
 

@@ -13,6 +13,8 @@ import {
   notifyBacklinkedLater,
   notifyBacklinkedNow,
 } from '../support/backlinks';
+import { List } from '../support/open-lists';
+import { schedulePostDeletion } from '../jobs/delete-post';
 
 import {
   HOMEFEED_MODE_FRIENDS_ONLY,
@@ -24,7 +26,6 @@ import {
  * @typedef { import("../models").User } User
  * @typedef { import("../models").Timeline } Timeline
  * @typedef { import("../support/DbAdapter").DbAdapter } DbAdapter
- * @typedef { import("../support/open-lists").List } List
  */
 
 /**
@@ -48,6 +49,7 @@ export function addModel(dbAdapter) {
     isPrivate;
     isProtected;
     isPropagable;
+    toDelete;
 
     constructor(params) {
       this.id = params.id;
@@ -66,6 +68,7 @@ export function addModel(dbAdapter) {
       this.isPrivate = params.isPrivate || '0';
       this.isProtected = params.isProtected || '0';
       this.isPropagable = params.isPropagable || '0';
+      this.toDelete = params.toDelete || false;
 
       if (params.friendfeedUrl) {
         this.friendfeedUrl = params.friendfeedUrl;
@@ -310,30 +313,90 @@ export function addModel(dbAdapter) {
       return this;
     }
 
-    async destroy(destroyedBy = null) {
+    /**
+     * Inactivate post: mark it to be deleted, but don't actually delete it.
+     *
+     * @param {User} [deletedBy]
+     * @return {Promise<boolean>}
+     */
+    async inactivate(deletedBy) {
+      if (this.toDelete) {
+        return false;
+      }
+
       const uuids = await dbAdapter.getPostLongIds(getUpdatedShortIds(this.body));
       uuids.push(...getUpdatedUUIDs(this.body));
 
-      const [realtimeRooms, comments, groups, notifyBacklinked, onlyForUsers] = await Promise.all([
+      const [realtimeRooms, groups, notifyBacklinked, onlyForUsers] = await Promise.all([
         getRoomsOfPost(this),
-        this.getComments(),
         this.getGroupsPostedTo(),
         notifyBacklinkedLater(this, pubSub, uuids),
         // We need to save the post viewers before destroying the post
         this.usersCanSee(),
       ]);
 
-      // remove all comments
-      await Promise.all(comments.map((comment) => comment.destroy()));
-
-      await dbAdapter.withdrawPostFromFeeds(this.feedIntIds, this.id);
-      await dbAdapter.deletePost(this.id);
+      await dbAdapter.updatePost(this.id, { toDelete: true });
+      this.toDelete = true;
 
       await Promise.all([
+        // Send a realtime event about post deletion
         pubSub.destroyPost(this.id, realtimeRooms, onlyForUsers),
-        destroyedBy ? EventService.onPostDestroyed(this, destroyedBy, { groups }) : null,
+        // Create a 'post deleted by' notification
+        deletedBy ? EventService.onPostDestroyed(this, deletedBy, { groups }) : null,
+        // Send a realtime event about linked posts update
         notifyBacklinked(),
+        // Schedule post deletion
+        schedulePostDeletion(this.id),
       ]);
+
+      return true;
+    }
+
+    /**
+     * Restore inactivated post
+     *
+     * @param {User} [restoredBy]
+     * @returns {Promise<boolean>}
+     */
+    async activate(restoredBy) {
+      if (!this.toDelete) {
+        return false;
+      }
+
+      await dbAdapter.updatePost(this.id, { toDelete: false });
+      this.toDelete = false;
+
+      // The post restoration looks like a new post creation for client (in some
+      // ways), so we need to send some notifications
+
+      const groups = await this.getGroupsPostedTo();
+
+      const uuids = await dbAdapter.getPostLongIds(getUpdatedShortIds(this.body));
+      uuids.push(...getUpdatedUUIDs(this.body));
+
+      await Promise.all([
+        // Create a 'post restored' notification
+        restoredBy ? EventService.onPostRestored(this, restoredBy, { groups }) : null,
+        // Send a realtime event
+        pubSub.restorePost(this.id),
+        // Send a realtime event about linked posts update
+        notifyBacklinkedNow(this, pubSub, uuids),
+      ]);
+
+      return true;
+    }
+
+    /**
+     * Actually destroy the post
+     *
+     * @return {Promise<void>}
+     */
+    async destroy() {
+      const comments = await this.getComments();
+      // remove all comments
+      await Promise.all(comments.map((comment) => comment.destroy()));
+      await dbAdapter.withdrawPostFromFeeds(this.feedIntIds, this.id);
+      await dbAdapter.deletePostRecord(this.id);
     }
 
     getShortId() {
@@ -401,7 +464,7 @@ export function addModel(dbAdapter) {
     /**
      * Return all groups post posted to or empty array
      *
-     * @returns {Array.<User>}
+     * @returns {Promise<Group[]>}
      */
     async getGroupsPostedTo() {
       return await dbAdapter.getPostGroups(this.id);
@@ -833,10 +896,26 @@ export function addModel(dbAdapter) {
     }
 
     /**
+     * Post still exists in the database, but is treated as deleted in any way.
+     * It can be restored in the future.
+     *
+     * @returns {Promise<boolean>}
+     */
+    async isDeleting() {
+      if (this.toDelete) {
+        return true;
+      }
+
+      const author = await dbAdapter.getUserById(this.userId);
+      return !author.isActive;
+    }
+
+    /**
      * isVisibleFor checks visibility of the post for the given viewer
      * or for anonymous if viewer is null.
      *
      *  Viewer CAN NOT see post if:
+     * - post is being deleted or
      * - viewer is anonymous and post is not public or
      * - viewer is authorized and
      *   - post author banned viewer or was banned by viewer or
@@ -877,6 +956,10 @@ export function addModel(dbAdapter) {
      * @returns {Promise<List<import('../support/types').UUID>>}
      */
     async usersCanSee() {
+      if (await this.isDeleting()) {
+        return List.empty();
+      }
+
       return await dbAdapter.getUsersWhoCanSeePost({
         authorId: this.userId,
         destFeeds: this.destinationFeedIds,

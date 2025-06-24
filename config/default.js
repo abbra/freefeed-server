@@ -182,6 +182,7 @@ config.attachments = {
   // Use https://imgproxy.net/ to dynamically create image thumbnails
   useImgProxy: false,
   previews: {
+    imagePreviewQuality: 90,
     imagePreviewAreas: {
       p1: 120_000,
       p2: 400_000,
@@ -557,6 +558,10 @@ config.dailyMails = {
     enabled: true,
     sendAt: '21:45', // 'HH:MM' in config.ianaTimeZone
   },
+};
+
+config.undo = {
+  undoInterval: 'PT5M',
 };
 
 module.exports = config;

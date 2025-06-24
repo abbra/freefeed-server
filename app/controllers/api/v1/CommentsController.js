@@ -21,6 +21,7 @@ import {
   commentAccessRequired,
 } from '../../middlewares';
 import { postMayUpdateForUser } from '../../middlewares/post-may-update-for-user';
+import { UndoCommentDelete } from '../../../support/undo/comment-delete';
 
 import { commentCreateInputSchema, commentUpdateInputSchema } from './data-schemes';
 import { getCommentsByIdsInputSchema } from './data-schemes/comments';
@@ -101,10 +102,28 @@ export const destroy = compose([
       throw new ForbiddenException("You don't have permission to delete this comment");
     }
 
-    await comment.destroy(user);
-    monitor.increment('comments.destroys');
+    const undo = [];
 
-    ctx.body = {};
+    if (await comment.inactivate(user)) {
+      const author = comment.userId ? await dbAdapter.getUserById(comment.userId) : null;
+      let message = 'You delete hidden comment';
+
+      if (author?.id === user.id) {
+        message = 'You deleted your comment';
+      } else if (author) {
+        message = `You deleted ${author.username}'s comment`;
+      }
+
+      undo.push(
+        new UndoCommentDelete(comment.id).serialize(user.id, message, {
+          author: author?.username ?? null,
+        }),
+      );
+
+      monitor.increment('comments.destroys');
+    }
+
+    ctx.body = { undo };
   },
 ]);
 

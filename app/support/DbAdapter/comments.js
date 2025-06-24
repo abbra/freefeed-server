@@ -279,6 +279,7 @@ const COMMENT_COLUMNS = {
   postId: 'post_id',
   userId: 'user_id',
   hideType: 'hide_type',
+  toDelete: 'to_delete',
 };
 
 const COMMENT_COLUMNS_MAPPING = {
@@ -305,6 +306,7 @@ export const COMMENT_FIELDS = {
   post_id: 'postId',
   hide_type: 'hideType',
   seq_number: 'seqNumber',
+  to_delete: 'toDelete',
 };
 
 const COMMENT_FIELDS_MAPPING = {

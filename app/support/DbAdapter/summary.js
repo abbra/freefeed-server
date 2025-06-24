@@ -45,7 +45,7 @@ const summaryTrait = (superClass) =>
             : '';
       }
 
-      privacyFilter += ' AND u.gone_status is null';
+      privacyFilter += ' AND u.gone_status is null AND not posts.to_delete ';
 
       let postSourceCondition = `posts.feed_ids && '{${timelineIntIds.join(',')}}'`;
 

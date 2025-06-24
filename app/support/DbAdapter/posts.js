@@ -144,7 +144,7 @@ const postsTrait = (superClass) =>
           posts p
           join users u on p.user_id = u.uid
         where
-          p.uid = any(:postIds) and u.gone_status is null`,
+          p.uid = any(:postIds) and u.gone_status is null and not p.to_delete`,
         { postIds },
       );
     }
@@ -161,7 +161,7 @@ const postsTrait = (superClass) =>
       return this.database('posts').where('uid', postId).update({ bumped_at });
     }
 
-    async deletePost(postId) {
+    async deletePostRecord(postId) {
       await this.database('posts').where({ uid: postId }).delete();
       return await Promise.all([this._deletePostLikes(postId), this._deletePostComments(postId)]);
     }
@@ -223,7 +223,7 @@ const postsTrait = (superClass) =>
 
         // Check for another comments from this commentator
         const { rows } = await trx.raw(
-          `select 1 from comments where post_id = :postId and user_id = :commentatorId limit 1`,
+          `select 1 from comments where not to_delete and post_id = :postId and user_id = :commentatorId limit 1`,
           { postId, commentatorId },
         );
 
@@ -350,6 +350,7 @@ const postsTrait = (superClass) =>
         ${bannedUsersFilter}
         ${usersWhoBannedMeFilter}
         and authors.gone_status is null
+        and not posts.to_delete
       ORDER BY "posts"."bumped_at" DESC
       OFFSET ${offset} LIMIT ${limit}`;
 
@@ -505,6 +506,7 @@ const POST_COLUMNS = {
   isPropagable: 'is_propagable',
   feedIntIds: 'feed_ids',
   destinationFeedIds: 'destination_feed_ids',
+  toDelete: 'to_delete',
 };
 
 const POST_COLUMNS_MAPPING = {
@@ -562,6 +564,7 @@ export const POST_FIELDS = {
   is_protected: 'isProtected',
   is_propagable: 'isPropagable',
   friendfeed_url: 'friendfeedUrl',
+  to_delete: 'toDelete',
 };
 
 const POST_FIELDS_MAPPING = {

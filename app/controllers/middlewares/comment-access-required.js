@@ -56,7 +56,7 @@ export function commentAccessRequired({ mustBeVisible, bannedUnlockParam = null 
       );
     }
 
-    if (!comment) {
+    if (!comment || comment.toDelete) {
       throw new NotFoundException("Can't find comment");
     }
 

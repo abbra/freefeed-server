@@ -17,6 +17,7 @@ import { initObject, prepareModelPayload } from './utils';
  * @typedef {import('../types').UUID} UUID
  * @typedef {import('../types').ISO8601DateTimeString} ISO8601DateTimeString
  * @typedef {import('../types').ISO8601DurationString} ISO8601DurationString
+ * @typedef {import('.').DbAdapter} DbAdapter
  */
 
 export const notificationsDigestRecipientSchema = z
@@ -712,6 +713,21 @@ const usersTrait = (superClass) =>
         { sparseQuery: `%${query.split('').join('%')}%`, query },
       );
     }
+
+    /**
+     * @param {UUID} userId
+     * @returns {Promise<Date|null>}
+     * @this {DbAdapter}
+     */
+    async setFirstUserInteraction(userId) {
+      const pool = await this.getSlonik();
+      const tSql = sql.type(z.object({ first_interaction_at: z.date() }));
+      return await pool.maybeOneFirst(
+        tSql`update users set first_interaction_at = now() 
+          where first_interaction_at is null and type = 'user' and uid = ${userId}
+          returning first_interaction_at`,
+      );
+    }
   };
 
 export default usersTrait;
@@ -736,6 +752,7 @@ const USER_COLUMNS = {
   profilePictureUuid: 'profile_picture_uuid',
   createdAt: 'created_at',
   updatedAt: 'updated_at',
+  firstInteractionAt: 'first_interaction_at',
   directsReadAt: 'directs_read_at',
   isPrivate: 'is_private',
   isProtected: 'is_protected',
@@ -795,6 +812,7 @@ const USER_FIELDS = {
   profile_picture_uuid: 'profilePictureUuid',
   created_at: 'createdAt',
   updated_at: 'updatedAt',
+  first_interaction_at: 'firstInteractionAt',
   directs_read_at: 'directsReadAt',
   notifications_read_at: 'notificationsReadAt',
   is_private: 'isPrivate',

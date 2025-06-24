@@ -43,6 +43,7 @@ export class User {
   invitationId: number | null;
   goneStatus: keyof typeof GONE_NAMES | null;
   goneStatusName: string;
+  firstInteractionAt: Date | null;
   constructor(params: unknown);
   create(): Promise<this>;
   update(params: unknown): Promise<void>;
@@ -65,6 +66,7 @@ export class User {
   isValidEmail(): Promise<boolean>;
   static validateEmail(email: string | null): Promise<void>;
   newComment(params: { body: string; postId: UUID }): Comment;
+  getFriends(): Promise<(User | Group)[]>;
 
   getGenericTimeline(name: (typeof User.feedNames)[number]): Promise<Timeline | null>;
   getGenericTimelineId(name: (typeof User.feedNames)[number]): Promise<UUID | null>;
@@ -111,6 +113,8 @@ export class User {
     subscriptions: number;
   }>;
   notifyOfAllCommentsOfPost(post: Post, enabled: boolean): Promise<void>;
+
+  setFirstInteraction(): Promise<boolean>;
 }
 
 export class Group {
@@ -137,6 +141,8 @@ export class Group {
 
   enableBansFor(userId: UUID, initiatorId?: UUID): Promise<void>;
   disableBansFor(userId: UUID, initiatorId?: UUID): Promise<void>;
+
+  setFirstInteraction(): Promise<boolean>;
 }
 
 type PostUserState = {
@@ -151,6 +157,8 @@ export class Post {
   userId: UUID;
   body: string;
   destinationFeedIds: number[];
+  feedIntIds: number[];
+  toDelete: boolean;
   constructor(params: {
     userId: UUID;
     body: string;
@@ -158,7 +166,9 @@ export class Post {
     commentsDisabled?: '0' | '1';
   });
   create(): Promise<this>;
-  destroy(destroyedBy?: User): Promise<void>;
+  inactivate(destroyedBy?: User): Promise<boolean>;
+  activate(restoredBy?: User): Promise<boolean>;
+  destroy(): Promise<void>;
   removeLike(user: User): Promise<boolean>;
   getPostedTo(): Promise<Timeline[]>;
   onlyUsersCanSeePost(fromUsers: User[]): Promise<User[]>;
@@ -171,6 +181,8 @@ export class Post {
   getCommentsListeners(): Promise<UUID[]>;
   getUserSpecificProps(user: User): Promise<PostUserState>;
   linkAttachments(attachments: UUID[]): Promise<void>;
+  getComments(): Promise<Comment[]>;
+  isDeleting(): Promise<boolean>;
 }
 
 export class Timeline {
@@ -264,10 +276,13 @@ export class Comment {
   hideType: 0 | 1 | 2 | 3 | 4;
   postId: UUID;
   seqNumber: number;
+  toDelete: boolean;
   static hiddenBody(hideType: number): string;
   constructor(params: { userId: UUID; body: string; postId: UUID });
   create(): Promise<void>;
-  destroy(destroyedBy?: User): Promise<boolean>;
+  inactivate(destroyedBy?: User): Promise<boolean>;
+  activate(restoredBy: User): Promise<boolean>;
+  destroy(): Promise<boolean>;
   getPost(): Promise<Post>;
   removeLike(user: User): Promise<boolean>;
   getCreatedBy(): Promise<User>;
@@ -294,6 +309,8 @@ export class Job<T = unknown> {
   failures: number;
   uniqKey: string | null;
   readonly kept: boolean;
+  createdAt: Date;
+  unlockAt: Date;
   static create<P>(name: string, payload?: P, params?: JobParams): Promise<Job<P>>;
   setUnlockAt(unlockAt?: Date | number, failure?: boolean | null): Promise<void>;
   keep(unlockAt?: Date | number): Promise<void>;

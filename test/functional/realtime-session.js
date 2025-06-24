@@ -15,6 +15,12 @@ export default class Session {
   /** @type {{string: {event: string, data: unknown}[]} */
   collected = [];
 
+  /**
+   * @param {int} port
+   * @param {string} name
+   * @param {object} extraOptions
+   * @returns {Promise<Session>}
+   */
   static create(port, name = '', extraOptions = {}) {
     const options = {
       transports: ['websocket'],
@@ -160,6 +166,10 @@ export default class Session {
     const listen = this.receiveSeq(events);
     const [result] = await Promise.all([listen, ...tasks.map((t) => t())]);
     return result;
+  }
+
+  clearCollected() {
+    this.collected.length = 0;
   }
 
   haveCollected(event) {

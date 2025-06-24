@@ -210,6 +210,10 @@ declare module 'config' {
         sendAt: string;
       };
     };
+
+    undo: {
+      undoInterval: ISO8601DurationString;
+    };
   };
 
   export type TranslationLimits = {
@@ -218,6 +222,7 @@ declare module 'config' {
   };
 
   export type PreviewsConfiguration = {
+    imagePreviewQuality: number;
     imagePreviewAreas: { [k: string]: number };
     legacyImagePreviewSizes: {
       [k: string]: {
@@ -244,6 +249,14 @@ declare module 'config' {
         s3ConfigOptions: Record<string, unknown>;
       };
 
-  const c: Config;
+  interface Util {
+    getEnv(key: string): string;
+    loadFileConfigs<C = unknown>(
+      configDir: string | null,
+      options?: { skipConfigSources?: boolean },
+    ): C;
+  }
+
+  const c: Config & { util: Util };
   export default c;
 }

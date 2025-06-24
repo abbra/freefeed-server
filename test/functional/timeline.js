@@ -261,7 +261,8 @@ describe('TimelinesController', () => {
 
     it('should clear comments timeline only after all comments are deleted', (done) => {
       funcTestHelper.removeComment(comment.id, context.authToken, (err, res) => {
-        res.body.should.be.empty;
+        res.body.should.have.property('undo');
+        res.body.undo.length.should.eql(1);
         res.status.should.eql(200);
 
         funcTestHelper.getTimeline(
@@ -281,7 +282,8 @@ describe('TimelinesController', () => {
 
             // now remove 2nd comment
             funcTestHelper.removeComment(comment2.id, context.authToken, (err, res) => {
-              res.body.should.be.empty;
+              res.body.should.have.property('undo');
+              res.body.undo.length.should.eql(1);
               res.status.should.eql(200);
 
               funcTestHelper.getTimeline(

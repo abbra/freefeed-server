@@ -194,6 +194,7 @@ async function processImage(
   isVideoStill = false,
 ): Promise<[VisualPreviews, FilesToUpload]> {
   const previewSizes = getImagePreviewSizes(info);
+  const quality = currentConfig().attachments.previews.imagePreviewQuality;
 
   debug(`image preview sizes for ${localFilePath}`, previewSizes);
 
@@ -244,7 +245,7 @@ async function processImage(
         ['-resize', `${width}!x${height}!`],
         ['-profile', `${__dirname}/../../../lib/assets/sRGB.icm`],
         '-strip',
-        ['-quality', '75'],
+        ['-quality', quality.toString()],
         `webp:${tmpFileVariant(localFilePath, variant, 'webp')}`,
       ]);
 
@@ -366,8 +367,10 @@ async function processVideo(
   // Components of 'filter_complex' graph
   const filters: string[] = [];
 
-  // First, we need to ensure that the video input is in YUV420 format (it is important for some GIFs)
-  filters.push(`[0:v:0]format=yuv420p[vin]`);
+  // First, we need to ensure that the video input is in YUV420 format (it is
+  // important for some GIFs). We also need to crop it to even dimensions
+  // because the yuv420p subsampling requires it.
+  filters.push(`[0:v:0]crop='trunc(iw/2)*2:trunc(ih/2)*2',format=yuv420p[vin]`);
 
   // Next, we need to resize the original video to maximum preview size
   if (maxPreviewSize.width === info.width && maxPreviewSize.height === info.height) {
@@ -465,6 +468,7 @@ async function processVideo(
   await spawnAsync('ffmpeg', [
     '-hide_banner',
     ['-loglevel', 'error'],
+    '-y',
     ['-i', localFilePath],
     ['-filter_complex', filters.join(';')],
     ...commands,

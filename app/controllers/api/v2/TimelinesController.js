@@ -1,5 +1,7 @@
 import { escape as urlEscape } from 'querystring';
 
+import createDebug from 'debug';
+import Raven from 'raven';
 import _ from 'lodash';
 import compose from 'koa-compose';
 import config from 'config';
@@ -13,9 +15,13 @@ import {
 import { serializeFeed } from '../../../serializers/v2/post';
 import { monitored, authRequired, targetUserRequired } from '../../middlewares';
 import { NotFoundException } from '../../../support/exceptions';
+import { scheduleWelcomeDirects } from '../../../support/welcome-directs';
+import { currentConfig } from '../../../support/app-async-context';
 
 export const ORD_UPDATED = 'bumped';
 export const ORD_CREATED = 'created';
+
+const errorLog = createDebug('freefeed:errors');
 
 export const bestOf = compose([
   monitored('timelines.bestof'),
@@ -73,6 +79,21 @@ export const ownTimeline = (feedName, params = {}) =>
 
       if (!timeline || timeline.userId !== user.id || timeline.name !== feedName) {
         throw new NotFoundException(`Timeline is not found`);
+      }
+
+      if (feedName === 'RiverOfNews' && !user.firstInteractionAt) {
+        try {
+          await scheduleWelcomeDirects(user);
+          await user.setFirstInteraction();
+        } catch (err) {
+          errorLog('cannot send welcome directs', { user: user.username, err });
+
+          if (currentConfig().sentryDsn) {
+            Raven.captureException(err, {
+              extra: { err: `cannot send welcome directs: ${err.message}` },
+            });
+          }
+        }
       }
 
       ctx.body = await genericTimeline(timeline, user.id, {

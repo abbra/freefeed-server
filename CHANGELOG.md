@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.24.0] - Not released
+### Fixed
+- Fix processing of animated GIFs with odd dimensions.
+
+### Changed
+- The image previews quality now configurable. Also, its default value is
+  changed from 75 to 90.
+
+### Added
+- The ability to undo actions.
+  - The destructive actions (like post  or comment deletion) now returns an
+    _undo_ field in the response. This field is a list of objects with the
+    following shape: `{ subject: string; message: string; messageParams?:
+    object; token: string; expiresInSec: number }`. The undo token is valid for
+    `expiresInSec` seconds (default is 300 seconds) and can be used to undo the
+    action.
+    
+    The `messageParams` contains some parameters used in the message, for the
+    clients that want to create custom messages. For the post/comment deletion,
+    the parameters are `{ author: string|null }` with the post/comment author's
+    username (it can be `null` for archived or hidden comments).
+  - New API endpoint `POST /vN/undo/:subject` allows undoing actions. The
+    request body is just the `{ "token": "UNDO TOKEN" }`.
+    
+    The reply is subject-dependent, for the post/comment deletion it returns the
+    same response as for the get-by-id requests.
+  - For now, only the post and comment deletion can be undone (with 'postDelete'
+    and 'commentDelete' subjects), but the plan is to add more.
+  - When the post/comment deletion is undone, the
+    'post:restore'/'comment:restore' realtime messages are sent. Their payloads
+    are the same as for the '*:new' messages.
+- The User model now includes the `firstInteractionAt` field. This field tracks
+  when a user interacts with the platform (specifically, when they load their
+  home feed) for the first time.
+- The server can be configured to send a series of direct messages to new users.
+
+  The configuration for these messages is defined in a separate set of config
+  files located in the `config/welcome-directs` directory. See
+  `config/welcome-directs/default.yml` and `config/welcome-directs/test.yml` for
+  the file format and examples.
+
+  As with regular configuration files, the server administrator can create a
+  `config/welcome-directs/local.yml` file to override the default settings.
+
+
 ## [2.23.22] - 2025-04-16
 ### Fixed
 - The `shouldSend*BestOfDigest()` functions now compares the current date with
