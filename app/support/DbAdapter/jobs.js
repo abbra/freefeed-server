@@ -4,6 +4,7 @@ import { difference, uniq } from 'lodash';
 import { Job } from '../../models';
 
 import { prepareModelPayload, initObject } from './utils';
+import { advisoryLock, JOBS_FETCH } from './adv-locks';
 
 const debug = createDebug('freefeed:jobs:debug');
 
@@ -54,8 +55,9 @@ export default function jobsTrait(superClass) {
      */
     async fetchJobs(count, lockTime, limitedJobs = {}) {
       const rows1 = await this.database.transaction(async (trx) => {
-        // Lock jobs table
-        await trx.raw('lock table jobs in access exclusive mode');
+        // Lock jobs table in exclusive mode
+        await advisoryLock(trx, JOBS_FETCH);
+
         const allRows = [];
         const allReturning = [];
         let maxLoops = 10; // To prevent infinite loop
