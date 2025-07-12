@@ -7,19 +7,26 @@ import Mailer from '../../lib/mailer';
 
 const errorLog = createDebug('freefeed:digests:notifications:errors');
 
-export function sendEventsDigestEmail(user, { events, users, groups }, digestInterval) {
-  const emailBody = events
+export async function sendEventsDigestEmail(user, { events, users, groups }, digestInterval) {
+  const emailBodyItems = events
     .map((event) => getEventText(event, users, groups))
     .filter(Boolean)
-    .map((text) => getEventMarkup(text))
-    .join('\n');
+    .map((text) => getEventMarkup(text));
 
-  return Mailer.sendMail(
+  if (emailBodyItems.length === 0) {
+    errorLog(
+      `[${user.username}] Nothing rendered for events: ${events.map((e) => e.event_type).join(', ')}`,
+    );
+    // Don't send an empty email
+    return;
+  }
+
+  await Mailer.sendMail(
     user,
     renderEJS(config.mailer.notificationDigestEmailSubject, { digestInterval }),
     {
       digest: {
-        body: emailBody,
+        body: emailBodyItems.join('\n'),
         interval: digestInterval,
       },
       recipient: user,
