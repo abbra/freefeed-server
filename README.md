@@ -28,7 +28,7 @@ createdb -O freefeed freefeed
 
 1. `brew install graphicsmagick`
 1. [Install and run Docker](https://www.docker.com/get-started)
-1. docker-compose up -d
+1. docker compose up -d
 
 ### Then prepare Node.js environment and the app
 
