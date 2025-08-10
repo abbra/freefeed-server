@@ -216,5 +216,6 @@ function serializePostData(post) {
       'omittedOwnCommentLikes',
     ]),
     createdBy: post.userId,
+    ...(post.isPinned ? { isPinned: true } : {}),
   };
 }

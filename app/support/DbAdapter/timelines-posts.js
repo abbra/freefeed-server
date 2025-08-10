@@ -32,6 +32,7 @@ const timelinesPostsTrait = (superClass) =>
       withLocalBumps = false,
       wideSelect = false,
       selectSQL = 'true',
+      pinnedUserId = null,
     }) {
       withLocalBumps = withLocalBumps && !!viewerId && sort === 'bumped';
 
@@ -66,12 +67,15 @@ const timelinesPostsTrait = (superClass) =>
           from 
             posts p
             join users u on p.user_id = u.uid
+            ${pinnedUserId ? `left join pinned_posts pp on pp.post_id = p.uid and pp.user_id = %L` : ''}
           where
             ${restrictionsSQL}
           order by
+            ${pinnedUserId ? 'case when pp.user_id is null then 0 else 1 end desc,' : ''}
             p.%I desc
           limit %L offset %L
         `,
+            ...(pinnedUserId ? [pinnedUserId] : []),
             `${_sort}_at`,
             _limit,
             _offset,
@@ -85,12 +89,15 @@ const timelinesPostsTrait = (superClass) =>
         from 
           posts p
           join users u on p.user_id = u.uid
+          ${pinnedUserId ? `left join pinned_posts pp on pp.post_id = p.uid and pp.user_id = %L` : ''}
         where
           (${selectSQL}) and (${restrictionsSQL})
         order by
+          ${pinnedUserId ? 'case when pp.user_id is null then 0 else 1 end desc,' : ''}
           p.%I desc
         limit %L offset %L
       `,
+          ...(pinnedUserId ? [pinnedUserId] : []),
           `${_sort}_at`,
           _limit,
           _offset,
@@ -264,6 +271,7 @@ const timelinesPostsTrait = (superClass) =>
         withLocalBumps: params.withLocalBumps,
         wideSelect: timelineIntIds ? timelineIntIds.length > smallFeedThreshold : true,
         selectSQL,
+        pinnedUserId: params.pinnedUserId,
       });
     }
 
@@ -486,6 +494,18 @@ const timelinesPostsTrait = (superClass) =>
           results[post.uid].post.commentLikes = parseInt(commentLikesForPost.post_c_likes_count);
           results[post.uid].post.ownCommentLikes = parseInt(commentLikesForPost.own_c_likes_count);
         }
+      }
+
+      // Mark pinned posts (pinned by their authors)
+      try {
+        const pinnedSet = await this.getPinnedStatusesForPosts(uniqPostsIds);
+        for (const pid of pinnedSet) {
+          if (results[pid]) {
+            results[pid].post.isPinned = true;
+          }
+        }
+      } catch (e) {
+        // ignore silently if table doesn't exist yet
       }
 
       for (const dest of destData) {

@@ -186,3 +186,29 @@ export const notifyOfAllComments = compose([
     ctx.body = await serializeSinglePost(post.id, user.id, { apiVersion });
   },
 ]);
+
+export const pin = compose([
+  authRequired(),
+  postAccessRequired(),
+  async (ctx) => {
+    const { user, post, apiVersion } = ctx.state;
+    if (post.userId !== user.id) {
+      throw new ForbiddenException('You can not pin this post');
+    }
+    await dbAdapter.pinUserPost(user.id, post.id);
+    ctx.body = await serializeSinglePost(post.id, user.id, { apiVersion });
+  },
+]);
+
+export const unpin = compose([
+  authRequired(),
+  postAccessRequired(),
+  async (ctx) => {
+    const { user, post, apiVersion } = ctx.state;
+    if (post.userId !== user.id) {
+      throw new ForbiddenException('You can not unpin this post');
+    }
+    await dbAdapter.unpinUserPost(user.id, post.id);
+    ctx.body = await serializeSinglePost(post.id, user.id, { apiVersion });
+  },
+]);

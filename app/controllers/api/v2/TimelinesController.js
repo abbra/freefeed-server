@@ -281,6 +281,7 @@ async function genericTimeline(timeline = null, viewerId = null, params = {}) {
           activityFeedIds,
           activityOnPropagable,
           activityHideIds,
+          pinnedUserId: timeline && timeline.name === 'Posts' ? (await timeline.getUser()).id : null,
           limit: params.limit + 1,
         })
       : [];
