@@ -539,7 +539,7 @@ export class EventService {
       dbAdapter.getUserById(post.userId),
       group.getAdministrators(),
     ]);
-    const recipients = uniqBy([postAuthor, ...admins], 'id');
+    const recipients = uniqBy((postAuthor ? [postAuthor] : []).concat(admins), 'id');
     await Promise.all(
       recipients.map((u) =>
         createEvent(
@@ -561,7 +561,7 @@ export class EventService {
       dbAdapter.getUserById(post.userId),
       group.getAdministrators(),
     ]);
-    const recipients = uniqBy([postAuthor, ...admins], 'id');
+    const recipients = uniqBy((postAuthor ? [postAuthor] : []).concat(admins), 'id');
     await Promise.all(
       recipients.map((u) =>
         createEvent(
