@@ -2,7 +2,8 @@ import config from 'config';
 import _, { difference } from 'lodash';
 import compose from 'koa-compose';
 
-import { dbAdapter } from '../../../models';
+import { dbAdapter, PubSub as pubSub } from '../../../models';
+import { EventService } from '../../../support/EventService';
 import { serializeSinglePost, serializeFeed } from '../../../serializers/v2/post';
 import {
   authRequired,
@@ -192,10 +193,43 @@ export const pin = compose([
   postAccessRequired(),
   async (ctx) => {
     const { user, post, apiVersion } = ctx.state;
-    if (post.userId !== user.id) {
-      throw new ForbiddenException('You can not pin this post');
+    const { owner } = ctx.request.body || {};
+    // Determine ownerId: default to author
+    const ownerId = owner || post.userId;
+
+    if (ownerId === post.userId) {
+      if (post.userId !== user.id) {
+        throw new ForbiddenException('You can not pin this post');
+      }
+    } else {
+      const ownerAccount = await dbAdapter.getFeedOwnerById(ownerId);
+
+      if (!ownerAccount || !ownerAccount.isGroup()) {
+        throw new ForbiddenException('Only groups supported as non-author owners');
+      }
+
+      const admins = await ownerAccount.getAdministrators();
+
+      if (!admins.some((a) => a.id === user.id)) {
+        throw new ForbiddenException('You are not admin of this group');
+      }
+      // Check post present in this group
+
+      const present = await dbAdapter.isPostInUserFeed(post.id, ownerId, 'Posts');
+
+      if (!present) {
+        throw new ForbiddenException('Post is not in this group');
+      }
     }
-    await dbAdapter.pinUserPost(user.id, post.id);
+
+    await dbAdapter.pinUserPost(ownerId, post.id);
+
+    if (ownerId !== post.userId) {
+      const group = await dbAdapter.getFeedOwnerById(ownerId);
+      await EventService.onPostPinnedInGroup(user, group, post);
+    }
+
+    await pubSub.updatePost(post.id);
     ctx.body = await serializeSinglePost(post.id, user.id, { apiVersion });
   },
 ]);
@@ -205,10 +239,35 @@ export const unpin = compose([
   postAccessRequired(),
   async (ctx) => {
     const { user, post, apiVersion } = ctx.state;
-    if (post.userId !== user.id) {
-      throw new ForbiddenException('You can not unpin this post');
+    const { owner } = ctx.request.body || {};
+    const ownerId = owner || post.userId;
+
+    if (ownerId === post.userId) {
+      if (post.userId !== user.id) {
+        throw new ForbiddenException('You can not unpin this post');
+      }
+    } else {
+      const ownerAccount = await dbAdapter.getFeedOwnerById(ownerId);
+
+      if (!ownerAccount || !ownerAccount.isGroup()) {
+        throw new ForbiddenException('Only groups supported as non-author owners');
+      }
+
+      const admins = await ownerAccount.getAdministrators();
+
+      if (!admins.some((a) => a.id === user.id)) {
+        throw new ForbiddenException('You are not admin of this group');
+      }
     }
-    await dbAdapter.unpinUserPost(user.id, post.id);
+
+    await dbAdapter.unpinUserPost(ownerId, post.id);
+
+    if (ownerId !== post.userId) {
+      const group = await dbAdapter.getFeedOwnerById(ownerId);
+      await EventService.onPostUnpinnedInGroup(user, group, post);
+    }
+
+    await pubSub.updatePost(post.id);
     ctx.body = await serializeSinglePost(post.id, user.id, { apiVersion });
   },
 ]);

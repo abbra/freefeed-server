@@ -1,16 +1,11 @@
 import pgFormat from 'pg-format';
+
 import { type DbAdapter } from './index';
 
 export default (superClass: typeof DbAdapter) =>
   class extends superClass {
     async pinUserPost(userId: string, postId: string) {
-      // Ensure post belongs to the user
-      const [{ count }] = await this.database('posts')
-        .count()
-        .where({ uid: postId, user_id: userId });
-      if (parseInt(String(count || 0), 10) === 0) {
-        return false;
-      }
+      // Just record pin by the given owner (user or group) for this post
       await this.database('pinned_posts')
         .insert({ user_id: userId, post_id: postId })
         .onConflict(['user_id', 'post_id'])
@@ -19,9 +14,7 @@ export default (superClass: typeof DbAdapter) =>
     }
 
     async unpinUserPost(userId: string, postId: string) {
-      await this.database('pinned_posts')
-        .where({ user_id: userId, post_id: postId })
-        .delete();
+      await this.database('pinned_posts').where({ user_id: userId, post_id: postId }).delete();
       return true;
     }
 
@@ -35,7 +28,10 @@ export default (superClass: typeof DbAdapter) =>
     }
 
     async getPinnedStatusesForPosts(postIds: string[]): Promise<Set<string>> {
-      if (postIds.length === 0) return new Set();
+      if (postIds.length === 0) {
+        return new Set();
+      }
+
       const sql = pgFormat(
         `select p.uid as post_id
          from posts p
@@ -46,5 +42,27 @@ export default (superClass: typeof DbAdapter) =>
       const { rows } = await this.database.raw(sql);
       return new Set(rows.map((r: any) => r.post_id));
     }
-  };
 
+    async getPinnedOwnersByPosts(postIds: string[]): Promise<Map<string, string[]>> {
+      if (postIds.length === 0) {
+        return new Map();
+      }
+
+      const sql = pgFormat(
+        `select post_id, user_id from pinned_posts where post_id in (%L)`,
+        postIds,
+      );
+      const { rows } = await this.database.raw(sql);
+      const map = new Map<string, string[]>();
+
+      for (const r of rows) {
+        if (!map.has(r.post_id)) {
+          map.set(r.post_id, []);
+        }
+
+        map.get(r.post_id)!.push(r.user_id);
+      }
+
+      return map;
+    }
+  };

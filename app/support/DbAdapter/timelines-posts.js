@@ -72,6 +72,7 @@ const timelinesPostsTrait = (superClass) =>
             ${restrictionsSQL}
           order by
             ${pinnedUserId ? 'case when pp.user_id is null then 0 else 1 end desc,' : ''}
+            ${pinnedUserId ? 'pp.created_at asc nulls last,' : ''}
             p.%I desc
           limit %L offset %L
         `,
@@ -94,6 +95,7 @@ const timelinesPostsTrait = (superClass) =>
           (${selectSQL}) and (${restrictionsSQL})
         order by
           ${pinnedUserId ? 'case when pp.user_id is null then 0 else 1 end desc,' : ''}
+          ${pinnedUserId ? 'pp.created_at asc nulls last,' : ''}
           p.%I desc
         limit %L offset %L
       `,
@@ -498,13 +500,18 @@ const timelinesPostsTrait = (superClass) =>
 
       // Mark pinned posts (pinned by their authors)
       try {
-        const pinnedSet = await this.getPinnedStatusesForPosts(uniqPostsIds);
-        for (const pid of pinnedSet) {
+        const ownersMap = await this.getPinnedOwnersByPosts(uniqPostsIds);
+
+        for (const [pid, owners] of ownersMap.entries()) {
           if (results[pid]) {
-            results[pid].post.isPinned = true;
+            results[pid].post.pinnedIn = owners;
+
+            if (owners.includes(results[pid].post.userId)) {
+              results[pid].post.isPinned = true;
+            }
           }
         }
-      } catch (e) {
+      } catch {
         // ignore silently if table doesn't exist yet
       }
 

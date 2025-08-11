@@ -214,6 +214,7 @@ function serializePostData(post) {
       'ownCommentLikes',
       'omittedCommentLikes',
       'omittedOwnCommentLikes',
+      'pinnedIn',
     ]),
     createdBy: post.userId,
     ...(post.isPinned ? { isPinned: true } : {}),

@@ -53,6 +53,8 @@ export const EVENT_TYPES = {
   POST_COMMENT: 'post_comment',
   POST_COMMENTS_SUBSCRIBE: 'post_comments_subscribe',
   POST_COMMENTS_UNSUBSCRIBE: 'post_comments_unsubscribe',
+  POST_PINNED_IN_GROUP: 'post_pinned_in_group',
+  POST_UNPINNED_IN_GROUP: 'post_unpinned_in_group',
 } as const;
 
 export type T_EVENT_TYPE = (typeof EVENT_TYPES)[keyof typeof EVENT_TYPES];

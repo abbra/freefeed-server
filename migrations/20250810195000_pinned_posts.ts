@@ -14,4 +14,3 @@ export const down = (knex: Knex) =>
   knex.raw(`do $$begin
   drop table if exists pinned_posts;
 end$$`);
-

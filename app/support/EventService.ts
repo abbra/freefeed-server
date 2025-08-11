@@ -534,6 +534,50 @@ export class EventService {
     );
   }
 
+  static async onPostPinnedInGroup(initiator: User, group: Group, post: Post) {
+    const [postAuthor, admins] = await Promise.all([
+      dbAdapter.getUserById(post.userId),
+      group.getAdministrators(),
+    ]);
+    const recipients = uniqBy([postAuthor, ...admins], 'id');
+    await Promise.all(
+      recipients.map((u) =>
+        createEvent(
+          u.intId,
+          EVENT_TYPES.POST_PINNED_IN_GROUP,
+          initiator.intId,
+          u.intId,
+          group.intId,
+          post.id,
+          null,
+          postAuthor!.intId,
+        ),
+      ),
+    );
+  }
+
+  static async onPostUnpinnedInGroup(initiator: User, group: Group, post: Post) {
+    const [postAuthor, admins] = await Promise.all([
+      dbAdapter.getUserById(post.userId),
+      group.getAdministrators(),
+    ]);
+    const recipients = uniqBy([postAuthor, ...admins], 'id');
+    await Promise.all(
+      recipients.map((u) =>
+        createEvent(
+          u.intId,
+          EVENT_TYPES.POST_UNPINNED_IN_GROUP,
+          initiator.intId,
+          u.intId,
+          group.intId,
+          post.id,
+          null,
+          postAuthor!.intId,
+        ),
+      ),
+    );
+  }
+
   static async onPostFeedsChanged(
     post: Post,
     changedBy: User,
@@ -595,6 +639,11 @@ export class EventService {
         );
       }),
     );
+
+    // Also unpin post from removed groups
+    if (removedFromGroups.length > 0) {
+      await Promise.all(removedFromGroups.map((g) => dbAdapter.unpinUserPost(g.id, post.id)));
+    }
   }
 
   static async onInvitationUsed(fromUserIntId: number, newUserIntId: number) {
