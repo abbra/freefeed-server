@@ -234,6 +234,9 @@ export class DbAdapter {
       authorsIds: ListLike<UUID>;
     }>,
   ): Promise<UUID[]>;
+  // Pinned posts
+  pinUserPost(userId: UUID, postId: UUID): Promise<boolean>;
+  unpinUserPost(userId: UUID, postId: UUID): Promise<boolean>;
 
   // Likes
   unlikePost(postId: UUID, userId: UUID): Promise<boolean>;
