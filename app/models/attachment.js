@@ -584,7 +584,31 @@ export function addModel(dbAdapter) {
      * @returns {Promise<boolean>}
      */
     async sanitizeOriginal() {
-      const localFile = await this.downloadOriginal();
+      let localFile;
+
+      try {
+        localFile = await this.downloadOriginal();
+      } catch (err) {
+        if (err.code !== 'NotFound') {
+          // Still need to update attachment record
+          const updAtt = await dbAdapter.updateAttachment(this.id, {
+            updatedAt: 'now',
+            sanitized: SANITIZE_VERSION,
+          });
+          this.updatedAt = updAtt.updatedAt;
+          this.sanitized = updAtt.sanitized;
+
+          debugError(`sanitizeOriginal: attachment original not found ${this.id}: ${err.message}`);
+          Raven.captureException(err, {
+            extra: {
+              err: `sanitizeOriginal: attachment original not found ${this.id}`,
+            },
+          });
+          return false;
+        }
+
+        throw err;
+      }
 
       try {
         let updated = false;
