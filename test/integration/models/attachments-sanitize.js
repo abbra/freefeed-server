@@ -141,7 +141,7 @@ describe('sanitizeOriginal model method', () => {
       attachments: { storage: storageConfig },
     });
 
-    before(async () => {
+    beforeEach(async () => {
       s3instance = new S3rver({
         port: 4569,
         address: 'localhost',
@@ -151,7 +151,7 @@ describe('sanitizeOriginal model method', () => {
       });
       await s3instance.run();
     });
-    after(() => s3instance.close());
+    afterEach(() => s3instance.close());
 
     it('should sanitize file with GPS data', async () => {
       const att = await createAttachment(
@@ -195,6 +195,33 @@ describe('sanitizeOriginal model method', () => {
         { storageConfig },
       );
       const prevSize = att.fileSize;
+
+      const capturedEvents = [];
+      s3instance.on('event', (e) => capturedEvents.push(e.Records[0].eventName));
+      const updated = await att.sanitizeOriginal();
+      s3instance.removeAllListeners();
+
+      expect(updated, 'to be false');
+      expect(prevSize, 'to equal', att.fileSize);
+      expect(att.sanitized, 'to be', SANITIZE_VERSION);
+      // Original should not be updated on S3
+      expect(capturedEvents, 'to equal', []);
+    });
+
+    it('should not fail if there is no file', async () => {
+      const att = await createAttachment(
+        luna.id,
+        {
+          name: `no-such-photo.jpg`,
+          type: 'image/jpeg',
+          content: await fsPromises.readFile(photoWithoutGPSPath),
+        },
+        { storageConfig },
+      );
+      const prevSize = att.fileSize;
+
+      // Deleting files
+      await att.deleteFiles();
 
       const capturedEvents = [];
       s3instance.on('event', (e) => capturedEvents.push(e.Records[0].eventName));
