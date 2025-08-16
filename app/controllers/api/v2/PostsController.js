@@ -222,7 +222,7 @@ export const pin = compose([
       }
     }
 
-    await dbAdapter.pinUserPost(ownerId, post.id);
+    await dbAdapter.pinUserPost(ownerId, post.id, user.id);
 
     if (ownerId !== post.userId) {
       const group = await dbAdapter.getFeedOwnerById(ownerId);

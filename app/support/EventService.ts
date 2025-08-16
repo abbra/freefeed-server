@@ -590,14 +590,15 @@ export class EventService {
       await this._processDirectMessagesForPost(post, addedFeeds, postAuthor);
     }
 
-    if (changedBy.id === post.userId || removedFeeds.length === 0) {
-      return;
-    }
-
     const removedFeedOwners = await Promise.all(
       removedFeeds.filter((f) => f.isPosts()).map((f) => f.getUser()),
     );
     const removedFromGroups = removedFeedOwners.filter((o) => o.isGroup()) as Group[];
+
+    // Always unpin post from removed groups regardless of who removed it
+    if (removedFromGroups.length > 0) {
+      await Promise.all(removedFromGroups.map((g) => dbAdapter.unpinUserPost(g.id, post.id)));
+    }
 
     const postAuthor = await dbAdapter.getUserById(post.userId);
 
@@ -640,10 +641,7 @@ export class EventService {
       }),
     );
 
-    // Also unpin post from removed groups
-    if (removedFromGroups.length > 0) {
-      await Promise.all(removedFromGroups.map((g) => dbAdapter.unpinUserPost(g.id, post.id)));
-    }
+    // (unpin already processed above)
   }
 
   static async onInvitationUsed(fromUserIntId: number, newUserIntId: number) {

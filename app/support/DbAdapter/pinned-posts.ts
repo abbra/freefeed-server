@@ -4,10 +4,10 @@ import { type DbAdapter } from './index';
 
 export default (superClass: typeof DbAdapter) =>
   class extends superClass {
-    async pinUserPost(userId: string, postId: string) {
-      // Just record pin by the given owner (user or group) for this post
+    async pinUserPost(userId: string, postId: string, pinnedBy: string) {
+      // Record pin by the given owner (user or group) for this post and initiator
       await this.database('pinned_posts')
-        .insert({ user_id: userId, post_id: postId })
+        .insert({ user_id: userId, post_id: postId, pinned_by: pinnedBy })
         .onConflict(['user_id', 'post_id'])
         .ignore();
       return true;
