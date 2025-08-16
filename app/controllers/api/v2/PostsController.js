@@ -222,7 +222,10 @@ export const pin = compose([
       }
     }
 
-    await dbAdapter.pinUserPost(ownerId, post.id, user.id);
+    // Determine Posts feed UUID of the owner
+    const ownerAccount = await dbAdapter.getFeedOwnerById(ownerId);
+    const ownerFeed = await ownerAccount.getPostsTimeline();
+    await dbAdapter.pinUserPost(ownerFeed.id, post.id, user.id);
 
     if (ownerId !== post.userId) {
       const group = await dbAdapter.getFeedOwnerById(ownerId);
@@ -260,7 +263,9 @@ export const unpin = compose([
       }
     }
 
-    await dbAdapter.unpinUserPost(ownerId, post.id);
+    const ownerAccount = await dbAdapter.getFeedOwnerById(ownerId);
+    const ownerFeed = await ownerAccount.getPostsTimeline();
+    await dbAdapter.unpinUserPost(ownerFeed.id, post.id);
 
     if (ownerId !== post.userId) {
       const group = await dbAdapter.getFeedOwnerById(ownerId);

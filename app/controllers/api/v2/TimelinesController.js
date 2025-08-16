@@ -273,7 +273,7 @@ async function genericTimeline(timeline = null, viewerId = null, params = {}) {
     }
   }
 
-  const pinnedUserId = timeline && timeline.name === 'Posts' ? (await timeline.getUser()).id : null;
+  const pinnedUserId = timeline && timeline.name === 'Posts' ? timeline.id : null;
 
   const postsIds =
     !timeline || (await timeline.canShow(viewerId))

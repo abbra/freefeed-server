@@ -67,11 +67,11 @@ const timelinesPostsTrait = (superClass) =>
           from 
             posts p
             join users u on p.user_id = u.uid
-            ${pinnedUserId ? `left join pinned_posts pp on pp.post_id = p.uid and pp.user_id = %L` : ''}
+            ${pinnedUserId ? `left join pinned_posts pp on pp.post_id = p.uid and pp.feed_id = %L` : ''}
           where
             ${restrictionsSQL}
           order by
-            ${pinnedUserId ? 'case when pp.user_id is null then 0 else 1 end desc,' : ''}
+            ${pinnedUserId ? 'case when pp.feed_id is null then 0 else 1 end desc,' : ''}
             ${pinnedUserId ? 'pp.created_at asc nulls last,' : ''}
             p.%I desc
           limit %L offset %L
@@ -90,11 +90,11 @@ const timelinesPostsTrait = (superClass) =>
         from 
           posts p
           join users u on p.user_id = u.uid
-          ${pinnedUserId ? `left join pinned_posts pp on pp.post_id = p.uid and pp.user_id = %L` : ''}
+          ${pinnedUserId ? `left join pinned_posts pp on pp.post_id = p.uid and pp.feed_id = %L` : ''}
         where
           (${selectSQL}) and (${restrictionsSQL})
         order by
-          ${pinnedUserId ? 'case when pp.user_id is null then 0 else 1 end desc,' : ''}
+          ${pinnedUserId ? 'case when pp.feed_id is null then 0 else 1 end desc,' : ''}
           ${pinnedUserId ? 'pp.created_at asc nulls last,' : ''}
           p.%I desc
         limit %L offset %L

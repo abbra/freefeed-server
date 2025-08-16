@@ -62,10 +62,11 @@ describe('Pins (v2)', () => {
         },
       });
 
+      const authorFeed = await (await luna.user.getPostsTimeline()).id;
       const rows = await dbAdapter
         .database('pinned_posts')
         .select('*')
-        .where({ user_id: luna.user.id, post_id: post.id });
+        .where({ feed_id: authorFeed, post_id: post.id });
       expect(rows, 'to have length', 1);
       expect(rows[0].pinned_by, 'to equal', luna.user.id);
 
@@ -80,7 +81,7 @@ describe('Pins (v2)', () => {
       const rows2 = await dbAdapter
         .database('pinned_posts')
         .select('*')
-        .where({ user_id: luna.user.id, post_id: post.id });
+        .where({ feed_id: authorFeed, post_id: post.id });
       expect(rows2, 'to have length', 0);
     });
 
@@ -124,10 +125,11 @@ describe('Pins (v2)', () => {
           },
         });
 
+        const groupFeed = await (await group.getPostsTimeline()).id;
         const rows = await dbAdapter
           .database('pinned_posts')
           .select('*')
-          .where({ user_id: group.id, post_id: post.id });
+          .where({ feed_id: groupFeed, post_id: post.id });
         expect(rows, 'to have length', 1);
         expect(rows[0].pinned_by, 'to equal', mars.user.id);
 
@@ -141,7 +143,7 @@ describe('Pins (v2)', () => {
         const rows2 = await dbAdapter
           .database('pinned_posts')
           .select('*')
-          .where({ user_id: group.id, post_id: post.id });
+          .where({ feed_id: groupFeed, post_id: post.id });
         expect(rows2, 'to have length', 0);
       });
 
@@ -369,17 +371,18 @@ describe('Pins (v2)', () => {
       const luna = await createTestUser();
       const post = await justCreatePost(luna, 'Hello');
       await performJSONRequest('POST', `/v2/posts/${post.id}/pin`, {}, authHeaders(luna));
+      const authorFeed = await (await luna.user.getPostsTimeline()).id;
       const before = await dbAdapter
         .database('pinned_posts')
         .select('*')
-        .where({ user_id: luna.user.id, post_id: post.id });
+        .where({ feed_id: authorFeed, post_id: post.id });
       expect(before, 'to have length', 1);
       // Delete post record directly to test DB cascade behavior
       await dbAdapter.deletePostRecord(post.id);
       const after = await dbAdapter
         .database('pinned_posts')
         .select('*')
-        .where({ user_id: luna.user.id, post_id: post.id });
+        .where({ feed_id: authorFeed, post_id: post.id });
       expect(after, 'to have length', 0);
     });
 
@@ -402,10 +405,11 @@ describe('Pins (v2)', () => {
         authHeaders(luna),
       );
       expect(upd, 'to satisfy', { __httpCode: 200 });
+      const groupFeed = await (await group.getPostsTimeline()).id;
       const rows = await dbAdapter
         .database('pinned_posts')
         .select('*')
-        .where({ user_id: group.id, post_id: post.id });
+        .where({ feed_id: groupFeed, post_id: post.id });
       expect(rows, 'to have length', 0);
     });
   });

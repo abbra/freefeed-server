@@ -254,7 +254,8 @@ export default class PostsController {
           const groups = owners.filter((o) => o.isGroup());
 
           if (groups.length > 0) {
-            await Promise.all(groups.map((g) => dbAdapter.unpinUserPost(g.id, post.id)));
+            const groupFeeds = await Promise.all(groups.map((g) => g.getPostsTimeline()));
+            await Promise.all(groupFeeds.map((f) => dbAdapter.unpinUserPost(f.id, post.id)));
           }
         }
 
@@ -282,7 +283,8 @@ export default class PostsController {
           const groups = owners.filter((o) => o.isGroup());
 
           if (groups.length > 0) {
-            await Promise.all(groups.map((g) => dbAdapter.unpinUserPost(g.id, post.id)));
+            const groupFeeds = await Promise.all(groups.map((g) => g.getPostsTimeline()));
+            await Promise.all(groupFeeds.map((f) => dbAdapter.unpinUserPost(f.id, post.id)));
           }
         }
 

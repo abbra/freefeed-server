@@ -4,17 +4,17 @@ import { type DbAdapter } from './index';
 
 export default (superClass: typeof DbAdapter) =>
   class extends superClass {
-    async pinUserPost(userId: string, postId: string, pinnedBy: string) {
-      // Record pin by the given owner (user or group) for this post and initiator
+    async pinUserPost(feedId: string, postId: string, pinnedBy: string) {
+      // Record pin by the given feed (Posts of user or group) for this post and initiator
       await this.database('pinned_posts')
-        .insert({ user_id: userId, post_id: postId, pinned_by: pinnedBy })
-        .onConflict(['user_id', 'post_id'])
+        .insert({ feed_id: feedId, post_id: postId, pinned_by: pinnedBy })
+        .onConflict(['feed_id', 'post_id'])
         .ignore();
       return true;
     }
 
-    async unpinUserPost(userId: string, postId: string) {
-      await this.database('pinned_posts').where({ user_id: userId, post_id: postId }).delete();
+    async unpinUserPost(feedId: string, postId: string) {
+      await this.database('pinned_posts').where({ feed_id: feedId, post_id: postId }).delete();
       return true;
     }
 
@@ -35,7 +35,8 @@ export default (superClass: typeof DbAdapter) =>
       const sql = pgFormat(
         `select p.uid as post_id
          from posts p
-         join pinned_posts pp on pp.post_id = p.uid and pp.user_id = p.user_id
+         join feeds f on f.user_id = p.user_id and f.name = 'Posts' and f.ord is null
+         join pinned_posts pp on pp.post_id = p.uid and pp.feed_id = f.uid
          where p.uid in (%L)`,
         postIds,
       );
@@ -49,7 +50,10 @@ export default (superClass: typeof DbAdapter) =>
       }
 
       const sql = pgFormat(
-        `select post_id, user_id from pinned_posts where post_id in (%L)`,
+        `select pp.post_id, f.user_id as owner_id
+         from pinned_posts pp
+         join feeds f on f.uid = pp.feed_id
+         where pp.post_id in (%L)`,
         postIds,
       );
       const { rows } = await this.database.raw(sql);
@@ -60,7 +64,7 @@ export default (superClass: typeof DbAdapter) =>
           map.set(r.post_id, []);
         }
 
-        map.get(r.post_id)!.push(r.user_id);
+        map.get(r.post_id)!.push(r.owner_id);
       }
 
       return map;
@@ -74,7 +78,11 @@ export default (superClass: typeof DbAdapter) =>
       }
 
       const sql = pgFormat(
-        `select post_id, user_id, created_at, pinned_by from pinned_posts where post_id in (%L) order by created_at asc`,
+        `select pp.post_id, f.user_id, pp.created_at, pp.pinned_by
+         from pinned_posts pp
+         join feeds f on f.uid = pp.feed_id
+         where pp.post_id in (%L)
+         order by pp.created_at asc`,
         postIds,
       );
       const { rows } = await this.database.raw(sql);
