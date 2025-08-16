@@ -11,4 +11,3 @@ export const down = (knex: Knex) =>
     alter table pinned_posts
       drop column if exists pinned_by;
   end$$`);
-
