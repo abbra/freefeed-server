@@ -598,7 +598,8 @@ export class EventService {
     // Always unpin post from removed groups regardless of who removed it
     if (removedFromGroups.length > 0) {
       const feeds = await Promise.all(removedFromGroups.map((g) => g.getPostsTimeline()));
-      await Promise.all(feeds.map((f) => dbAdapter.unpinUserPost(f.id, post.id)));
+      const nonNullFeeds = feeds.filter((f): f is Timeline => f !== null);
+      await Promise.all(nonNullFeeds.map((f) => dbAdapter.unpinUserPost(f.id, post.id)));
     }
 
     const postAuthor = await dbAdapter.getUserById(post.userId);
