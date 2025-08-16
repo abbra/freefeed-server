@@ -65,4 +65,36 @@ export default (superClass: typeof DbAdapter) =>
 
       return map;
     }
+
+    async getPinnedDetailsByPosts(
+      postIds: string[],
+    ): Promise<Map<string, { userId: string; createdAt: string; pinnedBy: string | null }[]>> {
+      if (postIds.length === 0) {
+        return new Map();
+      }
+
+      const sql = pgFormat(
+        `select post_id, user_id, created_at, pinned_by from pinned_posts where post_id in (%L) order by created_at asc`,
+        postIds,
+      );
+      const { rows } = await this.database.raw(sql);
+      const map = new Map<
+        string,
+        { userId: string; createdAt: string; pinnedBy: string | null }[]
+      >();
+
+      for (const r of rows) {
+        if (!map.has(r.post_id)) {
+          map.set(r.post_id, []);
+        }
+
+        map.get(r.post_id)!.push({
+          userId: r.user_id,
+          createdAt: new Date(r.created_at).toISOString(),
+          pinnedBy: r.pinned_by ?? null,
+        });
+      }
+
+      return map;
+    }
   };

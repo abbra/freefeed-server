@@ -51,7 +51,15 @@ describe('Pins (v2)', () => {
 
       expect(pinResp, 'to satisfy', {
         __httpCode: 200,
-        posts: { id: post.id, isPinned: true, pinnedIn: expect.it('to contain', luna.user.id) },
+        posts: {
+          id: post.id,
+          pinnedIn: expect.it(
+            'to satisfy',
+            expect.it((arr) =>
+              arr.some((d) => d.ownerId === luna.user.id && typeof d.pinnedAt === 'string'),
+            ),
+          ),
+        },
       });
 
       const rows = await dbAdapter
@@ -105,7 +113,15 @@ describe('Pins (v2)', () => {
         );
         expect(pinResp, 'to satisfy', {
           __httpCode: 200,
-          posts: { id: post.id, pinnedIn: expect.it('to contain', group.id) },
+          posts: {
+            id: post.id,
+            pinnedIn: expect.it(
+              'to satisfy',
+              expect.it((arr) =>
+                arr.some((d) => d.ownerId === group.id && typeof d.pinnedAt === 'string'),
+              ),
+            ),
+          },
         });
 
         const rows = await dbAdapter
@@ -179,7 +195,7 @@ describe('Pins (v2)', () => {
           {},
           { 'X-Authentication-Token': tokenYes.tokenString() },
         );
-        expect(yesResp, 'to satisfy', { __httpCode: 200, posts: { isPinned: true } });
+        expect(yesResp, 'to satisfy', { __httpCode: 200, posts: { id: post.id } });
       });
     });
   });
@@ -196,7 +212,7 @@ describe('Pins (v2)', () => {
       p3 = await justCreatePost(luna, 'Post3', [luna.username, group.username]);
     });
 
-    it('pinnedIn and isPinned present across feeds', async () => {
+    it('pinnedIn present across feeds', async () => {
       await performJSONRequest('POST', `/v2/posts/${p1.id}/pin`, {}, authHeaders(luna));
       await performJSONRequest(
         'POST',
@@ -209,15 +225,26 @@ describe('Pins (v2)', () => {
       const post1 = userFeed.posts.find((p) => p.id === p1.id);
       const post3 = userFeed.posts.find((p) => p.id === p3.id);
       expect(post1, 'to satisfy', {
-        isPinned: true,
-        pinnedIn: expect.it('to contain', luna.user.id),
+        pinnedIn: expect.it(
+          'to satisfy',
+          expect.it((arr) =>
+            arr.some((d) => d.ownerId === luna.user.id && typeof d.pinnedAt === 'string'),
+          ),
+        ),
       });
-      expect(post3, 'to satisfy', { pinnedIn: expect.it('to contain', group.id) });
+      expect(post3, 'to satisfy', {
+        pinnedIn: expect.it(
+          'to satisfy',
+          expect.it((arr) =>
+            arr.some((d) => d.ownerId === group.id && typeof d.pinnedAt === 'string'),
+          ),
+        ),
+      });
 
       const home = await getRiverOfNews(luna);
       const h1 = home.posts.find((p) => p.id === p1.id);
       const h3 = home.posts.find((p) => p.id === p3.id);
-      expect(h1, 'to satisfy', { pinnedIn: expect.it('to be an array'), isPinned: true });
+      expect(h1, 'to satisfy', { pinnedIn: expect.it('to be an array') });
       expect(h3, 'to satisfy', { pinnedIn: expect.it('to be an array') });
 
       // Fetch MyDiscussions including own posts
@@ -283,7 +310,7 @@ describe('Pins (v2)', () => {
       PubSub.setPublisher(new DummyPublisher());
     });
 
-    it("should deliver 'post:update' with pinnedIn/isPinned after pin to profile", async () => {
+    it("should deliver 'post:update' with updated pinnedIn after pin to profile", async () => {
       const lunaEvent = lunaSession.receive('post:update');
       const marsEvent = marsSession.receive('post:update');
       const anonEvent = anonSession.receive('post:update');
@@ -294,7 +321,13 @@ describe('Pins (v2)', () => {
         anonEvent,
       ]);
       expect(lunaEvent, 'to be fulfilled with value satisfying', {
-        posts: { id: post.id, isPinned: true, pinnedIn: expect.it('to contain', luna.user.id) },
+        posts: {
+          id: post.id,
+          pinnedIn: expect.it(
+            'to satisfy',
+            expect.it((arr) => arr.some((d) => d.ownerId === luna.user.id)),
+          ),
+        },
       });
     });
 
@@ -310,7 +343,13 @@ describe('Pins (v2)', () => {
         ev,
       ]);
       expect(ev, 'to be fulfilled with value satisfying', {
-        posts: { id: post.id, pinnedIn: expect.it('to contain', group.id) },
+        posts: {
+          id: post.id,
+          pinnedIn: expect.it(
+            'to satisfy',
+            expect.it((arr) => arr.some((d) => d.ownerId === group.id)),
+          ),
+        },
       });
     });
 

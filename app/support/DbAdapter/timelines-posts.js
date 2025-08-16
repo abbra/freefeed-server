@@ -498,21 +498,22 @@ const timelinesPostsTrait = (superClass) =>
         }
       }
 
-      // Mark pinned posts (pinned by their authors)
+      // Mark pinned posts
       try {
-        const ownersMap = await this.getPinnedOwnersByPosts(uniqPostsIds);
+        const detailsMap = await this.getPinnedDetailsByPosts(uniqPostsIds);
 
-        for (const [pid, owners] of ownersMap.entries()) {
-          if (results[pid]) {
-            results[pid].post.pinnedIn = owners;
-
-            if (owners.includes(results[pid].post.userId)) {
-              results[pid].post.isPinned = true;
-            }
+        for (const [pid, details] of detailsMap.entries()) {
+          if (!results[pid]) {
+            continue;
           }
+
+          results[pid].post.pinnedIn = details.map((d) => ({
+            ownerId: d.userId,
+            pinnedAt: d.createdAt,
+          }));
         }
       } catch {
-        // ignore silently if table doesn't exist yet
+        // ignore silently if table or columns don't exist yet
       }
 
       for (const dest of destData) {

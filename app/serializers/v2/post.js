@@ -217,6 +217,6 @@ function serializePostData(post) {
       'pinnedIn',
     ]),
     createdBy: post.userId,
-    ...(post.isPinned ? { isPinned: true } : {}),
+    // no isPinned: rely on pinnedIn contents
   };
 }

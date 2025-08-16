@@ -237,6 +237,9 @@ export class DbAdapter {
   // Pinned posts
   pinUserPost(userId: UUID, postId: UUID, pinnedBy: UUID): Promise<boolean>;
   unpinUserPost(userId: UUID, postId: UUID): Promise<boolean>;
+  getPinnedDetailsByPosts(
+    postIds: UUID[],
+  ): Promise<Map<UUID, { userId: UUID; createdAt: string; pinnedBy: UUID | null }[]>>;
 
   // Likes
   unlikePost(postId: UUID, userId: UUID): Promise<boolean>;
