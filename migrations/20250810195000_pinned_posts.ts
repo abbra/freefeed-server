@@ -1,16 +1,44 @@
 import type { Knex } from 'knex';
 
-export const up = (knex: Knex) =>
-  knex.raw(`do $$begin
-  create table if not exists pinned_posts (
-    user_id   uuid    not null references users (uid) on delete cascade on update cascade,
-    post_id   uuid    not null references posts (uid) on delete cascade on update cascade,
-    created_at timestamptz not null default now(),
-    primary key (user_id, post_id)
-  );
-end$$`);
+// Consolidated migration for pins feature: creates table and event types
+export const up = async (knex: Knex) => {
+  // Create final version of pinned_posts table using feed_id + post_id PK and non-null pinned_by
+  await knex.schema.raw(`do $$begin
+    create table if not exists pinned_posts (
+      feed_id    uuid not null references feeds (uid) on delete cascade on update cascade,
+      post_id    uuid not null references posts (uid) on delete cascade on update cascade,
+      pinned_by  uuid not null references users (uid) on delete cascade on update cascade,
+      created_at timestamptz not null default now(),
+      primary key (feed_id, post_id)
+    );
+  end$$`);
 
-export const down = (knex: Knex) =>
-  knex.raw(`do $$begin
-  drop table if exists pinned_posts;
-end$$`);
+  // Useful indexes for fast lookups and ordering
+  await knex.schema.raw(`do $$begin
+    create index if not exists pinned_posts_post_id_idx on pinned_posts (post_id);
+    create index if not exists pinned_posts_feed_created_idx on pinned_posts (feed_id, created_at);
+  end$$`);
+
+  // Register event types for pin/unpin notifications
+  await knex.schema.raw(`do $$begin
+    insert into event_types (event_type) values
+      ('post_pinned_in_group'),
+      ('post_unpinned_in_group'),
+      ('post_pinned_in_profile'),
+      ('post_unpinned_in_profile')
+    on conflict do nothing;
+  end$$`);
+};
+
+export const down = async (knex: Knex) => {
+  await knex.schema.raw(`do $$begin
+    drop table if exists pinned_posts;
+  end$$`);
+
+  await knex.schema.raw(`do $$begin
+    delete from event_types where event_type in (
+      'post_pinned_in_group','post_unpinned_in_group',
+      'post_pinned_in_profile','post_unpinned_in_profile'
+    );
+  end$$`);
+};

@@ -18,61 +18,9 @@ export default (superClass: typeof DbAdapter) =>
       return true;
     }
 
-    async getPinnedPostIdsForUser(userId: string): Promise<string[]> {
-      const rows = await this.database
-        .select('post_id')
-        .from('pinned_posts')
-        .where({ user_id: userId })
-        .orderBy('created_at', 'desc');
-      return rows.map((r: any) => r.post_id);
-    }
-
-    async getPinnedStatusesForPosts(postIds: string[]): Promise<Set<string>> {
-      if (postIds.length === 0) {
-        return new Set();
-      }
-
-      const sql = pgFormat(
-        `select p.uid as post_id
-         from posts p
-         join feeds f on f.user_id = p.user_id and f.name = 'Posts' and f.ord is null
-         join pinned_posts pp on pp.post_id = p.uid and pp.feed_id = f.uid
-         where p.uid in (%L)`,
-        postIds,
-      );
-      const { rows } = await this.database.raw(sql);
-      return new Set(rows.map((r: any) => r.post_id));
-    }
-
-    async getPinnedOwnersByPosts(postIds: string[]): Promise<Map<string, string[]>> {
-      if (postIds.length === 0) {
-        return new Map();
-      }
-
-      const sql = pgFormat(
-        `select pp.post_id, f.user_id as owner_id
-         from pinned_posts pp
-         join feeds f on f.uid = pp.feed_id
-         where pp.post_id in (%L)`,
-        postIds,
-      );
-      const { rows } = await this.database.raw(sql);
-      const map = new Map<string, string[]>();
-
-      for (const r of rows) {
-        if (!map.has(r.post_id)) {
-          map.set(r.post_id, []);
-        }
-
-        map.get(r.post_id)!.push(r.owner_id);
-      }
-
-      return map;
-    }
-
     async getPinnedDetailsByPosts(
       postIds: string[],
-    ): Promise<Map<string, { userId: string; createdAt: string; pinnedBy: string | null }[]>> {
+    ): Promise<Map<string, { userId: string; createdAt: string; pinnedBy: string }[]>> {
       if (postIds.length === 0) {
         return new Map();
       }
@@ -86,10 +34,7 @@ export default (superClass: typeof DbAdapter) =>
         postIds,
       );
       const { rows } = await this.database.raw(sql);
-      const map = new Map<
-        string,
-        { userId: string; createdAt: string; pinnedBy: string | null }[]
-      >();
+      const map = new Map<string, { userId: string; createdAt: string; pinnedBy: string }[]>();
 
       for (const r of rows) {
         if (!map.has(r.post_id)) {
@@ -99,7 +44,7 @@ export default (superClass: typeof DbAdapter) =>
         map.get(r.post_id)!.push({
           userId: r.user_id,
           createdAt: new Date(r.created_at).toISOString(),
-          pinnedBy: r.pinned_by ?? null,
+          pinnedBy: r.pinned_by,
         });
       }
 

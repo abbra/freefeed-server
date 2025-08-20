@@ -273,7 +273,7 @@ async function genericTimeline(timeline = null, viewerId = null, params = {}) {
     }
   }
 
-  const pinnedUserId = timeline && timeline.name === 'Posts' ? timeline.id : null;
+  const feedPinnedIn = timeline && timeline.name === 'Posts' ? timeline.id : null;
 
   const postsIds =
     !timeline || (await timeline.canShow(viewerId))
@@ -283,7 +283,7 @@ async function genericTimeline(timeline = null, viewerId = null, params = {}) {
           activityFeedIds,
           activityOnPropagable,
           activityHideIds,
-          pinnedUserId,
+          feedPinnedIn,
           limit: params.limit + 1,
         })
       : [];

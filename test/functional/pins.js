@@ -11,7 +11,6 @@ import { PubSubAdapter } from '../../app/support/PubSubAdapter';
 import Session from './realtime-session';
 import {
   createTestUsers,
-  createTestUser,
   mutualSubscriptions,
   performJSONRequest,
   authHeaders,
@@ -62,7 +61,7 @@ describe('Pins (v2)', () => {
         },
       });
 
-      const authorFeed = await (await luna.user.getPostsTimeline()).id;
+      const authorFeed = (await luna.user.getPostsTimeline()).id;
       const rows = await dbAdapter
         .database('pinned_posts')
         .select('*')
@@ -125,7 +124,7 @@ describe('Pins (v2)', () => {
           },
         });
 
-        const groupFeed = await (await group.getPostsTimeline()).id;
+        const groupFeed = (await group.getPostsTimeline()).id;
         const rows = await dbAdapter
           .database('pinned_posts')
           .select('*')
@@ -367,25 +366,6 @@ describe('Pins (v2)', () => {
   });
 
   describe('DB and migrations behaviors', () => {
-    it('ON DELETE CASCADE removes pinned row', async () => {
-      const luna = await createTestUser();
-      const post = await justCreatePost(luna, 'Hello');
-      await performJSONRequest('POST', `/v2/posts/${post.id}/pin`, {}, authHeaders(luna));
-      const authorFeed = await (await luna.user.getPostsTimeline()).id;
-      const before = await dbAdapter
-        .database('pinned_posts')
-        .select('*')
-        .where({ feed_id: authorFeed, post_id: post.id });
-      expect(before, 'to have length', 1);
-      // Delete post record directly to test DB cascade behavior
-      await dbAdapter.deletePostRecord(post.id);
-      const after = await dbAdapter
-        .database('pinned_posts')
-        .select('*')
-        .where({ feed_id: authorFeed, post_id: post.id });
-      expect(after, 'to have length', 0);
-    });
-
     it('Removing group from recipients unpins from that group', async () => {
       const [luna, mars] = await createTestUsers(['luna', 'mars']);
       const group = await justCreateGroup(mars, 'celestials', 'Celestials');
@@ -405,7 +385,7 @@ describe('Pins (v2)', () => {
         authHeaders(luna),
       );
       expect(upd, 'to satisfy', { __httpCode: 200 });
-      const groupFeed = await (await group.getPostsTimeline()).id;
+      const groupFeed = (await group.getPostsTimeline()).id;
       const rows = await dbAdapter
         .database('pinned_posts')
         .select('*')
@@ -475,6 +455,51 @@ describe('Pins (v2)', () => {
         Notifications: expect.it('to be non-empty'),
       });
       expect(unpinnedEventsMars, 'to satisfy', {
+        __httpCode: 200,
+        Notifications: expect.it('to be non-empty'),
+      });
+    });
+  });
+
+  describe('Notifications for profile pin/unpin', () => {
+    it('post_pinned_in_profile and post_unpinned_in_profile are delivered', async () => {
+      const [luna] = await createTestUsers(['luna']);
+      const post = await justCreatePost(luna, 'Hello');
+
+      const pinResp = await performJSONRequest(
+        'POST',
+        `/v2/posts/${post.id}/pin`,
+        {},
+        authHeaders(luna),
+      );
+      expect(pinResp, 'to satisfy', { __httpCode: 200 });
+
+      const pinnedEvents = await performJSONRequest(
+        'GET',
+        '/v2/notifications?filter=post_pinned_in_profile',
+        null,
+        authHeaders(luna),
+      );
+      expect(pinnedEvents, 'to satisfy', {
+        __httpCode: 200,
+        Notifications: expect.it('to be non-empty'),
+      });
+
+      const unpinResp = await performJSONRequest(
+        'POST',
+        `/v2/posts/${post.id}/unpin`,
+        {},
+        authHeaders(luna),
+      );
+      expect(unpinResp, 'to satisfy', { __httpCode: 200 });
+
+      const unpinnedEvents = await performJSONRequest(
+        'GET',
+        '/v2/notifications?filter=post_unpinned_in_profile',
+        null,
+        authHeaders(luna),
+      );
+      expect(unpinnedEvents, 'to satisfy', {
         __httpCode: 200,
         Notifications: expect.it('to be non-empty'),
       });

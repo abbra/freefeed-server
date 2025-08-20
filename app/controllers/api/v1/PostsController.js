@@ -246,19 +246,6 @@ export default class PostsController {
       const undo = [];
 
       if (feedsToRemain.length === 0) {
-        // Unpin from all destination groups (cascades will remove on full delete, but do it explicitly)
-        {
-          const owners = await Promise.all(
-            postDestinations.filter((f) => f.isPosts()).map((f) => f.getUser()),
-          );
-          const groups = owners.filter((o) => o.isGroup());
-
-          if (groups.length > 0) {
-            const groupFeeds = await Promise.all(groups.map((g) => g.getPostsTimeline()));
-            await Promise.all(groupFeeds.map((f) => dbAdapter.unpinUserPost(f.id, post.id)));
-          }
-        }
-
         // Start the complete removal process
         if (await post.inactivate(user)) {
           const author = await dbAdapter.getUserById(post.userId);
@@ -275,19 +262,6 @@ export default class PostsController {
         }
       } else {
         // Partial removal: remove post only from several feeds
-        // Unpin from removed groups
-        {
-          const owners = await Promise.all(
-            fromFeeds.filter((f) => f.isPosts()).map((f) => f.getUser()),
-          );
-          const groups = owners.filter((o) => o.isGroup());
-
-          if (groups.length > 0) {
-            const groupFeeds = await Promise.all(groups.map((g) => g.getPostsTimeline()));
-            await Promise.all(groupFeeds.map((f) => dbAdapter.unpinUserPost(f.id, post.id)));
-          }
-        }
-
         await post.update({
           destinationFeedIds: _.map(feedsToRemain, 'intId'),
           updatedBy: user,

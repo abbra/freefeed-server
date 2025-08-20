@@ -127,6 +127,21 @@ export async function serializeFeed(
     destinations.forEach((d) => allUserIds.add(d.user));
   }
 
+  // Fill pinnedIn for posts
+  const postMap = new Map(allPosts.map((p) => [p.id, p]));
+
+  const detailsMap = await dbAdapter.getPinnedDetailsByPosts(postIds);
+
+  for (const [pid, details] of detailsMap.entries()) {
+    const sp = postMap.get(pid);
+
+    if (!sp) {
+      continue;
+    }
+
+    sp.pinnedIn = details.map((d) => ({ ownerId: d.userId, pinnedAt: d.createdAt }));
+  }
+
   let timelines = null;
 
   if (timeline) {

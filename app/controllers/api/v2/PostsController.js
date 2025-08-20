@@ -13,7 +13,12 @@ import {
 } from '../../middlewares';
 import { ForbiddenException } from '../../../support/exceptions';
 
-import { getPostsByIdsInputSchema, notifyOfAllCommentsInputSchema } from './data-schemes/posts';
+import {
+  getPostsByIdsInputSchema,
+  notifyOfAllCommentsInputSchema,
+  pinPostInputSchema,
+  unpinPostInputSchema,
+} from './data-schemes/posts';
 import { getCommonParams } from './TimelinesController';
 
 export const show = compose([
@@ -191,6 +196,7 @@ export const notifyOfAllComments = compose([
 export const pin = compose([
   authRequired(),
   postAccessRequired(),
+  inputSchemaRequired(pinPostInputSchema),
   async (ctx) => {
     const { user, post, apiVersion } = ctx.state;
     const { owner } = ctx.request.body || {};
@@ -208,9 +214,9 @@ export const pin = compose([
         throw new ForbiddenException('Only groups supported as non-author owners');
       }
 
-      const admins = await ownerAccount.getAdministrators();
+      const isAdmin = await dbAdapter.isUserAdminOfGroup(user.id, ownerId);
 
-      if (!admins.some((a) => a.id === user.id)) {
+      if (!isAdmin) {
         throw new ForbiddenException('You are not admin of this group');
       }
       // Check post present in this group
@@ -230,6 +236,8 @@ export const pin = compose([
     if (ownerId !== post.userId) {
       const group = await dbAdapter.getFeedOwnerById(ownerId);
       await EventService.onPostPinnedInGroup(user, group, post);
+    } else {
+      await EventService.onPostPinnedInProfile(user, post);
     }
 
     await pubSub.updatePost(post.id);
@@ -240,6 +248,7 @@ export const pin = compose([
 export const unpin = compose([
   authRequired(),
   postAccessRequired(),
+  inputSchemaRequired(unpinPostInputSchema),
   async (ctx) => {
     const { user, post, apiVersion } = ctx.state;
     const { owner } = ctx.request.body || {};
@@ -256,9 +265,7 @@ export const unpin = compose([
         throw new ForbiddenException('Only groups supported as non-author owners');
       }
 
-      const admins = await ownerAccount.getAdministrators();
-
-      if (!admins.some((a) => a.id === user.id)) {
+      if (!(await dbAdapter.isUserAdminOfGroup(user.id, ownerId))) {
         throw new ForbiddenException('You are not admin of this group');
       }
     }
@@ -270,6 +277,8 @@ export const unpin = compose([
     if (ownerId !== post.userId) {
       const group = await dbAdapter.getFeedOwnerById(ownerId);
       await EventService.onPostUnpinnedInGroup(user, group, post);
+    } else {
+      await EventService.onPostUnpinnedInProfile(user, post);
     }
 
     await pubSub.updatePost(post.id);

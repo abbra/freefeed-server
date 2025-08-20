@@ -232,6 +232,7 @@ export class DbAdapter {
       activityOnPropagable: boolean;
       activityHideIds: number[];
       authorsIds: ListLike<UUID>;
+      feedPinnedIn: UUID | null;
     }>,
   ): Promise<UUID[]>;
   // Pinned posts
@@ -239,7 +240,7 @@ export class DbAdapter {
   unpinUserPost(feedId: UUID, postId: UUID): Promise<boolean>;
   getPinnedDetailsByPosts(
     postIds: UUID[],
-  ): Promise<Map<UUID, { userId: UUID; createdAt: string; pinnedBy: UUID | null }[]>>;
+  ): Promise<Map<UUID, { userId: UUID; createdAt: string; pinnedBy: UUID }[]>>;
 
   // Likes
   unlikePost(postId: UUID, userId: UUID): Promise<boolean>;

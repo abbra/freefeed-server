@@ -578,6 +578,44 @@ export class EventService {
     );
   }
 
+  static async onPostPinnedInProfile(initiator: User, post: Post) {
+    const postAuthor = await dbAdapter.getUserById(post.userId);
+
+    if (!postAuthor) {
+      return;
+    }
+
+    await createEvent(
+      postAuthor.intId,
+      EVENT_TYPES.POST_PINNED_IN_PROFILE,
+      initiator.intId,
+      postAuthor.intId,
+      null,
+      post.id,
+      null,
+      postAuthor.intId,
+    );
+  }
+
+  static async onPostUnpinnedInProfile(initiator: User, post: Post) {
+    const postAuthor = await dbAdapter.getUserById(post.userId);
+
+    if (!postAuthor) {
+      return;
+    }
+
+    await createEvent(
+      postAuthor.intId,
+      EVENT_TYPES.POST_UNPINNED_IN_PROFILE,
+      initiator.intId,
+      postAuthor.intId,
+      null,
+      post.id,
+      null,
+      postAuthor.intId,
+    );
+  }
+
   static async onPostFeedsChanged(
     post: Post,
     changedBy: User,
@@ -594,13 +632,6 @@ export class EventService {
       removedFeeds.filter((f) => f.isPosts()).map((f) => f.getUser()),
     );
     const removedFromGroups = removedFeedOwners.filter((o) => o.isGroup()) as Group[];
-
-    // Always unpin post from removed groups regardless of who removed it
-    if (removedFromGroups.length > 0) {
-      const feeds = await Promise.all(removedFromGroups.map((g) => g.getPostsTimeline()));
-      const nonNullFeeds = feeds.filter((f): f is Timeline => f !== null);
-      await Promise.all(nonNullFeeds.map((f) => dbAdapter.unpinUserPost(f.id, post.id)));
-    }
 
     const postAuthor = await dbAdapter.getUserById(post.userId);
 
