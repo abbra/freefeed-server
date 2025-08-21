@@ -673,10 +673,7 @@ export class EventService {
         );
       }),
     );
-
-    // (unpin already processed above)
   }
-
   static async onInvitationUsed(fromUserIntId: number, newUserIntId: number) {
     await createEvent(fromUserIntId, EVENT_TYPES.INVITATION_USED, newUserIntId, newUserIntId);
   }
