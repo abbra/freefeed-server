@@ -1,4 +1,15 @@
+// See 20251005… migration for the name issue
+
 import type { Knex } from 'knex';
+
+import { eventTypesSQLs } from '../app/support/migrations';
+
+const [eventTypesUp, eventTypesDown] = eventTypesSQLs(
+  'post_pinned_in_group',
+  'post_unpinned_in_group',
+  'post_pinned_in_profile',
+  'post_unpinned_in_profile',
+);
 
 // Consolidated migration for pins feature: creates table and event types
 export const up = async (knex: Knex) => {
@@ -21,12 +32,7 @@ export const up = async (knex: Knex) => {
 
   // Register event types for pin/unpin notifications
   await knex.schema.raw(`do $$begin
-    insert into event_types (event_type) values
-      ('post_pinned_in_group'),
-      ('post_unpinned_in_group'),
-      ('post_pinned_in_profile'),
-      ('post_unpinned_in_profile')
-    on conflict do nothing;
+    ${eventTypesUp}
   end$$`);
 };
 
@@ -36,9 +42,6 @@ export const down = async (knex: Knex) => {
   end$$`);
 
   await knex.schema.raw(`do $$begin
-    delete from event_types where event_type in (
-      'post_pinned_in_group','post_unpinned_in_group',
-      'post_pinned_in_profile','post_unpinned_in_profile'
-    );
+    ${eventTypesDown}
   end$$`);
 };
