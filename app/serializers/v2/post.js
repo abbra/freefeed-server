@@ -73,6 +73,8 @@ export async function serializeFeed(
     commentedPostIds = await dbAdapter.getPostsPresentsInTimeline(postIds, feedIntId);
   }
 
+  const pinDetailsMap = await dbAdapter.getPinnedDetailsByPosts(postIds);
+
   for (const {
     post,
     destinations,
@@ -115,6 +117,17 @@ export async function serializeFeed(
       sPost.notifyOfAllComments = true;
     }
 
+    if (pinDetailsMap.has(post.id)) {
+      sPost.pinnedIn = pinDetailsMap.get(post.id).map((d) => ({
+        ownerId: d.userId,
+        pinnedAt: d.createdAt,
+      }));
+
+      for (const p of sPost.pinnedIn) {
+        allUserIds.add(p.ownerId);
+      }
+    }
+
     allPosts.push(sPost);
     allDestinations.push(...destinations);
     allSubscribers.push(...destinations.map((d) => d.user));
@@ -125,21 +138,6 @@ export async function serializeFeed(
     likes.forEach((l) => allUserIds.add(l));
     comments.forEach((c) => allUserIds.add(c.userId));
     destinations.forEach((d) => allUserIds.add(d.user));
-  }
-
-  // Fill pinnedIn for posts
-  const postMap = new Map(allPosts.map((p) => [p.id, p]));
-
-  const detailsMap = await dbAdapter.getPinnedDetailsByPosts(postIds);
-
-  for (const [pid, details] of detailsMap.entries()) {
-    const sp = postMap.get(pid);
-
-    if (!sp) {
-      continue;
-    }
-
-    sp.pinnedIn = details.map((d) => ({ ownerId: d.userId, pinnedAt: d.createdAt }));
   }
 
   let timelines = null;
