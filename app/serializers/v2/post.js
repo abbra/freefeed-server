@@ -119,7 +119,7 @@ export async function serializeFeed(
 
     if (pinDetailsMap.has(post.id)) {
       sPost.pinnedIn = pinDetailsMap.get(post.id).map((d) => ({
-        ownerId: d.userId,
+        targetId: d.userId,
         pinnedAt: d.createdAt,
       }));
 

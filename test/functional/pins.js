@@ -55,7 +55,7 @@ describe('Pins (v2)', () => {
           pinnedIn: expect.it(
             'to satisfy',
             expect.it((arr) =>
-              arr.some((d) => d.ownerId === luna.user.id && typeof d.pinnedAt === 'string'),
+              arr.some((d) => d.targetId === luna.user.id && typeof d.pinnedAt === 'string'),
             ),
           ),
         },
@@ -118,7 +118,7 @@ describe('Pins (v2)', () => {
             pinnedIn: expect.it(
               'to satisfy',
               expect.it((arr) =>
-                arr.some((d) => d.ownerId === group.id && typeof d.pinnedAt === 'string'),
+                arr.some((d) => d.targetId === group.id && typeof d.pinnedAt === 'string'),
               ),
             ),
           },
@@ -229,7 +229,7 @@ describe('Pins (v2)', () => {
         pinnedIn: expect.it(
           'to satisfy',
           expect.it((arr) =>
-            arr.some((d) => d.ownerId === luna.user.id && typeof d.pinnedAt === 'string'),
+            arr.some((d) => d.targetId === luna.user.id && typeof d.pinnedAt === 'string'),
           ),
         ),
       });
@@ -237,7 +237,7 @@ describe('Pins (v2)', () => {
         pinnedIn: expect.it(
           'to satisfy',
           expect.it((arr) =>
-            arr.some((d) => d.ownerId === group.id && typeof d.pinnedAt === 'string'),
+            arr.some((d) => d.targetId === group.id && typeof d.pinnedAt === 'string'),
           ),
         ),
       });
@@ -326,7 +326,7 @@ describe('Pins (v2)', () => {
           id: post.id,
           pinnedIn: expect.it(
             'to satisfy',
-            expect.it((arr) => arr.some((d) => d.ownerId === luna.user.id)),
+            expect.it((arr) => arr.some((d) => d.targetId === luna.user.id)),
           ),
         },
       });
@@ -348,7 +348,7 @@ describe('Pins (v2)', () => {
           id: post.id,
           pinnedIn: expect.it(
             'to satisfy',
-            expect.it((arr) => arr.some((d) => d.ownerId === group.id)),
+            expect.it((arr) => arr.some((d) => d.targetId === group.id)),
           ),
         },
       });
