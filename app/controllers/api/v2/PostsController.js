@@ -11,7 +11,7 @@ import {
   monitored,
   postAccessRequired,
 } from '../../middlewares';
-import { ForbiddenException } from '../../../support/exceptions';
+import { BadRequestException, ForbiddenException } from '../../../support/exceptions';
 
 import {
   getPostsByIdsInputSchema,
@@ -199,29 +199,33 @@ export const pin = compose([
   inputSchemaRequired(pinPostInputSchema),
   async (ctx) => {
     const { user, post, apiVersion } = ctx.state;
-    const { owner } = ctx.request.body || {};
-    // Determine ownerId: default to author
-    const ownerId = owner || post.userId;
+    const { target: targetName } = ctx.request.body || {};
 
-    if (ownerId === post.userId) {
+    // Default target is the user themselves
+    const target = targetName ? await dbAdapter.getFeedOwnerByUsername(targetName) : user;
+
+    if (!target) {
+      throw new BadRequestException('Target account not found');
+    }
+
+    if (target.isUser()) {
+      if (target.id !== user.id) {
+        throw new ForbiddenException('You can pin post to your own profile only');
+      }
+
       if (post.userId !== user.id) {
-        throw new ForbiddenException('You can not pin this post');
+        throw new ForbiddenException("You can not pin someone else's post");
       }
     } else {
-      const ownerAccount = await dbAdapter.getFeedOwnerById(ownerId);
-
-      if (!ownerAccount || !ownerAccount.isGroup()) {
-        throw new ForbiddenException('Only groups supported as non-author owners');
-      }
-
-      const isAdmin = await dbAdapter.isUserAdminOfGroup(user.id, ownerId);
+      // Group
+      const isAdmin = await dbAdapter.isUserAdminOfGroup(user.id, target.id);
 
       if (!isAdmin) {
         throw new ForbiddenException('You are not admin of this group');
       }
-      // Check post present in this group
 
-      const present = await dbAdapter.isPostInUserFeed(post.id, ownerId, 'Posts');
+      // Check post present in this group
+      const present = await dbAdapter.isPostInUserFeed(post.id, target.id, 'Posts');
 
       if (!present) {
         throw new ForbiddenException('Post is not in this group');
@@ -229,13 +233,11 @@ export const pin = compose([
     }
 
     // Determine Posts feed UUID of the owner
-    const ownerAccount = await dbAdapter.getFeedOwnerById(ownerId);
-    const ownerFeed = await ownerAccount.getPostsTimeline();
-    await dbAdapter.pinUserPost(ownerFeed.id, post.id, user.id);
+    const targetFeed = await target.getPostsTimeline();
+    await dbAdapter.pinUserPost(targetFeed.id, post.id, user.id);
 
-    if (ownerId !== post.userId) {
-      const group = await dbAdapter.getFeedOwnerById(ownerId);
-      await EventService.onPostPinnedInGroup(user, group, post);
+    if (target.id !== post.userId) {
+      await EventService.onPostPinnedInGroup(user, target, post);
     } else {
       await EventService.onPostPinnedInProfile(user, post);
     }
@@ -251,32 +253,44 @@ export const unpin = compose([
   inputSchemaRequired(unpinPostInputSchema),
   async (ctx) => {
     const { user, post, apiVersion } = ctx.state;
-    const { owner } = ctx.request.body || {};
-    const ownerId = owner || post.userId;
+    const { target: targetName } = ctx.request.body || {};
 
-    if (ownerId === post.userId) {
+    // Default target is the user themselves
+    const target = targetName ? await dbAdapter.getFeedOwnerByUsername(targetName) : user;
+
+    if (!target) {
+      throw new BadRequestException('Target account not found');
+    }
+
+    if (target.isUser()) {
+      if (target.id !== user.id) {
+        throw new ForbiddenException('You can unpin post to your own profile only');
+      }
+
       if (post.userId !== user.id) {
-        throw new ForbiddenException('You can not unpin this post');
+        throw new ForbiddenException("You can not unpin someone else's post");
       }
     } else {
-      const ownerAccount = await dbAdapter.getFeedOwnerById(ownerId);
+      // Group
+      const isAdmin = await dbAdapter.isUserAdminOfGroup(user.id, target.id);
 
-      if (!ownerAccount || !ownerAccount.isGroup()) {
-        throw new ForbiddenException('Only groups supported as non-author owners');
+      if (!isAdmin) {
+        throw new ForbiddenException('You are not admin of this group');
       }
 
-      if (!(await dbAdapter.isUserAdminOfGroup(user.id, ownerId))) {
-        throw new ForbiddenException('You are not admin of this group');
+      // Check post present in this group
+      const present = await dbAdapter.isPostInUserFeed(post.id, target.id, 'Posts');
+
+      if (!present) {
+        throw new ForbiddenException('Post is not in this group');
       }
     }
 
-    const ownerAccount = await dbAdapter.getFeedOwnerById(ownerId);
-    const ownerFeed = await ownerAccount.getPostsTimeline();
-    await dbAdapter.unpinUserPost(ownerFeed.id, post.id);
+    const targetFeed = await target.getPostsTimeline();
+    await dbAdapter.unpinUserPost(targetFeed.id, post.id);
 
-    if (ownerId !== post.userId) {
-      const group = await dbAdapter.getFeedOwnerById(ownerId);
-      await EventService.onPostUnpinnedInGroup(user, group, post);
+    if (target.id !== post.userId) {
+      await EventService.onPostUnpinnedInGroup(user, target, post);
     } else {
       await EventService.onPostUnpinnedInProfile(user, post);
     }

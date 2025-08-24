@@ -39,7 +39,7 @@ export const pinPostInputSchema = {
   type: 'object',
   additionalProperties: false,
   properties: {
-    owner: { $ref: '#/definitions/uuid' },
+    target: { $ref: '#/definitions/accountName' },
   },
 };
 

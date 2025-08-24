@@ -108,7 +108,7 @@ describe('Pins (v2)', () => {
         const pinResp = await performJSONRequest(
           'POST',
           `/v2/posts/${post.id}/pin`,
-          { owner: group.id },
+          { target: group.username },
           authHeaders(mars),
         );
         expect(pinResp, 'to satisfy', {
@@ -135,7 +135,7 @@ describe('Pins (v2)', () => {
         const unpinResp = await performJSONRequest(
           'POST',
           `/v2/posts/${post.id}/unpin`,
-          { owner: group.id },
+          { target: group.username },
           authHeaders(mars),
         );
         expect(unpinResp, 'to satisfy', { __httpCode: 200 });
@@ -150,7 +150,7 @@ describe('Pins (v2)', () => {
         const pinResp = await performJSONRequest(
           'POST',
           `/v2/posts/${post.id}/pin`,
-          { owner: group.id },
+          { target: group.username },
           authHeaders(venus),
         );
         expect(pinResp, 'to satisfy', { __httpCode: 403 });
@@ -161,7 +161,7 @@ describe('Pins (v2)', () => {
         const pinResp = await performJSONRequest(
           'POST',
           `/v2/posts/${post.id}/pin`,
-          { owner: other.id },
+          { target: other.username },
           authHeaders(mars),
         );
         expect(pinResp, 'to satisfy', { __httpCode: 403 });
@@ -218,7 +218,7 @@ describe('Pins (v2)', () => {
       await performJSONRequest(
         'POST',
         `/v2/posts/${p3.id}/pin`,
-        { owner: group.id },
+        { target: group.username },
         authHeaders(mars),
       );
 
@@ -338,7 +338,7 @@ describe('Pins (v2)', () => {
         performJSONRequest(
           'POST',
           `/v2/posts/${post.id}/pin`,
-          { owner: group.id },
+          { target: group.username },
           authHeaders(mars),
         ),
         ev,
@@ -374,7 +374,7 @@ describe('Pins (v2)', () => {
       await performJSONRequest(
         'POST',
         `/v2/posts/${post.id}/pin`,
-        { owner: group.id },
+        { target: group.username },
         authHeaders(mars),
       );
       // Remove group from destinations (update post feeds)
@@ -404,7 +404,7 @@ describe('Pins (v2)', () => {
       const pinResp = await performJSONRequest(
         'POST',
         `/v2/posts/${post.id}/pin`,
-        { owner: group.id },
+        { target: group.username },
         authHeaders(mars),
       );
       expect(pinResp, 'to satisfy', { __httpCode: 200 });
@@ -433,7 +433,7 @@ describe('Pins (v2)', () => {
       const unpinResp = await performJSONRequest(
         'POST',
         `/v2/posts/${post.id}/unpin`,
-        { owner: group.id },
+        { target: group.username },
         authHeaders(mars),
       );
       expect(unpinResp, 'to satisfy', { __httpCode: 200 });
