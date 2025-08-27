@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [2.25.0] - Not released
+### Added
+- New API for pinning and unpinning posts in groups and author's profile. The
+  new methods are:
+  - `POST /vN/posts/:postId/pin`
+  - `POST /vN/posts/:postId/unpin`
+   
+  In both methods the request body is `{ "target": "username" }`. The _target_
+  is the username of the target user or group, to which feed the post will be
+  pinned. User can pin only their own posts and only to their own feed or
+  managed groups. The _target_ may be omitted to pin the post to the user's
+  profile.
+
+  Serialized posts have a new `pinnedIn` field, if the post is pinned to some
+  feed. This field is an array of `{"targetId": UUID, "pinnedAt": ISODateTime}`
+  objects.
 
 ## [2.24.3] - 2025-08-14
 ### Fixed

@@ -32,6 +32,7 @@ const timelinesPostsTrait = (superClass) =>
       withLocalBumps = false,
       wideSelect = false,
       selectSQL = 'true',
+      feedPinnedIn = null,
     }) {
       withLocalBumps = withLocalBumps && !!viewerId && sort === 'bumped';
 
@@ -66,12 +67,15 @@ const timelinesPostsTrait = (superClass) =>
           from 
             posts p
             join users u on p.user_id = u.uid
+            ${feedPinnedIn ? `left join pinned_posts pp on pp.post_id = p.uid and pp.feed_id = %L` : ''}
           where
             ${restrictionsSQL}
           order by
+            ${feedPinnedIn ? 'pp.created_at asc nulls last,' : ''}
             p.%I desc
           limit %L offset %L
         `,
+            ...(feedPinnedIn ? [feedPinnedIn] : []),
             `${_sort}_at`,
             _limit,
             _offset,
@@ -85,12 +89,15 @@ const timelinesPostsTrait = (superClass) =>
         from 
           posts p
           join users u on p.user_id = u.uid
+          ${feedPinnedIn ? `left join pinned_posts pp on pp.post_id = p.uid and pp.feed_id = %L` : ''}
         where
           (${selectSQL}) and (${restrictionsSQL})
         order by
+          ${feedPinnedIn ? 'pp.created_at asc nulls last,' : ''}
           p.%I desc
         limit %L offset %L
       `,
+          ...(feedPinnedIn ? [feedPinnedIn] : []),
           `${_sort}_at`,
           _limit,
           _offset,
@@ -264,6 +271,7 @@ const timelinesPostsTrait = (superClass) =>
         withLocalBumps: params.withLocalBumps,
         wideSelect: timelineIntIds ? timelineIntIds.length > smallFeedThreshold : true,
         selectSQL,
+        feedPinnedIn: params.feedPinnedIn,
       });
     }
 
@@ -454,7 +462,7 @@ const timelinesPostsTrait = (superClass) =>
         banned_by_viewer, banned_by_author
       from comments
       ${foldCommentsSql}
-      order by created_at, id
+        order by created_at, id
     `;
 
       const [likesData, commentsData, postsCommentLikes, backlinks] = await Promise.all([

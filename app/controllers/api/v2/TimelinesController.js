@@ -273,6 +273,8 @@ async function genericTimeline(timeline = null, viewerId = null, params = {}) {
     }
   }
 
+  const feedPinnedIn = timeline && timeline.name === 'Posts' ? timeline.id : null;
+
   const postsIds =
     !timeline || (await timeline.canShow(viewerId))
       ? await dbAdapter.getTimelinePostsIds(timelineIds, viewerId, {
@@ -281,6 +283,7 @@ async function genericTimeline(timeline = null, viewerId = null, params = {}) {
           activityFeedIds,
           activityOnPropagable,
           activityHideIds,
+          feedPinnedIn,
           limit: params.limit + 1,
         })
       : [];

@@ -30,3 +30,17 @@ export const notifyOfAllCommentsInputSchema = {
     enabled: { type: 'boolean' },
   },
 };
+
+export const pinPostInputSchema = {
+  $schema: 'http://json-schema.org/schema#',
+
+  definitions,
+
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    target: { $ref: '#/definitions/accountName' },
+  },
+};
+
+export const unpinPostInputSchema = pinPostInputSchema;

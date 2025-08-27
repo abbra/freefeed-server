@@ -6,6 +6,8 @@ import {
   leave,
   getReferringPosts,
   notifyOfAllComments,
+  pin,
+  unpin,
 } from '../../../controllers/api/v2/PostsController';
 import { getTranslatedBody } from '../../../controllers/api/v2/TranslationController';
 
@@ -19,4 +21,6 @@ export default function addRoutes(app) {
   app.post('/posts/byIds', getByIds);
   app.post('/posts/:postId/leave', leave);
   app.post('/posts/:postId/notifyOfAllComments', notifyOfAllComments);
+  app.post('/posts/:postId/pin', pin);
+  app.post('/posts/:postId/unpin', unpin);
 }

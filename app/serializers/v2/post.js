@@ -73,6 +73,8 @@ export async function serializeFeed(
     commentedPostIds = await dbAdapter.getPostsPresentsInTimeline(postIds, feedIntId);
   }
 
+  const pinDetailsMap = await dbAdapter.getPinnedDetailsByPosts(postIds);
+
   for (const {
     post,
     destinations,
@@ -113,6 +115,17 @@ export async function serializeFeed(
       sPost.notifyOfAllComments = true;
     } else if (commentedPostIds.includes(post.id)) {
       sPost.notifyOfAllComments = true;
+    }
+
+    if (pinDetailsMap.has(post.id)) {
+      sPost.pinnedIn = pinDetailsMap.get(post.id).map((d) => ({
+        targetId: d.userId,
+        pinnedAt: d.createdAt,
+      }));
+
+      for (const p of sPost.pinnedIn) {
+        allUserIds.add(p.ownerId);
+      }
     }
 
     allPosts.push(sPost);
@@ -214,6 +227,7 @@ function serializePostData(post) {
       'ownCommentLikes',
       'omittedCommentLikes',
       'omittedOwnCommentLikes',
+      'pinnedIn',
     ]),
     createdBy: post.userId,
   };

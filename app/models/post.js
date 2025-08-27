@@ -257,6 +257,16 @@ export function addModel(dbAdapter) {
               dbAdapter.getTimelinesByIntIds(removedFeedIds),
               dbAdapter.getTimelinesByIntIds(addedFeedIds),
             ]);
+            // Unpin from any removed Posts feeds (e.g., groups) here
+
+            const removedPostsFeeds = removedFeeds.filter((f) => f.isPosts());
+
+            if (removedPostsFeeds.length > 0) {
+              afterUpdate.push(() =>
+                Promise.all(removedPostsFeeds.map((f) => dbAdapter.unpinUserPost(f.id, this.id))),
+              );
+            }
+
             afterUpdate.push(() =>
               EventService.onPostFeedsChanged(this, params.updatedBy || postAuthor, {
                 addedFeeds,
