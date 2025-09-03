@@ -216,8 +216,13 @@ const timelinesPostsTrait = (superClass) =>
         // Hide activity-selected posts if they are posted to these feeds
         activityHideIds: [],
         authorsIds: List.everything(),
+        pinnedOnly: false,
         ...params,
       };
+
+      if (params.pinnedOnly) {
+        return [];
+      }
 
       params.withLocalBumps = params.withLocalBumps && !!viewerId && params.sort === 'bumped';
 
