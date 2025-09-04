@@ -1,6 +1,7 @@
 import { uniqBy, pick, compact, uniq } from 'lodash';
 
 import { dbAdapter } from '../../models';
+import { TIMELINE_VISIBILITY_FULL } from '../../models/constants';
 
 import { serializeUsersByIds } from './user';
 import { serializeAttachment } from './attachment';
@@ -38,7 +39,11 @@ export async function serializeFeed(
   timeline = null,
   { isLastPage = false, foldComments = true, foldLikes = true, apiVersion } = {},
 ) {
-  const canViewTimeline = timeline ? await timeline.canShow(viewerId) : true;
+  const visibilityLevel = timeline
+    ? await timeline.getVisibilityLevel(viewerId)
+    : TIMELINE_VISIBILITY_FULL;
+
+  const canSeeMeta = visibilityLevel === TIMELINE_VISIBILITY_FULL;
 
   const viewer = viewerId ? await dbAdapter.getUserById(viewerId) : null;
 
@@ -149,7 +154,7 @@ export async function serializeFeed(
       user: timeline.userId,
       posts: postIds,
     };
-    timelines.subscribers = canViewTimeline
+    timelines.subscribers = canSeeMeta
       ? await dbAdapter.getTimelineSubscribersIds(timeline.id)
       : [];
     allSubscribers.push(timeline.userId);
@@ -165,12 +170,12 @@ export async function serializeFeed(
     (u) => u.type === 'user' || (timeline && u.id === timeline.userId),
   );
 
-  const subscriptions = canViewTimeline ? uniqBy(compact(allDestinations), 'id') : [];
-  const subscribers = canViewTimeline
+  const subscriptions = canSeeMeta ? uniqBy(compact(allDestinations), 'id') : [];
+  const subscribers = canSeeMeta
     ? compact(uniq(allSubscribers)).map((id) => sAccountsMap.get(id))
     : [];
   const admins =
-    timeline && canViewTimeline
+    timeline && canSeeMeta
       ? (sAccountsMap.get(timeline.userId)?.administrators || []).map((id) => sAccountsMap.get(id))
       : [];
 

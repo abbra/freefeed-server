@@ -33,10 +33,16 @@ const timelinesPostsTrait = (superClass) =>
       wideSelect = false,
       selectSQL = 'true',
       feedPinnedIn = null,
+      pinnedOnly = false,
     }) {
       withLocalBumps = withLocalBumps && !!viewerId && sort === 'bumped';
 
-      const restrictionsSQL = await this.postsVisibilitySQL(viewerId);
+      let restrictionsSQL = await this.postsVisibilitySQL(viewerId);
+
+      // 'pinnedOnly' doesn't make sense without 'feedPinnedIn'
+      if (pinnedOnly && feedPinnedIn) {
+        restrictionsSQL = andJoin([restrictionsSQL, 'pp.post_id is not null']);
+      }
 
       /**
        * PostgreSQL is not very good dealing with queries like
@@ -107,7 +113,7 @@ const timelinesPostsTrait = (superClass) =>
       if (!withLocalBumps || offset > maxOffsetWithLocalBumps) {
         // without local bumps
         const sql = await getPostsSQL(limit, offset, sort);
-        return (await this.database.raw(sql)).rows.map((r) => r.uid);
+        return await this.database.getCol(sql);
       }
 
       // with local bumps
@@ -216,6 +222,8 @@ const timelinesPostsTrait = (superClass) =>
         // Hide activity-selected posts if they are posted to these feeds
         activityHideIds: [],
         authorsIds: List.everything(),
+        feedPinnedIn: null,
+        pinnedOnly: false,
         ...params,
       };
 
@@ -272,6 +280,7 @@ const timelinesPostsTrait = (superClass) =>
         wideSelect: timelineIntIds ? timelineIntIds.length > smallFeedThreshold : true,
         selectSQL,
         feedPinnedIn: params.feedPinnedIn,
+        pinnedOnly: params.pinnedOnly,
       });
     }
 

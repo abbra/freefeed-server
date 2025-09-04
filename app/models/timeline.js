@@ -1,6 +1,12 @@
 /* eslint babel/semi: "error" */
 import _ from 'lodash';
 
+import {
+  TIMELINE_VISIBILITY_NONE,
+  TIMELINE_VISIBILITY_PINNED_ONLY,
+  TIMELINE_VISIBILITY_FULL,
+} from './constants';
+
 /**
  * "Only friends" homefeed mode
  *
@@ -296,42 +302,84 @@ export function addModel(dbAdapter) {
       return true;
     }
 
-    async canShow(readerId) {
+    /**
+     * Determines the visibility level of a timeline for a specific reader.
+     *
+     * @param {string|null} readerId - The ID of the user trying to read the timeline.
+     *                                 Can be null for anonymous users.
+     * @returns {Promise<string>} One of: 'none', 'pinned_only', 'full'
+     * @throws {Error} If the timeline has no owner (orphaned feed).
+     *
+     * @description
+     * This method implements the core visibility logic for timelines:
+     * - Timeline owners always get full visibility
+     * - Personal feeds can only be seen by their owners (full) or not at all (none)
+     * - Inactive user feeds cannot be seen by anyone
+     * - Users in ban relations get no access
+     *
+     * For timeline visibility:
+     * - Public timelines: everyone gets full access
+     * - Protected timelines: subscribers get full access, others get pinned_only access
+     * - Private timelines: subscribers get full access, others get pinned_only access
+     *
+     * Note: Post visibility is determined by the most open timeline it belongs to.
+     * So pinned_only access means users can see public/protected posts that are pinned,
+     * even in private timelines.
+     */
+    async getVisibilityLevel(readerId) {
       if (this.userId === readerId) {
-        return true; // owner can read her posts
+        return TIMELINE_VISIBILITY_FULL; // owner can read all posts
       }
 
       if (this.isPersonal()) {
-        return false; // this is someone else's personal feed
+        return TIMELINE_VISIBILITY_NONE; // this is someone else's personal feed
       }
 
-      const user = await this.getUser();
+      const owner = await this.getUser();
 
-      if (!user) {
+      if (!owner) {
         throw new Error(`Feed without owner: ${this.id}`);
       }
 
-      if (!user.isActive) {
-        return false; // No one can read an inactive user feed
+      if (!owner.isActive) {
+        return TIMELINE_VISIBILITY_NONE; // No one can read an inactive user feed
       }
 
-      if (!readerId) {
-        return user.isProtected === '0';
-      }
+      // Check for ban relations first
+      if (readerId) {
+        const banIds = await dbAdapter.getUsersBansOrWasBannedBy(readerId);
 
-      if (user.isPrivate === '1') {
-        // User can view post if and only if she is subscriber
-        const subscriberIds = await dbAdapter.getUserSubscribersIds(user.id);
-        // const subscriberIds = await this.getSubscriberIds();
-
-        if (!subscriberIds.includes(readerId)) {
-          return false;
+        if (banIds.includes(owner.id)) {
+          return TIMELINE_VISIBILITY_NONE;
         }
       }
 
-      // Viewer cannot see feeds of users in ban relations with him
-      const banIds = await dbAdapter.getUsersBansOrWasBannedBy(readerId);
-      return !banIds.includes(user.id);
+      // Minimum visibility level for this timeline
+      const minVisibility = this.isPosts()
+        ? TIMELINE_VISIBILITY_PINNED_ONLY
+        : TIMELINE_VISIBILITY_NONE;
+
+      // Handle anonymous users
+      if (!readerId) {
+        // Private or protected feed: can see public pinned posts
+        if (owner.isPrivate === '1' || owner.isProtected === '1') {
+          return minVisibility;
+        }
+
+        // Public feed: can see all posts
+        return TIMELINE_VISIBILITY_FULL;
+      }
+
+      // Handle authenticated users
+
+      if (owner.isPrivate === '0') {
+        // Public or protected feed: can see all posts
+        return TIMELINE_VISIBILITY_FULL;
+      }
+
+      // Private feed: subscribers get full access, others can see pinned posts
+      const subscriberIds = await dbAdapter.getUserSubscribersIds(owner.id);
+      return subscriberIds.includes(readerId) ? TIMELINE_VISIBILITY_FULL : minVisibility;
     }
 
     /**
