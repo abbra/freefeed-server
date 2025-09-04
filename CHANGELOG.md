@@ -22,6 +22,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   feed. This field is an array of `{"targetId": UUID, "pinnedAt": ISODateTime}`
   objects.
 
+- Pinned posts affect visibility of protected/private user feeds. These feeds
+  are not visible to anonymous/not-subscribed users, even if they have visible
+  posts. It is a special behavior of such feeds.
+  
+  For example: private user creates a post, which belongs to their feed and to
+  some public group. This post has public visibility, so it is visible to
+  anonymous users (in group, in home feed, or by direct link). But when
+  anonymous user requests the author's feed, they will not see any post.
+
+  Pinned posts break this behavior: they are visible to anyone, who can see
+  them. So private user can make some public posts, pin them to their feed, and
+  these posts will be visible on their page for any guest.
+
 ## [2.24.0] - 2025-06-24
 ### Fixed
 - Fix processing of animated GIFs with odd dimensions.

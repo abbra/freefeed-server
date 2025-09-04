@@ -18,6 +18,8 @@ import {
   justCreateGroup,
   getUserFeed,
   getRiverOfNews,
+  goPrivate,
+  createCommentAsync,
 } from './functional_test_helper';
 
 describe('Pins (v2)', () => {
@@ -502,6 +504,94 @@ describe('Pins (v2)', () => {
       expect(unpinnedEvents, 'to satisfy', {
         __httpCode: 200,
         Notifications: expect.it('to be non-empty'),
+      });
+    });
+  });
+
+  describe('Private user pins visibility', () => {
+    let luna, selenites, post1, post2;
+
+    beforeEach(async () => {
+      // Create private user luna and public group selenites
+      [luna] = await createTestUsers(['luna']);
+      selenites = await justCreateGroup(luna, 'selenites', 'Selenites');
+
+      // Make luna private
+      await goPrivate(luna);
+
+      // Create two posts published in both luna's feed and selenites group
+      post1 = await justCreatePost(luna, 'First post', [luna.username, selenites.username]);
+      post2 = await justCreatePost(luna, 'Second post', [luna.username, selenites.username]);
+    });
+
+    it('anonymous user gets empty list when reading private user feed', async () => {
+      const feed = await performJSONRequest('GET', `/v2/timelines/${luna.username}`, null, {});
+
+      expect(feed, 'to satisfy', {
+        __httpCode: 200,
+        timelines: {
+          posts: [],
+        },
+        posts: [],
+      });
+    });
+
+    it('anonymous user sees only pinned post after user pins one post', async () => {
+      // Pin first post to luna's profile
+      const pinResp = await performJSONRequest(
+        'POST',
+        `/v2/posts/${post1.id}/pin`,
+        {},
+        authHeaders(luna),
+      );
+      expect(pinResp, 'to satisfy', { __httpCode: 200 });
+
+      // Anonymous user reads luna's feed
+      const feed = await performJSONRequest('GET', `/v2/timelines/${luna.username}`, null, {});
+
+      expect(feed, 'to satisfy', {
+        __httpCode: 200,
+        timelines: {
+          posts: [post1.id],
+        },
+        posts: [
+          {
+            id: post1.id,
+            body: 'First post',
+            pinnedIn: expect.it(
+              'to satisfy',
+              expect.it((arr) =>
+                arr.some((d) => d.targetId === luna.user.id && typeof d.pinnedAt === 'string'),
+              ),
+            ),
+          },
+        ],
+      });
+
+      // Verify that post2 is not visible
+      const post2InFeed = feed.posts.find((p) => p.id === post2.id);
+      expect(post2InFeed, 'to be undefined');
+    });
+
+    it('anonymous user gets empty list when reading private user commented posts feed', async () => {
+      // Add comments to both posts
+      await createCommentAsync(luna, post1.id, 'Comment on first post');
+      await createCommentAsync(luna, post2.id, 'Comment on second post');
+
+      // Anonymous user reads luna's commented posts feed
+      const feed = await performJSONRequest(
+        'GET',
+        `/v2/timelines/${luna.username}/comments`,
+        null,
+        {},
+      );
+
+      expect(feed, 'to satisfy', {
+        __httpCode: 200,
+        timelines: {
+          posts: [],
+        },
+        posts: [],
       });
     });
   });

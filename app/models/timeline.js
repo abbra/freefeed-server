@@ -354,11 +354,16 @@ export function addModel(dbAdapter) {
         }
       }
 
+      // Minimum visibility level for this timeline
+      const minVisibility = this.isPosts()
+        ? TIMELINE_VISIBILITY_PINNED_ONLY
+        : TIMELINE_VISIBILITY_NONE;
+
       // Handle anonymous users
       if (!readerId) {
         // Private or protected feed: can see public pinned posts
         if (owner.isPrivate === '1' || owner.isProtected === '1') {
-          return TIMELINE_VISIBILITY_PINNED_ONLY;
+          return minVisibility;
         }
 
         // Public feed: can see all posts
@@ -374,31 +379,7 @@ export function addModel(dbAdapter) {
 
       // Private feed: subscribers get full access, others can see pinned posts
       const subscriberIds = await dbAdapter.getUserSubscribersIds(owner.id);
-      return subscriberIds.includes(readerId)
-        ? TIMELINE_VISIBILITY_FULL
-        : TIMELINE_VISIBILITY_PINNED_ONLY;
-    }
-
-    /**
-     * Determines if a timeline can be shown to a specific reader.
-     *
-     * @param {string|null} readerId - The ID of the user trying to read the timeline.
-     *                                 Can be null for anonymous users.
-     * @returns {Promise<boolean>} True if the timeline can be shown to the reader, false otherwise.
-     * @throws {Error} If the timeline has no owner (orphaned feed).
-     *
-     * @description
-     * This method implements the visibility logic for timelines:
-     * - Timeline owners can always see their own timelines
-     * - Personal feeds can only be seen by their owners
-     * - Inactive user feeds cannot be seen by anyone
-     * - For anonymous users: only public (non-protected) feeds are visible
-     * - For private users: only subscribers can see the timeline
-     * - Users in ban relations cannot see each other's feeds
-     */
-    async canShow(readerId) {
-      const visibilityLevel = await this.getVisibilityLevel(readerId);
-      return visibilityLevel === TIMELINE_VISIBILITY_FULL;
+      return subscriberIds.includes(readerId) ? TIMELINE_VISIBILITY_FULL : minVisibility;
     }
 
     /**
