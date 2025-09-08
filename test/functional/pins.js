@@ -554,6 +554,47 @@ describe('Pins (v2)', () => {
         timelines: {
           posts: [post1.id],
         },
+        subscriptions: expect.it(
+          'when sorted by',
+          idCmp,
+          'to satisfy',
+          [
+            {
+              id: await luna.user.getPostsTimelineId(),
+              name: 'Posts',
+              user: luna.user.id,
+            },
+            {
+              id: await selenites.getPostsTimelineId(),
+              name: 'Posts',
+              user: selenites.id,
+            },
+          ].sort(idCmp),
+        ),
+        subscribers: expect.it(
+          'when sorted by',
+          idCmp,
+          'to satisfy',
+          [
+            {
+              id: luna.user.id,
+              username: luna.username,
+              screenName: luna.user.screenName,
+            },
+            {
+              id: selenites.id,
+              username: selenites.username,
+              screenName: selenites.screenName,
+            },
+          ].sort(idCmp),
+        ),
+        users: [
+          {
+            id: luna.user.id,
+            username: luna.username,
+            screenName: luna.user.screenName,
+          },
+        ],
         posts: [
           {
             id: post1.id,
@@ -596,3 +637,8 @@ describe('Pins (v2)', () => {
     });
   });
 });
+
+function idCmp(a, b) {
+  // eslint-disable-next-line no-nested-ternary
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+}

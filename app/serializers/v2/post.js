@@ -43,17 +43,29 @@ export async function serializeFeed(
     ? await timeline.getVisibilityLevel(viewerId)
     : TIMELINE_VISIBILITY_FULL;
 
+  // Private account timeline doesn't expose its meta info:
+  // - subscribers
+  // - admins (for groups)
   const canSeeMeta = visibilityLevel === TIMELINE_VISIBILITY_FULL;
 
   const viewer = viewerId ? await dbAdapter.getUserById(viewerId) : null;
 
   const hiddenCommentTypes = viewer?.getHiddenCommentTypes() ?? [];
 
+  // All users that are mentioned in posts, comments, and anything else
   const allUserIds = new Set();
+  // All serialized posts
   const allPosts = [];
+  // All serialized comments
   const allComments = [];
+  // All serialized attachments
   const allAttachments = [];
+  // All post destination feeds (it becomes 'subscriptions' in the response)
   const allDestinations = [];
+  // All subscribers (UIDs). Includes UIDs of:
+  // - post destination feeds owners
+  // - this timeline (if any) owner
+  // - this timeline (if any) subscribers
   const allSubscribers = [];
 
   const [hidesFeedId, savesFeedId] = viewerId
@@ -153,11 +165,16 @@ export async function serializeFeed(
       name: timeline.name,
       user: timeline.userId,
       posts: postIds,
+      subscribers: [],
     };
-    timelines.subscribers = canSeeMeta
-      ? await dbAdapter.getTimelineSubscribersIds(timeline.id)
-      : [];
-    allSubscribers.push(timeline.userId);
+
+    if (canSeeMeta) {
+      timelines.subscribers = await dbAdapter.getTimelineSubscribersIds(timeline.id);
+      allSubscribers.push(timeline.userId);
+    } else {
+      allUserIds.add(timeline.userId);
+    }
+
     allSubscribers.push(...timelines.subscribers);
   }
 
@@ -170,11 +187,10 @@ export async function serializeFeed(
     (u) => u.type === 'user' || (timeline && u.id === timeline.userId),
   );
 
-  const subscriptions = canSeeMeta ? uniqBy(compact(allDestinations), 'id') : [];
-  const subscribers = canSeeMeta
-    ? compact(uniq(allSubscribers)).map((id) => sAccountsMap.get(id))
-    : [];
+  const subscriptions = uniqBy(compact(allDestinations), 'id');
+  const subscribers = compact(uniq(allSubscribers)).map((id) => sAccountsMap.get(id));
   const admins =
+    // Only fully visible timelines expose admins
     timeline && canSeeMeta
       ? (sAccountsMap.get(timeline.userId)?.administrators || []).map((id) => sAccountsMap.get(id))
       : [];
