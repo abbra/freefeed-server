@@ -534,6 +534,88 @@ export class EventService {
     );
   }
 
+  static async onPostPinnedInGroup(initiator: User, group: Group, post: Post) {
+    const [postAuthor, admins] = await Promise.all([
+      dbAdapter.getUserById(post.userId),
+      group.getAdministrators(),
+    ]);
+    const recipients = uniqBy((postAuthor ? [postAuthor] : []).concat(admins), 'id');
+    await Promise.all(
+      recipients.map((u) =>
+        createEvent(
+          u.intId,
+          EVENT_TYPES.POST_PINNED_IN_GROUP,
+          initiator.intId,
+          u.intId,
+          group.intId,
+          post.id,
+          null,
+          postAuthor!.intId,
+        ),
+      ),
+    );
+  }
+
+  static async onPostUnpinnedInGroup(initiator: User, group: Group, post: Post) {
+    const [postAuthor, admins] = await Promise.all([
+      dbAdapter.getUserById(post.userId),
+      group.getAdministrators(),
+    ]);
+    const recipients = uniqBy((postAuthor ? [postAuthor] : []).concat(admins), 'id');
+    await Promise.all(
+      recipients.map((u) =>
+        createEvent(
+          u.intId,
+          EVENT_TYPES.POST_UNPINNED_IN_GROUP,
+          initiator.intId,
+          u.intId,
+          group.intId,
+          post.id,
+          null,
+          postAuthor!.intId,
+        ),
+      ),
+    );
+  }
+
+  static async onPostPinnedInProfile(initiator: User, post: Post) {
+    const postAuthor = await dbAdapter.getUserById(post.userId);
+
+    if (!postAuthor) {
+      return;
+    }
+
+    await createEvent(
+      postAuthor.intId,
+      EVENT_TYPES.POST_PINNED_IN_PROFILE,
+      initiator.intId,
+      postAuthor.intId,
+      null,
+      post.id,
+      null,
+      postAuthor.intId,
+    );
+  }
+
+  static async onPostUnpinnedInProfile(initiator: User, post: Post) {
+    const postAuthor = await dbAdapter.getUserById(post.userId);
+
+    if (!postAuthor) {
+      return;
+    }
+
+    await createEvent(
+      postAuthor.intId,
+      EVENT_TYPES.POST_UNPINNED_IN_PROFILE,
+      initiator.intId,
+      postAuthor.intId,
+      null,
+      post.id,
+      null,
+      postAuthor.intId,
+    );
+  }
+
   static async onPostFeedsChanged(
     post: Post,
     changedBy: User,
@@ -544,10 +626,6 @@ export class EventService {
     if (addedFeeds.length > 0) {
       const postAuthor = await post.getCreatedBy();
       await this._processDirectMessagesForPost(post, addedFeeds, postAuthor);
-    }
-
-    if (changedBy.id === post.userId || removedFeeds.length === 0) {
-      return;
     }
 
     const removedFeedOwners = await Promise.all(
@@ -596,7 +674,6 @@ export class EventService {
       }),
     );
   }
-
   static async onInvitationUsed(fromUserIntId: number, newUserIntId: number) {
     await createEvent(fromUserIntId, EVENT_TYPES.INVITATION_USED, newUserIntId, newUserIntId);
   }

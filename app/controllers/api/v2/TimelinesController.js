@@ -12,6 +12,11 @@ import {
   HOMEFEED_MODE_FRIENDS_ALL_ACTIVITY,
   HOMEFEED_MODE_FRIENDS_ONLY,
 } from '../../../models';
+import {
+  TIMELINE_VISIBILITY_FULL,
+  TIMELINE_VISIBILITY_NONE,
+  TIMELINE_VISIBILITY_PINNED_ONLY,
+} from '../../../models/constants';
 import { serializeFeed } from '../../../serializers/v2/post';
 import { monitored, authRequired, targetUserRequired } from '../../middlewares';
 import { NotFoundException } from '../../../support/exceptions';
@@ -273,17 +278,27 @@ async function genericTimeline(timeline = null, viewerId = null, params = {}) {
     }
   }
 
-  const postsIds =
-    !timeline || (await timeline.canShow(viewerId))
-      ? await dbAdapter.getTimelinePostsIds(timelineIds, viewerId, {
-          ...params,
-          authorsIds,
-          activityFeedIds,
-          activityOnPropagable,
-          activityHideIds,
-          limit: params.limit + 1,
-        })
-      : [];
+  const feedPinnedIn = timeline && timeline.name === 'Posts' ? timeline.id : null;
+
+  // Check timeline visibility level
+  const visibilityLevel = timeline
+    ? await timeline.getVisibilityLevel(viewerId)
+    : TIMELINE_VISIBILITY_FULL;
+
+  let postsIds = [];
+
+  if (visibilityLevel !== TIMELINE_VISIBILITY_NONE) {
+    postsIds = await dbAdapter.getTimelinePostsIds(timelineIds, viewerId, {
+      ...params,
+      authorsIds,
+      activityFeedIds,
+      activityOnPropagable,
+      activityHideIds,
+      feedPinnedIn,
+      pinnedOnly: visibilityLevel === TIMELINE_VISIBILITY_PINNED_ONLY,
+      limit: params.limit + 1,
+    });
+  }
 
   const isLastPage = postsIds.length <= params.limit;
 

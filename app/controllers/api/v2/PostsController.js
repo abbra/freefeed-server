@@ -2,7 +2,8 @@ import config from 'config';
 import _, { difference } from 'lodash';
 import compose from 'koa-compose';
 
-import { dbAdapter } from '../../../models';
+import { dbAdapter, PubSub as pubSub } from '../../../models';
+import { EventService } from '../../../support/EventService';
 import { serializeSinglePost, serializeFeed } from '../../../serializers/v2/post';
 import {
   authRequired,
@@ -10,9 +11,14 @@ import {
   monitored,
   postAccessRequired,
 } from '../../middlewares';
-import { ForbiddenException } from '../../../support/exceptions';
+import { BadRequestException, ForbiddenException } from '../../../support/exceptions';
 
-import { getPostsByIdsInputSchema, notifyOfAllCommentsInputSchema } from './data-schemes/posts';
+import {
+  getPostsByIdsInputSchema,
+  notifyOfAllCommentsInputSchema,
+  pinPostInputSchema,
+  unpinPostInputSchema,
+} from './data-schemes/posts';
 import { getCommonParams } from './TimelinesController';
 
 export const show = compose([
@@ -183,6 +189,113 @@ export const notifyOfAllComments = compose([
     const { enabled } = ctx.request.body;
 
     await user.notifyOfAllCommentsOfPost(post, enabled);
+    ctx.body = await serializeSinglePost(post.id, user.id, { apiVersion });
+  },
+]);
+
+export const pin = compose([
+  authRequired(),
+  postAccessRequired(),
+  inputSchemaRequired(pinPostInputSchema),
+  async (ctx) => {
+    const { user, post, apiVersion } = ctx.state;
+    const { target: targetName } = ctx.request.body || {};
+
+    // Default target is the user themselves
+    const target = targetName ? await dbAdapter.getFeedOwnerByUsername(targetName) : user;
+
+    if (!target) {
+      throw new BadRequestException('Target account not found');
+    }
+
+    if (target.isUser()) {
+      if (target.id !== user.id) {
+        throw new ForbiddenException('You can pin post to your own profile only');
+      }
+
+      if (post.userId !== user.id) {
+        throw new ForbiddenException("You can not pin someone else's post");
+      }
+    } else {
+      // Group
+      const isAdmin = await dbAdapter.isUserAdminOfGroup(user.id, target.id);
+
+      if (!isAdmin) {
+        throw new ForbiddenException('You are not admin of this group');
+      }
+
+      // Check post present in this group
+      const present = await dbAdapter.isPostInUserFeed(post.id, target.id, 'Posts');
+
+      if (!present) {
+        throw new ForbiddenException('Post is not in this group');
+      }
+    }
+
+    // Determine Posts feed UUID of the owner
+    const targetFeed = await target.getPostsTimeline();
+    await dbAdapter.pinUserPost(targetFeed.id, post.id, user.id);
+
+    if (target.id !== post.userId) {
+      await EventService.onPostPinnedInGroup(user, target, post);
+    } else {
+      await EventService.onPostPinnedInProfile(user, post);
+    }
+
+    await pubSub.updatePost(post.id);
+    ctx.body = await serializeSinglePost(post.id, user.id, { apiVersion });
+  },
+]);
+
+export const unpin = compose([
+  authRequired(),
+  postAccessRequired(),
+  inputSchemaRequired(unpinPostInputSchema),
+  async (ctx) => {
+    const { user, post, apiVersion } = ctx.state;
+    const { target: targetName } = ctx.request.body || {};
+
+    // Default target is the user themselves
+    const target = targetName ? await dbAdapter.getFeedOwnerByUsername(targetName) : user;
+
+    if (!target) {
+      throw new BadRequestException('Target account not found');
+    }
+
+    if (target.isUser()) {
+      if (target.id !== user.id) {
+        throw new ForbiddenException('You can unpin post to your own profile only');
+      }
+
+      if (post.userId !== user.id) {
+        throw new ForbiddenException("You can not unpin someone else's post");
+      }
+    } else {
+      // Group
+      const isAdmin = await dbAdapter.isUserAdminOfGroup(user.id, target.id);
+
+      if (!isAdmin) {
+        throw new ForbiddenException('You are not admin of this group');
+      }
+
+      // Check post present in this group
+      const present = await dbAdapter.isPostInUserFeed(post.id, target.id, 'Posts');
+
+      if (!present) {
+        throw new ForbiddenException('Post is not in this group');
+      }
+    }
+
+    const targetFeed = await target.getPostsTimeline();
+    await dbAdapter.unpinUserPost(targetFeed.id, post.id);
+
+    if (target.id !== post.userId) {
+      await EventService.onPostUnpinnedInGroup(user, target, post);
+    } else {
+      await EventService.onPostUnpinnedInProfile(user, post);
+    }
+
+    await pubSub.updatePost(post.id);
     ctx.body = await serializeSinglePost(post.id, user.id, { apiVersion });
   },
 ]);

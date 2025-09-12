@@ -32,10 +32,17 @@ const timelinesPostsTrait = (superClass) =>
       withLocalBumps = false,
       wideSelect = false,
       selectSQL = 'true',
+      feedPinnedIn = null,
+      pinnedOnly = false,
     }) {
       withLocalBumps = withLocalBumps && !!viewerId && sort === 'bumped';
 
-      const restrictionsSQL = await this.postsVisibilitySQL(viewerId);
+      let restrictionsSQL = await this.postsVisibilitySQL(viewerId);
+
+      // 'pinnedOnly' doesn't make sense without 'feedPinnedIn'
+      if (pinnedOnly && feedPinnedIn) {
+        restrictionsSQL = andJoin([restrictionsSQL, 'pp.post_id is not null']);
+      }
 
       /**
        * PostgreSQL is not very good dealing with queries like
@@ -66,12 +73,15 @@ const timelinesPostsTrait = (superClass) =>
           from 
             posts p
             join users u on p.user_id = u.uid
+            ${feedPinnedIn ? `left join pinned_posts pp on pp.post_id = p.uid and pp.feed_id = %L` : ''}
           where
             ${restrictionsSQL}
           order by
+            ${feedPinnedIn ? 'pp.created_at asc nulls last,' : ''}
             p.%I desc
           limit %L offset %L
         `,
+            ...(feedPinnedIn ? [feedPinnedIn] : []),
             `${_sort}_at`,
             _limit,
             _offset,
@@ -85,12 +95,15 @@ const timelinesPostsTrait = (superClass) =>
         from 
           posts p
           join users u on p.user_id = u.uid
+          ${feedPinnedIn ? `left join pinned_posts pp on pp.post_id = p.uid and pp.feed_id = %L` : ''}
         where
           (${selectSQL}) and (${restrictionsSQL})
         order by
+          ${feedPinnedIn ? 'pp.created_at asc nulls last,' : ''}
           p.%I desc
         limit %L offset %L
       `,
+          ...(feedPinnedIn ? [feedPinnedIn] : []),
           `${_sort}_at`,
           _limit,
           _offset,
@@ -100,7 +113,7 @@ const timelinesPostsTrait = (superClass) =>
       if (!withLocalBumps || offset > maxOffsetWithLocalBumps) {
         // without local bumps
         const sql = await getPostsSQL(limit, offset, sort);
-        return (await this.database.raw(sql)).rows.map((r) => r.uid);
+        return await this.database.getCol(sql);
       }
 
       // with local bumps
@@ -209,6 +222,8 @@ const timelinesPostsTrait = (superClass) =>
         // Hide activity-selected posts if they are posted to these feeds
         activityHideIds: [],
         authorsIds: List.everything(),
+        feedPinnedIn: null,
+        pinnedOnly: false,
         ...params,
       };
 
@@ -264,6 +279,8 @@ const timelinesPostsTrait = (superClass) =>
         withLocalBumps: params.withLocalBumps,
         wideSelect: timelineIntIds ? timelineIntIds.length > smallFeedThreshold : true,
         selectSQL,
+        feedPinnedIn: params.feedPinnedIn,
+        pinnedOnly: params.pinnedOnly,
       });
     }
 
@@ -454,7 +471,7 @@ const timelinesPostsTrait = (superClass) =>
         banned_by_viewer, banned_by_author
       from comments
       ${foldCommentsSql}
-      order by created_at, id
+        order by created_at, id
     `;
 
       const [likesData, commentsData, postsCommentLikes, backlinks] = await Promise.all([

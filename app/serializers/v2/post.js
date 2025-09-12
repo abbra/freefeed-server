@@ -1,6 +1,7 @@
 import { uniqBy, pick, compact, uniq } from 'lodash';
 
 import { dbAdapter } from '../../models';
+import { TIMELINE_VISIBILITY_FULL } from '../../models/constants';
 
 import { serializeUsersByIds } from './user';
 import { serializeAttachment } from './attachment';
@@ -38,17 +39,33 @@ export async function serializeFeed(
   timeline = null,
   { isLastPage = false, foldComments = true, foldLikes = true, apiVersion } = {},
 ) {
-  const canViewTimeline = timeline ? await timeline.canShow(viewerId) : true;
+  const visibilityLevel = timeline
+    ? await timeline.getVisibilityLevel(viewerId)
+    : TIMELINE_VISIBILITY_FULL;
+
+  // Private account timeline doesn't expose its meta info:
+  // - subscribers
+  // - admins (for groups)
+  const canSeeMeta = visibilityLevel === TIMELINE_VISIBILITY_FULL;
 
   const viewer = viewerId ? await dbAdapter.getUserById(viewerId) : null;
 
   const hiddenCommentTypes = viewer?.getHiddenCommentTypes() ?? [];
 
+  // All users that are mentioned in posts, comments, and anything else
   const allUserIds = new Set();
+  // All serialized posts
   const allPosts = [];
+  // All serialized comments
   const allComments = [];
+  // All serialized attachments
   const allAttachments = [];
+  // All post destination feeds (it becomes 'subscriptions' in the response)
   const allDestinations = [];
+  // All subscribers (UIDs). Includes UIDs of:
+  // - post destination feeds owners
+  // - this timeline (if any) owner
+  // - this timeline (if any) subscribers
   const allSubscribers = [];
 
   const [hidesFeedId, savesFeedId] = viewerId
@@ -72,6 +89,8 @@ export async function serializeFeed(
     const feedIntId = await viewer.getCommentsTimelineIntId();
     commentedPostIds = await dbAdapter.getPostsPresentsInTimeline(postIds, feedIntId);
   }
+
+  const pinDetailsMap = await dbAdapter.getPinnedDetailsByPosts(postIds);
 
   for (const {
     post,
@@ -115,6 +134,17 @@ export async function serializeFeed(
       sPost.notifyOfAllComments = true;
     }
 
+    if (pinDetailsMap.has(post.id)) {
+      sPost.pinnedIn = pinDetailsMap.get(post.id).map((d) => ({
+        targetId: d.userId,
+        pinnedAt: d.createdAt,
+      }));
+
+      for (const p of sPost.pinnedIn) {
+        allUserIds.add(p.ownerId);
+      }
+    }
+
     allPosts.push(sPost);
     allDestinations.push(...destinations);
     allSubscribers.push(...destinations.map((d) => d.user));
@@ -135,11 +165,16 @@ export async function serializeFeed(
       name: timeline.name,
       user: timeline.userId,
       posts: postIds,
+      subscribers: [],
     };
-    timelines.subscribers = canViewTimeline
-      ? await dbAdapter.getTimelineSubscribersIds(timeline.id)
-      : [];
-    allSubscribers.push(timeline.userId);
+
+    if (canSeeMeta) {
+      timelines.subscribers = await dbAdapter.getTimelineSubscribersIds(timeline.id);
+      allSubscribers.push(timeline.userId);
+    } else {
+      allUserIds.add(timeline.userId);
+    }
+
     allSubscribers.push(...timelines.subscribers);
   }
 
@@ -152,12 +187,11 @@ export async function serializeFeed(
     (u) => u.type === 'user' || (timeline && u.id === timeline.userId),
   );
 
-  const subscriptions = canViewTimeline ? uniqBy(compact(allDestinations), 'id') : [];
-  const subscribers = canViewTimeline
-    ? compact(uniq(allSubscribers)).map((id) => sAccountsMap.get(id))
-    : [];
+  const subscriptions = uniqBy(compact(allDestinations), 'id');
+  const subscribers = compact(uniq(allSubscribers)).map((id) => sAccountsMap.get(id));
   const admins =
-    timeline && canViewTimeline
+    // Only fully visible timelines expose admins
+    timeline && canSeeMeta
       ? (sAccountsMap.get(timeline.userId)?.administrators || []).map((id) => sAccountsMap.get(id))
       : [];
 
@@ -214,6 +248,7 @@ function serializePostData(post) {
       'ownCommentLikes',
       'omittedCommentLikes',
       'omittedOwnCommentLikes',
+      'pinnedIn',
     ]),
     createdBy: post.userId,
   };
