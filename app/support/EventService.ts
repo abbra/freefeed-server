@@ -628,6 +628,11 @@ export class EventService {
       await this._processDirectMessagesForPost(post, addedFeeds, postAuthor);
     }
 
+    // Don't send events if changed by the post author or if there are no removed feeds
+    if (changedBy.id === post.userId || removedFeeds.length === 0) {
+      return;
+    }
+
     const removedFeedOwners = await Promise.all(
       removedFeeds.filter((f) => f.isPosts()).map((f) => f.getUser()),
     );
@@ -674,6 +679,7 @@ export class EventService {
       }),
     );
   }
+
   static async onInvitationUsed(fromUserIntId: number, newUserIntId: number) {
     await createEvent(fromUserIntId, EVENT_TYPES.INVITATION_USED, newUserIntId, newUserIntId);
   }
