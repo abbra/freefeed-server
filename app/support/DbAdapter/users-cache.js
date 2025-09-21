@@ -4,15 +4,21 @@ import _ from 'lodash';
 // User's attributes caching
 ///////////////////////////////////////////////////
 
+// We MUST increment this version when we change the structure of `users` table
+const cacheVersion = 1;
+
+function cacheKey(id) {
+  return `user_${cacheVersion}_${id}`;
+}
+
 const usersCacheTrait = (superClass) =>
   class extends superClass {
     async cacheFlushUser(id) {
-      const cacheKey = `user_${id}`;
-      await this.cache.del(cacheKey);
+      await this.cache.del(cacheKey(id));
     }
 
     getCachedUserAttrs = async (id) => {
-      return fixCachedUserAttrs(await this.cache.get(`user_${id}`));
+      return fixCachedUserAttrs(await this.cache.get(cacheKey(id)));
     };
 
     async fetchUser(id) {
@@ -23,7 +29,7 @@ const usersCacheTrait = (superClass) =>
         attrs = (await this.database('users').first().where('uid', id)) || null;
 
         if (attrs) {
-          await this.cache.set(`user_${id}`, attrs);
+          await this.cache.set(cacheKey(id), attrs);
         }
       }
 
@@ -46,7 +52,7 @@ const usersCacheTrait = (superClass) =>
       if (this.cache.store.name === 'redis') {
         const client = await this.cache.store.getClient();
 
-        const cacheKeys = ids.map((id) => `user_${id}`);
+        const cacheKeys = ids.map((id) => cacheKey(id));
         const result = await client.mget(cacheKeys);
 
         cachedUsers = result.map((x) => (x ? JSON.parse(x) : null)).map(fixCachedUserAttrs);
@@ -58,7 +64,7 @@ const usersCacheTrait = (superClass) =>
       const dbUsers =
         notFoundIds.length === 0 ? [] : await this.database('users').whereIn('uid', notFoundIds);
 
-      await Promise.all(dbUsers.map((attrs) => this.cache.set(`user_${attrs.uid}`, attrs)));
+      await Promise.all(dbUsers.map((attrs) => this.cache.set(cacheKey(attrs.uid), attrs)));
 
       _.compact(cachedUsers).forEach((attrs) => (idToUser[attrs.uid] = attrs));
       dbUsers.forEach((attrs) => (idToUser[attrs.uid] = attrs));
