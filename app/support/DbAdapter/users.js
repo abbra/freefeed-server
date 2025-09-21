@@ -722,11 +722,13 @@ const usersTrait = (superClass) =>
     async setFirstUserInteraction(userId) {
       const pool = await this.getSlonik();
       const tSql = sql.type(z.object({ first_interaction_at: z.date() }));
-      return await pool.maybeOneFirst(
+      const date = await pool.maybeOneFirst(
         tSql`update users set first_interaction_at = now() 
           where first_interaction_at is null and type = 'user' and uid = ${userId}
           returning first_interaction_at`,
       );
+      await this.cacheFlushUser(userId);
+      return date;
     }
   };
 

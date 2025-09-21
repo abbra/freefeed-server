@@ -88,8 +88,8 @@ export const ownTimeline = (feedName, params = {}) =>
 
       if (feedName === 'RiverOfNews' && !user.firstInteractionAt) {
         try {
-          await scheduleWelcomeDirects(user);
           await user.setFirstInteraction();
+          await scheduleWelcomeDirects(user);
         } catch (err) {
           errorLog('cannot send welcome directs', { user: user.username, err });
 
