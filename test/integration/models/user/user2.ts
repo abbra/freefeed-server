@@ -43,5 +43,18 @@ describe('User model', () => {
       const ok = await selenites.setFirstInteraction();
       expect(ok, 'to be', false);
     });
+
+    it(`should read updated 'firstInteractionAt' field`, async () => {
+      // Read user from DB to fill cache
+      const lunaClone1 = await dbAdapter.getUserById(luna.id);
+      expect(lunaClone1!.firstInteractionAt, 'to be', null);
+
+      const [ok, now] = await Promise.all([lunaClone1!.setFirstInteraction(), dbAdapter.now()]);
+      expect(ok, 'to be', true);
+
+      // Read user from DB / cache
+      const lunaClone2 = await dbAdapter.getUserById(luna.id);
+      expect(lunaClone2!.firstInteractionAt, 'to be close to', now);
+    });
   });
 });
