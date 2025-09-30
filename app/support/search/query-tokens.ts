@@ -9,11 +9,12 @@ import { linkToText } from './norm';
 
 const ftsCfg = config.postgres.textSearchConfigName;
 
-export type Scope = 1 | 2 | 3;
+export type Scope = 1 | 2 | 4 | 7;
 
-export const IN_POSTS = 1 as Scope,
-  IN_COMMENTS = 2 as Scope,
-  IN_ALL = (IN_POSTS | IN_COMMENTS) as Scope;
+export const IN_POSTS: Scope = 1 as const,
+  IN_COMMENTS: Scope = 2 as const,
+  IN_ACCOUNTS: Scope = 4 as const,
+  IN_ALL: Scope = 7 as const; // = IN_POSTS | IN_COMMENTS | IN_ACCOUNTS
 
 export interface Token {
   getComplexity(): number;
@@ -185,6 +186,7 @@ export class InScope implements Token {
 export const scopeStarts: [RegExp, Scope][] = [
   [/^in-?body$/, IN_POSTS],
   [/^in-?comments?$/, IN_COMMENTS],
+  [/^in-?(user|account)s?$/, IN_ACCOUNTS],
 ];
 
 export const listConditions: [RegExp, string][] = [

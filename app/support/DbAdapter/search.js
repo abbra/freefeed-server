@@ -11,6 +11,7 @@ import {
   ScopeStart,
   InScope,
   SeqTexts,
+  IN_ACCOUNTS,
 } from '../search/query-tokens';
 import { List } from '../open-lists';
 import { Comment } from '../../models';
@@ -19,6 +20,7 @@ import { sqlIn, sqlIntarrayIn, andJoin, orJoin, sqlNot } from './utils';
 
 /**
  * @typedef {import('../search/query-tokens').Token} Token
+ * @typedef {import('../types').UUID} UUID
  */
 
 ///////////////////////////////////////////////////
@@ -257,6 +259,105 @@ const searchTrait = (superClass) =>
       // console.log(fullSQL);
 
       return this.database.getCol(fullSQL);
+    }
+
+    /**
+     * Search in users/groups accounts
+     *
+     * @param {string} query
+     * @param {Object} options
+     * @param {UUID|null} options.viewerId
+     * @param {number} options.maxQueryComplexity
+     * @returns {Promise<UUID[]>}
+     */
+    async searchInAccounts(
+      query,
+      { viewerId = null, maxQueryComplexity = config.search.maxQueryComplexity } = {},
+    ) {
+      const parsedQuery = parseQuery(query);
+
+      if (queryComplexity(parsedQuery) > maxQueryComplexity) {
+        throw new Error(`The search query is too complex, try to simplify it`);
+      }
+
+      // Collecting text query parts
+      let textQuery;
+
+      {
+        const result = [];
+
+        walkWithScope(parsedQuery, (token, scope) => {
+          if (scope & (IN_ACCOUNTS === 0)) {
+            return;
+          }
+
+          if (token instanceof SeqTexts) {
+            result.push(token.toTSQuery());
+          }
+
+          if (token instanceof InScope) {
+            result.push(token.text.toTSQuery());
+          }
+        });
+
+        textQuery = result.join(' && ');
+
+        if (result.length > 1) {
+          textQuery = `(${textQuery})`;
+        }
+      }
+
+      const textSql = orJoin([
+        textQuery && `u.screen_name_tsvector @@ ${textQuery}`,
+        textQuery && `u.description_tsvector @@ ${textQuery}`,
+      ]);
+
+      // Viewer can search the following user/group accounts:
+      // - Public and protected
+      // - Private, viewer subscribed to
+      const privateAccIds = viewerId
+        ? await this.database.getCol(
+            joinLines([
+              `select u.uid`,
+              `from users u`,
+              `join feeds f on u.uid = f.user_id`,
+              `join subscriptions s on f.uid = s.feed_id`,
+              `where s.user_id = :viewerId`,
+              `and f.name = 'Posts'`,
+              `and u.is_private`,
+            ]),
+            { viewerId },
+          )
+        : [];
+
+      const accountsRestrictionSQL = orJoin(['not u.is_private', sqlIn('u.uid', privateAccIds)]);
+
+      let accIds = await this.database.getCol(
+        joinLines([
+          `select u.uid`,
+          `from users u`,
+          `where`,
+          andJoin([textSql, accountsRestrictionSQL]),
+        ]),
+      );
+
+      // Sort accounts by number of subscribers (descending)
+      if (accIds.length > 0) {
+        accIds = await this.database.getCol(
+          joinLines([
+            `select u.uid`,
+            `from users u`,
+            `left join feeds f on u.uid = f.user_id and f.name = 'Posts'`,
+            `left join subscriptions s on f.uid = s.feed_id`,
+            `where`,
+            sqlIn('u.uid', accIds),
+            `group by u.uid`,
+            `order by count(s.feed_id) desc`,
+          ]),
+        );
+      }
+
+      return accIds;
     }
 
     async _getAccountsUsedInQuery(parsedQuery, viewerId) {

@@ -289,6 +289,13 @@ export class DbAdapter {
       maxQueryComplexity: number;
     }>,
   ): Promise<UUID[]>;
+  searchInAccounts(
+    query: string,
+    options?: Partial<{
+      viewerId: UUID | null;
+      maxQueryComplexity: number;
+    }>,
+  ): Promise<UUID[]>;
 
   // Visibility
   postsVisibilitySQL(
