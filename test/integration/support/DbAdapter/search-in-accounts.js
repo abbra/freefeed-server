@@ -118,6 +118,19 @@ describe('Search in accounts', () => {
         const foundIds = await dbAdapter.searchInAccounts('searchable', { viewerId: viewer.id });
         expect(foundIds, 'to contain', privateUser.id);
       });
+
+      it('should find private accounts if they are subscribed to viewer', async () => {
+        await privateUser.subscribeTo(viewer);
+        const foundIds = await dbAdapter.searchInAccounts('searchable', { viewerId: viewer.id });
+        expect(foundIds, 'to contain', privateUser.id);
+      });
+
+      it('should find private accounts with mutual subscription', async () => {
+        await viewer.subscribeTo(privateUser);
+        await privateUser.subscribeTo(viewer);
+        const foundIds = await dbAdapter.searchInAccounts('searchable', { viewerId: viewer.id });
+        expect(foundIds, 'to contain', privateUser.id);
+      });
     });
   });
 

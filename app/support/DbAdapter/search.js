@@ -315,16 +315,18 @@ const searchTrait = (superClass) =>
       // Viewer can search the following user/group accounts:
       // - Public and protected
       // - Private, viewer subscribed to
+      // - Private, subscribed to viewer
       const privateAccIds = viewerId
         ? await this.database.getCol(
             joinLines([
-              `select u.uid`,
+              `select distinct u.uid`,
               `from users u`,
-              `join feeds f on u.uid = f.user_id`,
-              `join subscriptions s on f.uid = s.feed_id`,
-              `where s.user_id = :viewerId`,
-              `and f.name = 'Posts'`,
-              `and u.is_private`,
+              `join feeds f on u.uid = f.user_id and f.name = 'Posts'`,
+              `join feeds vf on vf.user_id = :viewerId and vf.name = 'Posts'`,
+              `left join subscriptions s on f.uid = s.feed_id and s.user_id = :viewerId`,
+              `left join subscriptions vs on vs.feed_id = vf.uid and vs.user_id = u.uid`,
+              `where u.is_private`,
+              `and (s.user_id is not null or vs.user_id is not null)`,
             ]),
             { viewerId },
           )
