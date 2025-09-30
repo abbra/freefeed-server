@@ -287,7 +287,7 @@ const searchTrait = (superClass) =>
         const result = [];
 
         walkWithScope(parsedQuery, (token, scope) => {
-          if (scope & (IN_ACCOUNTS === 0)) {
+          if ((scope & IN_ACCOUNTS) === 0) {
             return;
           }
 

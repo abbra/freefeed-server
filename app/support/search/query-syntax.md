@@ -57,6 +57,10 @@ Example: `cat in-body: mouse` — the "cat" will be searched in posts and commen
 
 Example: `in-comments: mouse` — the "mouse" will be searched only in comment bodies.
 
+**in-users:** / **in-accounts:** — starting from this operator the search will be performed only in the usernames, screennames and descriptions of users and groups.
+
+Example: `in-users: mouse` — the "mouse" will be searched only in user names, screennames and descriptions.
+
 The global search scope operators switches search scope from itself to the end of the query or to the other global scope operator. 
 
 ### Interval operators

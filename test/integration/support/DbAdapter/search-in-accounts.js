@@ -34,6 +34,21 @@ describe('Search in accounts', () => {
       const foundIds = await dbAdapter.searchInAccounts('brown fox');
       expect(foundIds, 'to equal', [account.id]);
     });
+
+    it('should find account with in-users scope', async () => {
+      const foundIds = await dbAdapter.searchInAccounts('in-users: quick');
+      expect(foundIds, 'to equal', [account.id]);
+    });
+
+    it('should NOT find account with in-body scope', async () => {
+      const foundIds = await dbAdapter.searchInAccounts('in-body: quick');
+      expect(foundIds, 'to equal', []);
+    });
+
+    it('should NOT find account with in-comments scope', async () => {
+      const foundIds = await dbAdapter.searchInAccounts('in-comments: lazy');
+      expect(foundIds, 'to equal', []);
+    });
   });
 
   describe('Privacy restrictions', () => {
@@ -103,6 +118,44 @@ describe('Search in accounts', () => {
         const foundIds = await dbAdapter.searchInAccounts('searchable', { viewerId: viewer.id });
         expect(foundIds, 'to contain', privateUser.id);
       });
+    });
+  });
+
+  describe('Search scope handling', () => {
+    let user1, user2;
+
+    beforeEach(async () => {
+      [user1, user2] = await createUsers(['mercury', 'saturn']);
+
+      await user1.update({
+        screenName: 'Searchable Name',
+        description: 'first account',
+      });
+
+      await user2.update({
+        screenName: 'Another Name',
+        description: 'second account',
+      });
+    });
+
+    it('should find accounts only in in-users scope', async () => {
+      const foundIds = await dbAdapter.searchInAccounts('in-users: searchable');
+      expect(foundIds, 'to equal', [user1.id]);
+    });
+
+    it('should find accounts from in-users scope even after switching', async () => {
+      const foundIds = await dbAdapter.searchInAccounts('in-users: searchable in-body: account');
+      expect(foundIds, 'to equal', [user1.id]);
+    });
+
+    it('should NOT find accounts when text is only in other scope', async () => {
+      const foundIds = await dbAdapter.searchInAccounts('in-body: searchable');
+      expect(foundIds, 'to equal', []);
+    });
+
+    it('should find accounts when switching to in-users scope', async () => {
+      const foundIds = await dbAdapter.searchInAccounts('in-body: something in-users: searchable');
+      expect(foundIds, 'to equal', [user1.id]);
     });
   });
 
