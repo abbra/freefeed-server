@@ -12,6 +12,7 @@ import {
   InScope,
   SeqTexts,
   IN_ACCOUNTS,
+  toPrefixQuery,
 } from '../search/query-tokens';
 import { List } from '../open-lists';
 import { Comment } from '../../models';
@@ -280,11 +281,26 @@ const searchTrait = (superClass) =>
         throw new Error(`The search query is too complex, try to simplify it`);
       }
 
-      // Collecting text query parts
+      // Collecting text query parts. This part is for the screennames and
+      // descriptions, we treat them as regular texts.
       let textQuery;
+
+      // We processing usernames in a special way, because we need to search
+      // _inside_ them. For example, we want to find 'badapple' username by the
+      // 'bad', 'apple' or 'bad apple' queries. Effectively, we want to search
+      // by substrings of username strings.
+      //
+      // To achieve this, we index all _suffixes_ of username ('badapple',
+      // 'adapple', 'dapple' and so on). Then we performing search by _prefix_
+      // query ('bad' -> 'bad*', 'apple' -> 'apple*'). With this approach we can
+      // find 'badapple' by 'bad' (matches by prefix to 'badapple' suffix),
+      // 'apple' (matches by prefix to 'apple' suffix) or 'bad apple' (matches
+      // both).
+      let usernameQuery;
 
       {
         const result = [];
+        const usernameResult = [];
 
         walkWithScope(parsedQuery, (token, scope) => {
           if ((scope & IN_ACCOUNTS) === 0) {
@@ -293,10 +309,12 @@ const searchTrait = (superClass) =>
 
           if (token instanceof SeqTexts) {
             result.push(token.toTSQuery());
+            usernameResult.push(toPrefixQuery(token).toTSQuery());
           }
 
           if (token instanceof InScope) {
             result.push(token.text.toTSQuery());
+            usernameResult.push(toPrefixQuery(token.text).toTSQuery());
           }
         });
 
@@ -305,11 +323,18 @@ const searchTrait = (superClass) =>
         if (result.length > 1) {
           textQuery = `(${textQuery})`;
         }
+
+        usernameQuery = usernameResult.join(' && ');
+
+        if (usernameResult.length > 1) {
+          usernameQuery = `(${usernameQuery})`;
+        }
       }
 
       const textSql = orJoin([
         textQuery && `u.screen_name_tsvector @@ ${textQuery}`,
         textQuery && `u.description_tsvector @@ ${textQuery}`,
+        usernameQuery && `u.username_tsvector @@ ${usernameQuery}`,
       ]);
 
       // Viewer can search the following user/group accounts:

@@ -68,3 +68,23 @@ export function toTSVector(text: string) {
 
   return `(${vectors.join(' || ')})`;
 }
+
+/**
+ * Prepares suffixes of the text as a tsvector. The suffixes are used for
+ * username substring search.
+ */
+export function toSuffixTSVector(text: string): string {
+  // Leave only alphanumeric characters
+  text = text.toLowerCase().replace(/[^a-z0-9]+/g, '');
+
+  const parts = [];
+
+  // 'apple' should produce ['apple', 'pple', 'ple', 'le']
+  const minLen = 2;
+
+  for (let i = 0; i <= text.length - minLen; i++) {
+    parts.push(`'=${text.substring(i)}':${i + 1}`);
+  }
+
+  return pgFormat(`%L::tsvector`, parts.join(' '));
+}

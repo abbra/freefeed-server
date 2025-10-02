@@ -253,3 +253,24 @@ function exactPhraseToTSQuery(text: string): string {
     text,
   );
 }
+
+/**
+ * Transforms the text-related queries to prefix forms. It is used for username
+ * substring search.
+ */
+export function toPrefixQuery<T extends AnyText | SeqTexts | Text>(token: T): T {
+  if (token instanceof Text) {
+    if (token.phrase || token.text.endsWith('*')) {
+      return token;
+    }
+
+    return new Text(token.exclude, token.phrase, `${token.text}*`) as T;
+  }
+
+  if (token instanceof AnyText) {
+    return new AnyText(token.children.map(toPrefixQuery)) as T;
+  }
+
+  // token instanceof SeqTexts
+  return new SeqTexts(token.children.map(toPrefixQuery)) as T;
+}

@@ -229,4 +229,45 @@ describe('Search in accounts', () => {
       expect(foundIds.slice(1), 'to contain', user2.id, user3.id);
     });
   });
+
+  describe('Search in usernames', () => {
+    async function createUserWithName(username) {
+      const user = await createUser(username);
+      await user.update({ screenName: 'something unrelated' });
+      return user;
+    }
+
+    it('should find accounts by full username', async () => {
+      const user = await createUserWithName('luna');
+      const foundIds = await dbAdapter.searchInAccounts('luna');
+      expect(foundIds, 'to equal', [user.id]);
+    });
+
+    it('should find accounts by part of username', async () => {
+      const user = await createUserWithName('welovebread');
+      const foundIds = await dbAdapter.searchInAccounts('love');
+      expect(foundIds, 'to equal', [user.id]);
+    });
+
+    it('should use logic in query', async () => {
+      const user1 = await createUserWithName('workworkwork');
+      const user2 = await createUserWithName('lifelifelife');
+      const user3 = await createUserWithName('worklifebalance');
+
+      {
+        const foundIds = await dbAdapter.searchInAccounts('work | life');
+        expect(foundIds.sort(), 'to equal', [user1.id, user2.id, user3.id].sort());
+      }
+
+      {
+        const foundIds = await dbAdapter.searchInAccounts('work | life -balance');
+        expect(foundIds.sort(), 'to equal', [user1.id, user2.id].sort());
+      }
+
+      {
+        const foundIds = await dbAdapter.searchInAccounts('work life');
+        expect(foundIds.sort(), 'to equal', [user3.id].sort());
+      }
+    });
+  });
 });
