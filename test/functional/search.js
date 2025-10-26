@@ -193,4 +193,34 @@ describe('SearchController', () => {
       });
     });
   });
+  describe('Search in account names and screennames', () => {
+    let luna, mars, post;
+    before(async () => {
+      await cleanDB($pg_database);
+
+      [luna, mars] = await funcTestHelper.createTestUsers(['luna', 'mars']);
+      await luna.user.update({ screenName: 'Quick brown fox' });
+      await mars.user.update({ screenName: 'Lazy dog' });
+
+      post = await funcTestHelper.justCreatePost(luna, 'hello from luna');
+    });
+
+    it('should find account by screen name', async () => {
+      const response = await funcTestHelper.performSearch(luna, 'quick');
+      expect(response, 'to satisfy', {
+        posts: [],
+        foundUsers: [luna.user.id],
+        users: [{ id: luna.user.id, screenName: 'Quick brown fox' }],
+      });
+    });
+
+    it('should find account and post', async () => {
+      const response = await funcTestHelper.performSearch(luna, 'luna');
+      expect(response, 'to satisfy', {
+        posts: [{ id: post.id }],
+        foundUsers: [luna.user.id],
+        users: [{ id: luna.user.id, screenName: 'Quick brown fox' }],
+      });
+    });
+  });
 });
