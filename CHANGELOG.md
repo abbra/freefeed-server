@@ -24,6 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Private accounts are included in search results only if the viewer is
   subscribed to them or vice versa.
 
+  **After upgrading from 2.25.x**, it is recommended to run the
+  `bin/reindex_accounts.js` script to build search indexes for existing
+  accounts:
+  ```
+  yarn babel bin/reindex_accounts.js
+  ```
+
 ## [2.25.2] - 2025-09-21
 ### Fixed
 - Ensure cache invalidation after setting first user interaction.
