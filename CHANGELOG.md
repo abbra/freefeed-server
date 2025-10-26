@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [2.26.0] - Not released
+### Added
+- Account search functionality: users and groups can now be found by their
+  usernames, screennames, and descriptions. The search is performed in parallel
+  with post and comment search.
+
+  Username search has some limitations compared to post/comment search:
+  - Morphology is not used
+  - Usernames are searched by _substrings_ (e.g., username `badapple` will be
+    found by queries `bad`, `apple`, `apple bad`, or `apple | pear -good`)
+  - Only the _and_, _or_, and _not_ operators are supported (other operators
+    are ignored)
+
+  The search API response now includes new `foundUsers` field: an array of
+  user/group IDs found by the search query
+
+  Private accounts are included in search results only if the viewer is
+  subscribed to them or vice versa.
 
 ## [2.25.2] - 2025-09-21
 ### Fixed
