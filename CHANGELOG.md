@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ```
   yarn babel bin/reindex_accounts.js
   ```
+### Fixed
+- Filter out deleted comments from `GET /vN/comments/by-ids` endpoint.
 
 ## [2.25.2] - 2025-09-21
 ### Fixed

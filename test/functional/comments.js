@@ -579,9 +579,14 @@ describe('CommentsController', () => {
       comments = [];
 
       for (let n = 0; n < nComments; n++) {
+        const author = n % 2 == 0 ? luna : mars;
         comments.push(
           // eslint-disable-next-line no-await-in-loop
-          await funcTestHelper.justCreateComment(n % 2 == 0 ? luna : mars, post.id, 'Comment'),
+          await funcTestHelper.justCreateComment(
+            author,
+            post.id,
+            `Comment from ${author.username}`,
+          ),
         );
       }
 
@@ -631,6 +636,113 @@ describe('CommentsController', () => {
         );
         expect(resp, 'to satisfy', {
           comments: commentIds.map((id, i) => ({ id, hideType: i % 2 === 1 ? 0 : 2 })),
+        });
+      });
+    });
+
+    describe('Visibility restrictions', () => {
+      let jupiter, privatePost, privateComments;
+
+      beforeEach(async () => {
+        // Create Jupiter who will have a private post
+        [jupiter] = await funcTestHelper.createTestUsers(['jupiter']);
+        await funcTestHelper.goPrivate(jupiter);
+
+        // Create a private post with comments
+        privatePost = await funcTestHelper.justCreatePost(jupiter, 'Private post');
+        privateComments = [];
+
+        for (let n = 0; n < 3; n++) {
+          privateComments.push(
+            // eslint-disable-next-line no-await-in-loop
+            await funcTestHelper.justCreateComment(jupiter, privatePost.id, `Private comment ${n}`),
+          );
+        }
+      });
+
+      it('should not return comments from private post for non-subscriber', async () => {
+        const commentIds = privateComments.map((c) => c.id);
+        const resp = await funcTestHelper.performJSONRequest(
+          'POST',
+          '/v2/comments/byIds',
+          {
+            commentIds,
+          },
+          funcTestHelper.authHeaders(luna),
+        );
+        expect(resp, 'to satisfy', {
+          comments: [],
+          commentsNotFound: commentIds,
+        });
+      });
+
+      it('should not return comments when viewer is banned by comment author', async () => {
+        // Mars bans Luna
+        await banUser(mars, luna);
+
+        // Try to get Mars's comments as Luna
+        const marsCommentIds = comments.filter((c, i) => i % 2 === 0).map((c) => c.id);
+        const resp = await funcTestHelper.performJSONRequest(
+          'POST',
+          '/v2/comments/byIds',
+          {
+            commentIds: marsCommentIds,
+          },
+          funcTestHelper.authHeaders(luna),
+        );
+
+        // Comments should be returned as hidden (hideType: Comment.HIDDEN_VIEWER_BANNED)
+        expect(resp, 'to satisfy', {
+          comments: marsCommentIds.map((id) => ({ id, hideType: Comment.HIDDEN_VIEWER_BANNED })),
+        });
+      });
+
+      it('should not return comments from post by banned author', async () => {
+        // Luna bans Venus (post author)
+        await banUser(luna, venus);
+
+        // Try to get all comments from Venus's post as Luna
+        const commentIds = comments.map((c) => c.id);
+        const resp = await funcTestHelper.performJSONRequest(
+          'POST',
+          '/v2/comments/byIds',
+          {
+            commentIds,
+          },
+          funcTestHelper.authHeaders(luna),
+        );
+
+        // All comments should be unavailable because the post itself is not visible
+        expect(resp, 'to satisfy', {
+          comments: [],
+          commentsNotFound: commentIds,
+        });
+      });
+
+      it('should not return deleted comments', async () => {
+        // Delete some comments
+        const [commentToDelete1, , commentToDelete2] = comments;
+
+        await funcTestHelper.removeCommentAsync(venus, commentToDelete1.id);
+        await funcTestHelper.removeCommentAsync(venus, commentToDelete2.id);
+
+        // Try to get all comments including deleted ones
+        const commentIds = comments.map((c) => c.id);
+        const resp = await funcTestHelper.performJSONRequest(
+          'POST',
+          '/v2/comments/byIds',
+          {
+            commentIds,
+          },
+          funcTestHelper.authHeaders(luna),
+        );
+
+        // Deleted comments should not be returned
+        expect(resp, 'to satisfy', {
+          comments: commentIds
+            .filter((id) => id !== commentToDelete1.id && id !== commentToDelete2.id)
+            .map((id) => ({ id })),
+          commentsNotFound: [commentToDelete1.id, commentToDelete2.id],
         });
       });
     });

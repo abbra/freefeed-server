@@ -150,7 +150,7 @@ export const getByIds = compose([
       commentIds.length = maxCommentsByIds;
     }
 
-    const allComments = await dbAdapter.getCommentsByIds(commentIds);
+    const allComments = (await dbAdapter.getCommentsByIds(commentIds)).filter((c) => !c.toDelete);
     const postIds = uniq(allComments.map((c) => c.postId));
 
     const visiblePostIds = await dbAdapter.selectPostsVisibleByUser(postIds, viewer?.id);
