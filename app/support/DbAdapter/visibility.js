@@ -185,6 +185,26 @@ const visibilityTrait = (superClass) =>
       return m.get(commentId) ?? null;
     }
 
+    /**
+     * Check if comments are banned (hidden) for the given viewer and return a
+     * map of comment IDs to arrays of hide types.
+     *
+     * This method checks ban relationships between the viewer and comment
+     * authors according to the visibility rules. Comments in 'to_delete' status
+     * are excluded from the result.
+     *
+     * See doc/visibility-rules.md for the visibility rules details.
+     *
+     * @param {string[]} commentIds - Array of comment UUIDs to check
+     * @param {string|null} viewerId - Viewer's user UUID, or null for anonymous
+     * viewer
+     * @returns {Promise<Map<string, number[]>>} Map where keys are comment
+     *   UUIDs and values are arrays of hide type constants:
+     *   - Comment.HIDDEN_AUTHOR_BANNED: comment author is banned by viewer
+     *   - Comment.HIDDEN_VIEWER_BANNED: viewer is banned by comment author
+     *
+     * Only comments that should be hidden are included in the map.
+     */
     async areCommentsBannedForViewerAssoc(commentIds, viewerId = null) {
       const bannedSQLsFabric = await this.bannedActionsSQLsFabric(viewerId);
       const [bannedByViewerSQL, bannedByAuthorSQL] = bannedSQLsFabric('c');
