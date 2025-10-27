@@ -10,6 +10,7 @@ import { User, Group, Comment } from '../../models';
 import { normalizeEmail } from '../email-norm';
 import { List } from '../open-lists';
 import { MAX_DATE } from '../constants';
+import { toSuffixTSVector, toTSVector } from '../search/to-tsvector';
 
 import { initObject, prepareModelPayload } from './utils';
 
@@ -41,6 +42,18 @@ const usersTrait = (superClass) =>
     async createUser(payload) {
       const preparedPayload = prepareModelPayload(payload, USER_COLUMNS, USER_COLUMNS_MAPPING);
 
+      // raw() interprets '?' chars as positional placeholders so we must escape them
+      // https://github.com/knex/knex/issues/2622
+      preparedPayload.username_tsvector = this.database.raw(
+        toSuffixTSVector(preparedPayload.username).replace(/\?/g, '\\?'),
+      );
+      preparedPayload.screen_name_tsvector = this.database.raw(
+        toTSVector(preparedPayload.screen_name).replace(/\?/g, '\\?'),
+      );
+      preparedPayload.description_tsvector = this.database.raw(
+        toTSVector(preparedPayload.description).replace(/\?/g, '\\?'),
+      );
+
       if (preparedPayload.email) {
         preparedPayload.email_norm = normalizeEmail(preparedPayload.email);
       }
@@ -52,6 +65,15 @@ const usersTrait = (superClass) =>
 
     async updateUser(userId, payload) {
       const preparedPayload = prepareModelPayload(payload, USER_COLUMNS, USER_COLUMNS_MAPPING);
+
+      // raw() interprets '?' chars as positional placeholders so we must escape them
+      // https://github.com/knex/knex/issues/2622
+      preparedPayload.screen_name_tsvector = this.database.raw(
+        toTSVector(preparedPayload.screen_name).replace(/\?/g, '\\?'),
+      );
+      preparedPayload.description_tsvector = this.database.raw(
+        toTSVector(preparedPayload.description).replace(/\?/g, '\\?'),
+      );
 
       if ('reset_password_token' in preparedPayload) {
         const { tokenTTL } = config.passwordReset;
@@ -148,10 +170,12 @@ const usersTrait = (superClass) =>
           );
         }
 
-        await trx.raw(`update users set username = :newUsername where uid = :userId`, {
-          userId,
-          newUsername,
-        });
+        const usernameTsvector = this.database.raw(toSuffixTSVector(newUsername));
+
+        await trx.raw(
+          `update users set username = :newUsername, username_tsvector = :usernameTsvector where uid = :userId`,
+          { userId, newUsername, usernameTsvector },
+        );
       });
       await this.cacheFlushUser(userId);
     }

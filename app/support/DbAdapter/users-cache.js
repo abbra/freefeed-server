@@ -5,7 +5,7 @@ import _ from 'lodash';
 ///////////////////////////////////////////////////
 
 // We MUST increment this version when we change the structure of `users` table
-const cacheVersion = 1;
+const cacheVersion = 2;
 
 function cacheKey(id) {
   return `user_${cacheVersion}_${id}`;

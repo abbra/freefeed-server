@@ -11,6 +11,8 @@ import {
   ScopeStart,
   InScope,
   SeqTexts,
+  IN_ACCOUNTS,
+  toPrefixQuery,
 } from '../search/query-tokens';
 import { List } from '../open-lists';
 import { Comment } from '../../models';
@@ -19,6 +21,7 @@ import { sqlIn, sqlIntarrayIn, andJoin, orJoin, sqlNot } from './utils';
 
 /**
  * @typedef {import('../search/query-tokens').Token} Token
+ * @typedef {import('../types').UUID} UUID
  */
 
 ///////////////////////////////////////////////////
@@ -257,6 +260,131 @@ const searchTrait = (superClass) =>
       // console.log(fullSQL);
 
       return this.database.getCol(fullSQL);
+    }
+
+    /**
+     * Search in users/groups accounts
+     *
+     * @param {string} query
+     * @param {Object} options
+     * @param {UUID|null} options.viewerId
+     * @param {number} options.maxQueryComplexity
+     * @returns {Promise<UUID[]>}
+     */
+    async searchInAccounts(
+      query,
+      { viewerId = null, maxQueryComplexity = config.search.maxQueryComplexity } = {},
+    ) {
+      const parsedQuery = parseQuery(query);
+
+      if (queryComplexity(parsedQuery) > maxQueryComplexity) {
+        throw new Error(`The search query is too complex, try to simplify it`);
+      }
+
+      // Collecting text query parts. This part is for the screennames and
+      // descriptions, we treat them as regular texts.
+      let textQuery;
+
+      // We processing usernames in a special way, because we need to search
+      // _inside_ them. For example, we want to find 'badapple' username by the
+      // 'bad', 'apple' or 'bad apple' queries. Effectively, we want to search
+      // by substrings of username strings.
+      //
+      // To achieve this, we index all _suffixes_ of username ('badapple',
+      // 'adapple', 'dapple' and so on). Then we performing search by _prefix_
+      // query ('bad' -> 'bad*', 'apple' -> 'apple*'). With this approach we can
+      // find 'badapple' by 'bad' (matches by prefix to 'badapple' suffix),
+      // 'apple' (matches by prefix to 'apple' suffix) or 'bad apple' (matches
+      // both).
+      let usernameQuery;
+
+      {
+        const result = [];
+        const usernameResult = [];
+
+        walkWithScope(parsedQuery, (token, scope) => {
+          if ((scope & IN_ACCOUNTS) === 0) {
+            return;
+          }
+
+          if (token instanceof SeqTexts) {
+            result.push(token.toTSQuery());
+            usernameResult.push(toPrefixQuery(token).toTSQuery());
+          }
+
+          if (token instanceof InScope) {
+            result.push(token.text.toTSQuery());
+            usernameResult.push(toPrefixQuery(token.text).toTSQuery());
+          }
+        });
+
+        textQuery = result.join(' && ');
+
+        if (result.length > 1) {
+          textQuery = `(${textQuery})`;
+        }
+
+        usernameQuery = usernameResult.join(' && ');
+
+        if (usernameResult.length > 1) {
+          usernameQuery = `(${usernameQuery})`;
+        }
+      }
+
+      const textSql = orJoin([
+        textQuery && `u.screen_name_tsvector @@ ${textQuery}`,
+        textQuery && `u.description_tsvector @@ ${textQuery}`,
+        usernameQuery && `u.username_tsvector @@ ${usernameQuery}`,
+      ]);
+
+      // Viewer can search the following user/group accounts:
+      // - Public and protected
+      // - Private, viewer subscribed to
+      // - Private, subscribed to viewer
+      const privateAccIds = viewerId
+        ? await this.database.getCol(
+            joinLines([
+              `select distinct u.uid`,
+              `from users u`,
+              `join feeds f on u.uid = f.user_id and f.name = 'Posts'`,
+              `join feeds vf on vf.user_id = :viewerId and vf.name = 'Posts'`,
+              `left join subscriptions s on f.uid = s.feed_id and s.user_id = :viewerId`,
+              `left join subscriptions vs on vs.feed_id = vf.uid and vs.user_id = u.uid`,
+              `where u.is_private`,
+              `and (s.user_id is not null or vs.user_id is not null)`,
+            ]),
+            { viewerId },
+          )
+        : [];
+
+      const accountsRestrictionSQL = orJoin(['not u.is_private', sqlIn('u.uid', privateAccIds)]);
+
+      let accIds = await this.database.getCol(
+        joinLines([
+          `select u.uid`,
+          `from users u`,
+          `where`,
+          andJoin([textSql, accountsRestrictionSQL]),
+        ]),
+      );
+
+      // Sort accounts by number of subscribers (descending)
+      if (accIds.length > 0) {
+        accIds = await this.database.getCol(
+          joinLines([
+            `select u.uid`,
+            `from users u`,
+            `left join feeds f on u.uid = f.user_id and f.name = 'Posts'`,
+            `left join subscriptions s on f.uid = s.feed_id`,
+            `where`,
+            sqlIn('u.uid', accIds),
+            `group by u.uid`,
+            `order by count(s.feed_id) desc`,
+          ]),
+        );
+      }
+
+      return accIds;
     }
 
     async _getAccountsUsedInQuery(parsedQuery, viewerId) {
