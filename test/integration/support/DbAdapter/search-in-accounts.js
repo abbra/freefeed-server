@@ -131,6 +131,13 @@ describe('Search in accounts', () => {
         const foundIds = await dbAdapter.searchInAccounts('searchable', { viewerId: viewer.id });
         expect(foundIds, 'to contain', privateUser.id);
       });
+
+      it('should find own private account', async () => {
+        const foundIds = await dbAdapter.searchInAccounts('searchable', {
+          viewerId: privateUser.id,
+        });
+        expect(foundIds, 'to contain', privateUser.id);
+      });
     });
   });
 
