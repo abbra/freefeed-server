@@ -341,6 +341,7 @@ const searchTrait = (superClass) =>
       // - Public and protected
       // - Private, viewer subscribed to
       // - Private, subscribed to viewer
+      // - Private, the viewer themselves
       const privateAccIds = viewerId
         ? await this.database.getCol(
             joinLines([
@@ -351,7 +352,7 @@ const searchTrait = (superClass) =>
               `left join subscriptions s on f.uid = s.feed_id and s.user_id = :viewerId`,
               `left join subscriptions vs on vs.feed_id = vf.uid and vs.user_id = u.uid`,
               `where u.is_private`,
-              `and (s.user_id is not null or vs.user_id is not null)`,
+              `and (s.user_id is not null or vs.user_id is not null or u.uid = :viewerId)`,
             ]),
             { viewerId },
           )
