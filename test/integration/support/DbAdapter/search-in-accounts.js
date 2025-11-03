@@ -276,5 +276,49 @@ describe('Search in accounts', () => {
         expect(foundIds.sort(), 'to equal', [user3.id].sort());
       }
     });
+
+    it('should NOT search accounts by words after post/comment filters', async () => {
+      const luna = await createUserWithName('luna');
+      const mars = await createUserWithName('mars');
+
+      // Words after post/comment filters should not be searched in accounts
+      const postCommentFilters = [
+        'from:luna luna',
+        'to:luna luna',
+        'in:luna luna',
+        'in-my:saves luna',
+        'commented-by:luna luna',
+        'liked-by:luna luna',
+        'cliked-by:luna luna',
+        'author:luna luna',
+        'by:luna luna',
+        'has:images luna',
+        'is:public luna',
+        'comments:1 luna',
+        'likes:1 luna',
+        'clikes:1 luna',
+        'date:2020 luna',
+        'post-date:2020 luna',
+        'in-body: luna',
+        'in-comments: luna',
+      ];
+
+      for (const query of postCommentFilters) {
+        const foundIds = await dbAdapter.searchInAccounts(query);
+        expect(foundIds, 'to equal', []);
+      }
+
+      // But should find when explicitly using in-users scope
+      {
+        const foundIds = await dbAdapter.searchInAccounts(`from:${mars.username} in-users: luna`);
+        expect(foundIds, 'to equal', [luna.id]);
+      }
+
+      // And should find when username is before the filter
+      {
+        const foundIds = await dbAdapter.searchInAccounts(`luna from:${mars.username}`);
+        expect(foundIds, 'to equal', [luna.id]);
+      }
+    });
   });
 });

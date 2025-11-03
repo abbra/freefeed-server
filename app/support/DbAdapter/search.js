@@ -13,6 +13,7 @@ import {
   SeqTexts,
   IN_ACCOUNTS,
   toPrefixQuery,
+  IN_CONTENT,
 } from '../search/query-tokens';
 import { List } from '../open-lists';
 import { Comment } from '../../models';
@@ -65,27 +66,34 @@ const searchTrait = (superClass) =>
       // Map from username to User/Group object (or null)
       const accountsMap = await this._getAccountsUsedInQuery(parsedQuery, viewerId);
 
+      const allContent = (scope) => (scope & IN_CONTENT) === IN_CONTENT;
+      const postsOnly = (scope) => (scope & IN_CONTENT) === IN_POSTS;
+      const commentsOnly = (scope) => (scope & IN_CONTENT) === IN_COMMENTS;
+
       // Text queries
-      const commonTextQuery = getTSQuery(parsedQuery, IN_ALL); // Search for this text in posts and comments
-      const postsOnlyTextQuery = getTSQuery(parsedQuery, IN_POSTS); // Search for this text only in posts
-      const commentsOnlyTextQuery = getTSQuery(parsedQuery, IN_COMMENTS); // Search for this text only in comments
+      // Search for this text in posts and comments
+      const commonTextQuery = getTSQuery(parsedQuery, allContent);
+      // Search for this text only in posts
+      const postsOnlyTextQuery = getTSQuery(parsedQuery, postsOnly);
+      // Search for this text only in comments
+      const commentsOnlyTextQuery = getTSQuery(parsedQuery, commentsOnly);
 
       // Text authorship (the 'author:'/'by:' filter)
-      const commonTextAuthors = namesToIds(getAuthorNames(parsedQuery, IN_ALL), accountsMap);
-      const postTextAuthors = namesToIds(getAuthorNames(parsedQuery, IN_POSTS), accountsMap);
-      const commentTextAuthors = namesToIds(getAuthorNames(parsedQuery, IN_COMMENTS), accountsMap);
+      const commonTextAuthors = namesToIds(getAuthorNames(parsedQuery, allContent), accountsMap);
+      const postTextAuthors = namesToIds(getAuthorNames(parsedQuery, postsOnly), accountsMap);
+      const commentTextAuthors = namesToIds(getAuthorNames(parsedQuery, commentsOnly), accountsMap);
 
       // Post author filter (the 'from:' filter)
       let postAuthors = namesToIds(getPostAuthorNames(parsedQuery), accountsMap);
 
       // Date
       const postsContentDateSQL = andJoin([
-        contendDateSQL(parsedQuery, 'p.created_at', IN_ALL),
-        contendDateSQL(parsedQuery, 'p.created_at', IN_POSTS),
+        contendDateSQL(parsedQuery, 'p.created_at', allContent),
+        contendDateSQL(parsedQuery, 'p.created_at', postsOnly),
       ]);
       const commentsContentDateSQL = andJoin([
-        contendDateSQL(parsedQuery, 'c.created_at', IN_ALL),
-        contendDateSQL(parsedQuery, 'c.created_at', IN_COMMENTS),
+        contendDateSQL(parsedQuery, 'c.created_at', allContent),
+        contendDateSQL(parsedQuery, 'c.created_at', commentsOnly),
       ]);
 
       const postsDateSQL = postDateFilterSQL(parsedQuery, 'p.created_at');
@@ -539,22 +547,27 @@ function walkWithScope(tokens, action) {
       continue;
     }
 
+    // Any condition restricts the scope to IN_CONTENT (i.e., excludes IN_ACCOUNTS)
+    if (token instanceof Condition) {
+      currentScope = currentScope & IN_CONTENT;
+    }
+
     action(token, token instanceof InScope ? token.scope : currentScope);
   }
 }
 
-function walkInScope(tokens, scope, action) {
-  walkWithScope(tokens, (token, currentScope) => currentScope === scope && action(token));
+function walkInScope(tokens, scopeFilter, action) {
+  walkWithScope(tokens, (token, currentScope) => scopeFilter(currentScope) && action(token));
 }
 
 function isCondition(token, condition) {
   return token instanceof Condition && token.condition === condition;
 }
 
-function getTSQuery(tokens, targetScope) {
+function getTSQuery(tokens, scopeFilter) {
   const result = [];
 
-  walkInScope(tokens, targetScope, (token) => {
+  walkInScope(tokens, scopeFilter, (token) => {
     if (token instanceof SeqTexts) {
       result.push(token.toTSQuery());
     }
@@ -567,10 +580,10 @@ function getTSQuery(tokens, targetScope) {
   return result.length > 1 ? `(${result.join(' && ')})` : result.join(' && ');
 }
 
-function getAuthorNames(tokens, targetScope) {
+function getAuthorNames(tokens, scopeFilter) {
   let result = List.everything();
 
-  walkInScope(tokens, targetScope, (token) => {
+  walkInScope(tokens, scopeFilter, (token) => {
     if (isCondition(token, 'author')) {
       result = List.intersection(result, token.exclude ? List.inverse(token.args) : token.args);
     }
@@ -595,15 +608,19 @@ function getClikesAuthorsSQL(tokens, field, accountsMap) {
   let positive = null;
   let negative = null;
 
-  walkInScope(tokens, IN_COMMENTS, (token) => {
-    if (isCondition(token, 'cliked-by')) {
-      if (!token.exclude) {
-        positive = positive ? union(positive, token.args) : uniq(token.args);
-      } else {
-        negative = negative ? union(negative, token.args) : uniq(token.args);
+  walkInScope(
+    tokens,
+    (scope) => scope & IN_COMMENTS,
+    (token) => {
+      if (isCondition(token, 'cliked-by')) {
+        if (!token.exclude) {
+          positive = positive ? union(positive, token.args) : uniq(token.args);
+        } else {
+          negative = negative ? union(negative, token.args) : uniq(token.args);
+        }
       }
-    }
-  });
+    },
+  );
 
   if (positive) {
     positive = positive.map((n) => accountsMap[n]?.intId).filter(Boolean);
@@ -630,12 +647,12 @@ function postDateFilterSQL(tokens, field) {
   return andJoin(result);
 }
 
-function contendDateSQL(tokens, field, targetScope) {
+function contendDateSQL(tokens, field, scopeFilter) {
   const result = [];
   walkWithScope(tokens, (token, currentScope) => {
     if (
-      (isCondition(token, 'post-date') && targetScope === IN_POSTS) ||
-      (isCondition(token, 'date') && currentScope === targetScope)
+      (isCondition(token, 'post-date') && scopeFilter(IN_POSTS)) ||
+      (isCondition(token, 'date') && scopeFilter(currentScope))
     ) {
       result.push(intervalSQL(token, field));
     }

@@ -9,11 +9,12 @@ import { linkToText } from './norm';
 
 const ftsCfg = config.postgres.textSearchConfigName;
 
-export type Scope = 1 | 2 | 4 | 7;
+export type Scope = 1 | 2 | 3 | 4 | 7;
 
 export const IN_POSTS: Scope = 1 as const,
   IN_COMMENTS: Scope = 2 as const,
   IN_ACCOUNTS: Scope = 4 as const,
+  IN_CONTENT: Scope = 3 as const, // = IN_POSTS | IN_COMMENTS
   IN_ALL: Scope = 7 as const; // = IN_POSTS | IN_COMMENTS | IN_ACCOUNTS
 
 export interface Token {
