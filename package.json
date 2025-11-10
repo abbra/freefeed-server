@@ -177,7 +177,8 @@
     "xml-parser": "~1.2.1"
   },
   "resolutions": {
-    "@types/node": "~18.19.4"
+    "@types/node": "~18.19.4",
+    "is-generator-function": "1.0.10"
   },
   "packageManager": "yarn@4.11.0"
 }
