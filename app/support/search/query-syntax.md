@@ -4,9 +4,15 @@ The search query is a sequence of text terms and search operators.
 
 You can put the minus sign (`-`) right before the text term or operator to _exclude_ it from search results: `cat -mouse` will return documents with the "cat" word but without the "mouse" word.
 
+## Search scopes
+
+The search is performed across post and comment texts, as well as usernames, screennames, and descriptions of users and groups. By default, the search covers all these texts, but the search scope can be narrowed using scope operators.
+
+Full syntax is available in all search scopes except usernames (logins). Username search is limited: morphology is not used, _substrings_ of the login are searched, and only the _and_, _or_, and _not_ operators can be used (others are ignored). For example, the username `badapple` will be found by queries `bad`, `apple`, `apple bad`, or `apple | pear -good`.
+
 ## Text terms
 
-The text term is a word without white spaces (like `cat`, or `#mouse` or even `http://freefeed.net/`) or a double-quoted string that can include spaces: `"cat mouse"`. Putting text in double quotes tells search engine to search these words in the specific order and in exact word forms. It is also possible to search words by prefix (not in double quotes): `cat*`.
+The text term is a word without white spaces (like `cat`, or `#mouse` or even `http://freefeed.net/`) or a double-quoted string that can include spaces: `"cat mouse"`. Putting text in double quotes tells the search engine to search these words in the specific order and in exact word forms. It is also possible to search words by prefix (not in double quotes): `cat*`.
 
 By default _all_ text terms in query will be searched (AND is implied). You can use the "pipe" symbol (`|`) to search _any_ of them: `cat | mouse` will find documents with "cat" OR with "mouse". To search words in the specific order use the "plus" symbol (`+`): `cat + mouse` means these two words standing next to each other in that order.
 
@@ -20,7 +26,7 @@ Two important rules about the `+` and `|` symbols:
 
 General rule: in any operator you can omit dash symbol (if present) and the 's suffix of the plural word form. For example the `in-comments:` operator can also be written as `incomments:` or `incomment:`.
 
-Some operators takes user name as an arguments. In such operators you can use a special user name, `me` that means you, the current signed in user. The `cat from:me` query will find the "cat" word in all posts and comments of the current user.
+Some operators take a user name as an argument. In such operators you can use a special user name, `me` that means you, the current signed in user. The `cat from:me` query will find the "cat" word in all posts and comments of the current user.
 
 ### Full operators list
 
@@ -47,7 +53,7 @@ Some operators takes user name as an arguments. In such operators you can use a 
 
 ⚠ Warning: you can not use minus modifier with global search scope operators.
 
-By default, the search is performed both in post and comment bodies. The following operators changes this behavior.
+By default, the search is performed both in post and comment bodies. The following operators change this behavior.
 
 **in-body:** — starting from this operator the search will be performed only in the post bodies. 
 
@@ -57,7 +63,11 @@ Example: `cat in-body: mouse` — the "cat" will be searched in posts and commen
 
 Example: `in-comments: mouse` — the "mouse" will be searched only in comment bodies.
 
-The global search scope operators switches search scope from itself to the end of the query or to the other global scope operator. 
+**in-users:** / **in-accounts:** — starting from this operator the search will be performed only in the usernames, screennames and descriptions of users and groups.
+
+Example: `in-users: mouse` — the "mouse" will be searched only in user names, screennames and descriptions.
+
+The global search scope operators switch the search scope from themselves to the end of the query or to another global scope operator. 
 
 ### Interval operators
 
@@ -74,33 +84,33 @@ Some operators allow to specify the interval of the values. The interval syntax 
 
 ### Local search scope
 
-Local search scope operator are like global ones but without switching the global search scope.
+Local search scope operators are like global ones but without switching the global search scope.
 
 **in-body:word1,word2** or **in-body:"quoted text"** will search _any_ of word1, word2 or the "quoted text" in post body but will not change the global query scope. Note that there is no space after a colon.
 
-**in-comments:word1,word2** or **in-comments:"quoted text"** do the same for comments.
+**in-comments:word1,word2** or **in-comments:"quoted text"** does the same for comments.
 
 Example: `cat in-body:mouse dog` — the "cat" and "dog" will be searched in post and comments but the "mouse" will be searched only in posts.
 
 ### Content filtering
 
-**from:user1,user2** limits search to posts authored by user1 or user2. The `from:alice cat` query will search "cat" in posts authored by Alice _and in any their comments_ (not only in Alice's comments').
+**from:user1,user2** limits search to posts authored by user1 or user2. The `from:alice cat` query will search "cat" in posts authored by Alice _and in any of their comments_ (not only in Alice's comments).
 
 **in:user1,group2** limits search to posts published in user1 or group2 feeds.
 
-`cat in:cats` will find all post with the "cat" word in the @cats group.
+`cat in:cats` will find all posts with the "cat" word in the @cats group.
 
-`cat in:cats from:alice` will find all post with the "cat" word authored by Alice in the @cats group.
+`cat in:cats from:alice` will find all posts with the "cat" word authored by Alice in the @cats group.
 
-`cat in:cats,alice` will find all post with the "cat" word posted to the Alice's own feed OR to the @cats group.
+`cat in:cats,alice` will find all posts with the "cat" word posted to Alice's own feed OR to the @cats group.
 
-`cat in:cats in:alice` will find all post with the "cat" word posted to the Alice's own feed AND to the @cats group.
+`cat in:cats in:alice` will find all posts with the "cat" word posted to Alice's own feed AND to the @cats group.
 
-The "in:" operator has the "group:" alias, it left for compatibility.
+The "in:" operator has the "group:" alias, which is left for compatibility.
 
-**in-my:feed1,feed2** limit search to the current user's personal feeds. The personal feed names are: "saves", "directs", "discussions" and "friends". You can omit the 's suffix in these names. The "friends" feed means all feeds of users and groups current user subscribed to.
+**in-my:feed1,feed2** limits search to the current user's personal feeds. The personal feed names are: "saves", "directs", "discussions" and "friends". You can omit the 's suffix in these names. The "friends" feed means all feeds of users and groups the current user is subscribed to.
 
-`cat in-my:saves` will find all post with the "cat" word in my Saves feed.
+`cat in-my:saves` will find all posts with the "cat" word in my Saves feed.
 
 **commented-by:user1,user2** limits search to posts commented by user1 or user2.
 
@@ -144,6 +154,6 @@ The `post-date:` always sets the post date. The `in-comments: foo post-date:2020
 
 The "content" is defined by the current search scope. By default it is a post and comment bodies: `cat author:alice` will search the "cat" word in all Alice's posts and comments bodies.
 
-`in-body: author:alice cat` will search the "cat" word only in Alice's posts bodies. In this context the 'author:' works in same way as 'from:'.
+`in-body: author:alice cat` will search the "cat" word only in Alice's posts bodies. In this context, 'author:' works in the same way as 'from:'.
 
 `in-comments: author:alice cat` will search the "cat" word only in Alice's comments bodies.

@@ -17,7 +17,11 @@ export class Cache {
     private readonly keyPrefix: string,
     private readonly ttl: number,
   ) {
-    this.cache = createCache(ioRedisStore({ redisInstance: redisConnect() }), { ttl });
+    // Type assertion needed due to ioredis version mismatch between
+    // @tirke/node-cache-manager-ioredis (expects 5.2.x) and current version (5.7.0)
+    // TODO: replace @tirke/node-cache-manager-ioredis with something supported by cache-manager
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.cache = createCache(ioRedisStore({ redisInstance: redisConnect() as any }), { ttl });
   }
 
   async put<T>(data: T) {

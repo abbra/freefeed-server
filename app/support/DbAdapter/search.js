@@ -11,6 +11,9 @@ import {
   ScopeStart,
   InScope,
   SeqTexts,
+  IN_ACCOUNTS,
+  toPrefixQuery,
+  IN_CONTENT,
 } from '../search/query-tokens';
 import { List } from '../open-lists';
 import { Comment } from '../../models';
@@ -19,6 +22,7 @@ import { sqlIn, sqlIntarrayIn, andJoin, orJoin, sqlNot } from './utils';
 
 /**
  * @typedef {import('../search/query-tokens').Token} Token
+ * @typedef {import('../types').UUID} UUID
  */
 
 ///////////////////////////////////////////////////
@@ -62,27 +66,34 @@ const searchTrait = (superClass) =>
       // Map from username to User/Group object (or null)
       const accountsMap = await this._getAccountsUsedInQuery(parsedQuery, viewerId);
 
+      const allContent = (scope) => (scope & IN_CONTENT) === IN_CONTENT;
+      const postsOnly = (scope) => (scope & IN_CONTENT) === IN_POSTS;
+      const commentsOnly = (scope) => (scope & IN_CONTENT) === IN_COMMENTS;
+
       // Text queries
-      const commonTextQuery = getTSQuery(parsedQuery, IN_ALL); // Search for this text in posts and comments
-      const postsOnlyTextQuery = getTSQuery(parsedQuery, IN_POSTS); // Search for this text only in posts
-      const commentsOnlyTextQuery = getTSQuery(parsedQuery, IN_COMMENTS); // Search for this text only in comments
+      // Search for this text in posts and comments
+      const commonTextQuery = getTSQuery(parsedQuery, allContent);
+      // Search for this text only in posts
+      const postsOnlyTextQuery = getTSQuery(parsedQuery, postsOnly);
+      // Search for this text only in comments
+      const commentsOnlyTextQuery = getTSQuery(parsedQuery, commentsOnly);
 
       // Text authorship (the 'author:'/'by:' filter)
-      const commonTextAuthors = namesToIds(getAuthorNames(parsedQuery, IN_ALL), accountsMap);
-      const postTextAuthors = namesToIds(getAuthorNames(parsedQuery, IN_POSTS), accountsMap);
-      const commentTextAuthors = namesToIds(getAuthorNames(parsedQuery, IN_COMMENTS), accountsMap);
+      const commonTextAuthors = namesToIds(getAuthorNames(parsedQuery, allContent), accountsMap);
+      const postTextAuthors = namesToIds(getAuthorNames(parsedQuery, postsOnly), accountsMap);
+      const commentTextAuthors = namesToIds(getAuthorNames(parsedQuery, commentsOnly), accountsMap);
 
       // Post author filter (the 'from:' filter)
       let postAuthors = namesToIds(getPostAuthorNames(parsedQuery), accountsMap);
 
       // Date
       const postsContentDateSQL = andJoin([
-        contendDateSQL(parsedQuery, 'p.created_at', IN_ALL),
-        contendDateSQL(parsedQuery, 'p.created_at', IN_POSTS),
+        contendDateSQL(parsedQuery, 'p.created_at', allContent),
+        contendDateSQL(parsedQuery, 'p.created_at', postsOnly),
       ]);
       const commentsContentDateSQL = andJoin([
-        contendDateSQL(parsedQuery, 'c.created_at', IN_ALL),
-        contendDateSQL(parsedQuery, 'c.created_at', IN_COMMENTS),
+        contendDateSQL(parsedQuery, 'c.created_at', allContent),
+        contendDateSQL(parsedQuery, 'c.created_at', commentsOnly),
       ]);
 
       const postsDateSQL = postDateFilterSQL(parsedQuery, 'p.created_at');
@@ -259,6 +270,132 @@ const searchTrait = (superClass) =>
       return this.database.getCol(fullSQL);
     }
 
+    /**
+     * Search in users/groups accounts
+     *
+     * @param {string} query
+     * @param {Object} options
+     * @param {UUID|null} options.viewerId
+     * @param {number} options.maxQueryComplexity
+     * @returns {Promise<UUID[]>}
+     */
+    async searchInAccounts(
+      query,
+      { viewerId = null, maxQueryComplexity = config.search.maxQueryComplexity } = {},
+    ) {
+      const parsedQuery = parseQuery(query);
+
+      if (queryComplexity(parsedQuery) > maxQueryComplexity) {
+        throw new Error(`The search query is too complex, try to simplify it`);
+      }
+
+      // Collecting text query parts. This part is for the screennames and
+      // descriptions, we treat them as regular texts.
+      let textQuery;
+
+      // We processing usernames in a special way, because we need to search
+      // _inside_ them. For example, we want to find 'badapple' username by the
+      // 'bad', 'apple' or 'bad apple' queries. Effectively, we want to search
+      // by substrings of username strings.
+      //
+      // To achieve this, we index all _suffixes_ of username ('badapple',
+      // 'adapple', 'dapple' and so on). Then we performing search by _prefix_
+      // query ('bad' -> 'bad*', 'apple' -> 'apple*'). With this approach we can
+      // find 'badapple' by 'bad' (matches by prefix to 'badapple' suffix),
+      // 'apple' (matches by prefix to 'apple' suffix) or 'bad apple' (matches
+      // both).
+      let usernameQuery;
+
+      {
+        const result = [];
+        const usernameResult = [];
+
+        walkWithScope(parsedQuery, (token, scope) => {
+          if ((scope & IN_ACCOUNTS) === 0) {
+            return;
+          }
+
+          if (token instanceof SeqTexts) {
+            result.push(token.toTSQuery());
+            usernameResult.push(toPrefixQuery(token).toTSQuery());
+          }
+
+          if (token instanceof InScope) {
+            result.push(token.text.toTSQuery());
+            usernameResult.push(toPrefixQuery(token.text).toTSQuery());
+          }
+        });
+
+        textQuery = result.join(' && ');
+
+        if (result.length > 1) {
+          textQuery = `(${textQuery})`;
+        }
+
+        usernameQuery = usernameResult.join(' && ');
+
+        if (usernameResult.length > 1) {
+          usernameQuery = `(${usernameQuery})`;
+        }
+      }
+
+      const textSql = orJoin([
+        textQuery && `u.screen_name_tsvector @@ ${textQuery}`,
+        textQuery && `u.description_tsvector @@ ${textQuery}`,
+        usernameQuery && `u.username_tsvector @@ ${usernameQuery}`,
+      ]);
+
+      // Viewer can search the following user/group accounts:
+      // - Public and protected
+      // - Private, viewer subscribed to
+      // - Private, subscribed to viewer
+      // - Private, the viewer themselves
+      const privateAccIds = viewerId
+        ? await this.database.getCol(
+            joinLines([
+              `select distinct u.uid`,
+              `from users u`,
+              `join feeds f on u.uid = f.user_id and f.name = 'Posts'`,
+              `join feeds vf on vf.user_id = :viewerId and vf.name = 'Posts'`,
+              `left join subscriptions s on f.uid = s.feed_id and s.user_id = :viewerId`,
+              `left join subscriptions vs on vs.feed_id = vf.uid and vs.user_id = u.uid`,
+              `where u.is_private`,
+              `and (s.user_id is not null or vs.user_id is not null or u.uid = :viewerId)`,
+            ]),
+            { viewerId },
+          )
+        : [];
+
+      const accountsRestrictionSQL = orJoin(['not u.is_private', sqlIn('u.uid', privateAccIds)]);
+
+      let accIds = await this.database.getCol(
+        joinLines([
+          `select u.uid`,
+          `from users u`,
+          `where`,
+          andJoin([textSql, accountsRestrictionSQL]),
+        ]),
+      );
+
+      // Sort accounts by number of subscribers (descending)
+      if (accIds.length > 0) {
+        accIds = await this.database.getCol(
+          joinLines([
+            `select u.uid`,
+            `from users u`,
+            `left join feeds f on u.uid = f.user_id and f.name = 'Posts'`,
+            `left join subscriptions s on f.uid = s.feed_id`,
+            `where`,
+            sqlIn('u.uid', accIds),
+            `group by u.uid`,
+            `order by count(s.feed_id) desc`,
+          ]),
+        );
+      }
+
+      return accIds;
+    }
+
     async _getAccountsUsedInQuery(parsedQuery, viewerId) {
       const conditionsWithAccNames = [
         'in',
@@ -410,22 +547,27 @@ function walkWithScope(tokens, action) {
       continue;
     }
 
+    // Any condition restricts the scope to IN_CONTENT (i.e., excludes IN_ACCOUNTS)
+    if (token instanceof Condition) {
+      currentScope = currentScope & IN_CONTENT;
+    }
+
     action(token, token instanceof InScope ? token.scope : currentScope);
   }
 }
 
-function walkInScope(tokens, scope, action) {
-  walkWithScope(tokens, (token, currentScope) => currentScope === scope && action(token));
+function walkInScope(tokens, scopeFilter, action) {
+  walkWithScope(tokens, (token, currentScope) => scopeFilter(currentScope) && action(token));
 }
 
 function isCondition(token, condition) {
   return token instanceof Condition && token.condition === condition;
 }
 
-function getTSQuery(tokens, targetScope) {
+function getTSQuery(tokens, scopeFilter) {
   const result = [];
 
-  walkInScope(tokens, targetScope, (token) => {
+  walkInScope(tokens, scopeFilter, (token) => {
     if (token instanceof SeqTexts) {
       result.push(token.toTSQuery());
     }
@@ -438,10 +580,10 @@ function getTSQuery(tokens, targetScope) {
   return result.length > 1 ? `(${result.join(' && ')})` : result.join(' && ');
 }
 
-function getAuthorNames(tokens, targetScope) {
+function getAuthorNames(tokens, scopeFilter) {
   let result = List.everything();
 
-  walkInScope(tokens, targetScope, (token) => {
+  walkInScope(tokens, scopeFilter, (token) => {
     if (isCondition(token, 'author')) {
       result = List.intersection(result, token.exclude ? List.inverse(token.args) : token.args);
     }
@@ -466,15 +608,19 @@ function getClikesAuthorsSQL(tokens, field, accountsMap) {
   let positive = null;
   let negative = null;
 
-  walkInScope(tokens, IN_COMMENTS, (token) => {
-    if (isCondition(token, 'cliked-by')) {
-      if (!token.exclude) {
-        positive = positive ? union(positive, token.args) : uniq(token.args);
-      } else {
-        negative = negative ? union(negative, token.args) : uniq(token.args);
+  walkInScope(
+    tokens,
+    (scope) => scope & IN_COMMENTS,
+    (token) => {
+      if (isCondition(token, 'cliked-by')) {
+        if (!token.exclude) {
+          positive = positive ? union(positive, token.args) : uniq(token.args);
+        } else {
+          negative = negative ? union(negative, token.args) : uniq(token.args);
+        }
       }
-    }
-  });
+    },
+  );
 
   if (positive) {
     positive = positive.map((n) => accountsMap[n]?.intId).filter(Boolean);
@@ -501,12 +647,12 @@ function postDateFilterSQL(tokens, field) {
   return andJoin(result);
 }
 
-function contendDateSQL(tokens, field, targetScope) {
+function contendDateSQL(tokens, field, scopeFilter) {
   const result = [];
   walkWithScope(tokens, (token, currentScope) => {
     if (
-      (isCondition(token, 'post-date') && targetScope === IN_POSTS) ||
-      (isCondition(token, 'date') && currentScope === targetScope)
+      (isCondition(token, 'post-date') && scopeFilter(IN_POSTS)) ||
+      (isCondition(token, 'date') && scopeFilter(currentScope))
     ) {
       result.push(intervalSQL(token, field));
     }
