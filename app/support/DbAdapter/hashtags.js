@@ -1,6 +1,8 @@
 import _ from 'lodash';
 import pgFormat from 'pg-format';
 
+import { normalizeHashtag } from '../normalize-hashtags';
+
 ///////////////////////////////////////////////////
 // Hashtags
 ///////////////////////////////////////////////////
@@ -76,11 +78,12 @@ const hashtagsTrait = (superClass) =>
 
       const payload = names
         .map((name) => {
-          return pgFormat(`(%L)`, name.toLowerCase());
+          const lowerName = name.toLowerCase();
+          return pgFormat(`(%L, %L)`, lowerName, normalizeHashtag(lowerName));
         })
         .join(',');
       const res = await this.database.raw(
-        `insert into hashtags ("name") values ${payload} on conflict do nothing returning "id" `,
+        `insert into hashtags ("name", "normalized_name") values ${payload} on conflict do nothing returning "id" `,
       );
       return res.rows.map((t) => t.id);
     }
