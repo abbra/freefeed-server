@@ -187,6 +187,45 @@ const hashtagsTrait = (superClass) =>
       await this.database.raw('refresh materialized view concurrently hashtag_stats');
       await this.database.raw('refresh materialized view concurrently hashtag_users');
     }
+
+    /**
+     * Search hashtags for autocomplete.
+     * Returns hashtag names matching the query pattern.
+     * Prioritizes user's own hashtags, then by usage count.
+     * @param {string} query - search query
+     * @param {string} userId - current user ID (for prioritizing own hashtags)
+     * @returns {Promise<string[]>}
+     */
+    async sparseMatchesHashtags(query, userId) {
+      const normalizedQuery = normalizeHashtag(query);
+
+      if (!normalizedQuery) {
+        return [];
+      }
+
+      const sparsePattern = `%${normalizedQuery.split('').join('%')}%`;
+
+      // Select best hashtag variant per normalized_name:
+      // - prioritize user's own hashtags (is_own)
+      // - then by usage_count
+      const rows = await this.database.getAll(
+        `select distinct on (hs.normalized_name) 
+           hs.name,
+           (hu.user_id is not null) as is_own,
+           hs.usage_count
+         from hashtag_stats hs
+         left join hashtag_users hu on hu.hashtag_id = hs.hashtag_id and hu.user_id = :userId
+         where hs.normalized_name like :sparsePattern
+           and (hs.is_public or hu.user_id is not null)
+         order by hs.normalized_name, (hu.user_id is not null) desc, hs.usage_count desc`,
+        { sparsePattern, userId },
+      );
+
+      // Sort by own first, then by usage_count, and limit
+      return rows
+        .sort((a, b) => Number(b.is_own) - Number(a.is_own) || b.usage_count - a.usage_count)
+        .map((r) => r.name);
+    }
   };
 
 export default hashtagsTrait;
