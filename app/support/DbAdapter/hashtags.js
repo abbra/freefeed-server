@@ -178,6 +178,15 @@ const hashtagsTrait = (superClass) =>
 
       return this.unlinkHashtags(hashtagIds, commentId, false);
     }
+
+    /**
+     * Refresh hashtag materialized views for autocomplete.
+     * Uses CONCURRENTLY to avoid blocking reads.
+     */
+    async refreshHashtagStats() {
+      await this.database.raw('refresh materialized view concurrently hashtag_stats');
+      await this.database.raw('refresh materialized view concurrently hashtag_users');
+    }
   };
 
 export default hashtagsTrait;
