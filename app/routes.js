@@ -30,6 +30,7 @@ import ServerInfoRoute from './routes/api/v2/ServerInfo';
 import ExtAuthRoute from './routes/api/v2/ExtAuth';
 import CorsProxyRoute from './routes/api/v2/CorsProxyRoute';
 import UndoRoute from './routes/api/v2/UndoRoute';
+import HashtagsRoute from './routes/api/v2/HashtagsRoute';
 import AdminCommonRoute from './routes/api/admin/CommonRoute';
 import AdminAdminRoute from './routes/api/admin/AdminRoute';
 import AdminModeratorRoute from './routes/api/admin/ModeratorRoute';
@@ -90,6 +91,7 @@ export function createRouter() {
   AttachmentsRouteV2(publicRouter);
   CorsProxyRoute(publicRouter);
   UndoRoute(publicRouter);
+  HashtagsRoute(publicRouter);
 
   const router = new Router();
   router.use('/v([1-9]\\d*)', publicRouter.routes(), publicRouter.allowedMethods());

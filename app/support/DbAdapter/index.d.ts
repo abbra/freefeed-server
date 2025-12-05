@@ -178,6 +178,11 @@ export class DbAdapter {
    */
   sparseMatchesHashtags(query: string, userId: UUID): Promise<string[]>;
 
+  /**
+   * Refresh hashtag materialized views for autocomplete.
+   */
+  refreshHashtagStats(): Promise<void>;
+
   setFirstUserInteraction(userId: UUID): Promise<Date | null>;
 
   getUsersIdsByIntIds(intIds: number[]): Promise<{ id: number; uid: UUID }[]>;
