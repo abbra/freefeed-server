@@ -64,8 +64,9 @@ describe('hashtags sparseMatches', () => {
       authHeaders(luna),
     );
     expect(result, 'to satisfy', { __httpCode: 200 });
-    expect(result.hashtags, 'to contain', 'programming');
-    expect(result.hashtags, 'not to contain', 'python');
+    const names = result.hashtags.map((h) => h.name);
+    expect(names, 'to contain', 'programming');
+    expect(names, 'not to contain', 'python');
   });
 
   it('should find hashtags matching "p"', async () => {
@@ -76,7 +77,8 @@ describe('hashtags sparseMatches', () => {
       authHeaders(luna),
     );
     expect(result, 'to satisfy', { __httpCode: 200 });
-    expect(result.hashtags, 'to contain', 'programming', 'python');
+    const names = result.hashtags.map((h) => h.name);
+    expect(names, 'to contain', 'programming', 'python');
   });
 
   it('should find hashtags with sparse matching "js"', async () => {
@@ -87,7 +89,8 @@ describe('hashtags sparseMatches', () => {
       authHeaders(luna),
     );
     expect(result, 'to satisfy', { __httpCode: 200 });
-    expect(result.hashtags, 'to contain', 'javascript');
+    const names = result.hashtags.map((h) => h.name);
+    expect(names, 'to contain', 'javascript');
   });
 
   describe('visibility rules', () => {
@@ -111,7 +114,8 @@ describe('hashtags sparseMatches', () => {
         authHeaders(luna),
       );
       expect(result, 'to satisfy', { __httpCode: 200 });
-      expect(result.hashtags, 'not to contain', 'privatetag');
+      const names = result.hashtags.map((h) => h.name);
+      expect(names, 'not to contain', 'privatetag');
     });
 
     it('should show private hashtags to the owner', async () => {
@@ -122,11 +126,12 @@ describe('hashtags sparseMatches', () => {
         authHeaders(venus),
       );
       expect(result, 'to satisfy', { __httpCode: 200 });
-      expect(result.hashtags, 'to contain', 'privatetag');
+      const names = result.hashtags.map((h) => h.name);
+      expect(names, 'to contain', 'privatetag');
     });
   });
 
-  describe('prioritization', () => {
+  describe('is_own flag', () => {
     let jupiter;
 
     before(async () => {
@@ -143,7 +148,7 @@ describe('hashtags sparseMatches', () => {
       await dbAdapter.refreshHashtagStats();
     });
 
-    it('should prioritize own hashtag variant over more popular one', async () => {
+    it('should return is_own=true for hashtags used by the user', async () => {
       const result = await performJSONRequest(
         'GET',
         '/v2/hashtags/sparseMatches?qs=freefeed',
@@ -151,10 +156,11 @@ describe('hashtags sparseMatches', () => {
         authHeaders(jupiter),
       );
       expect(result, 'to satisfy', { __httpCode: 200 });
-      expect(result.hashtags[0], 'to equal', 'freefeed');
+      expect(result.hashtags, 'to have length', 1);
+      expect(result.hashtags[0].is_own, 'to be true');
     });
 
-    it('should return only one variant per normalization', async () => {
+    it('should return is_own=false for hashtags not used by the user', async () => {
       const result = await performJSONRequest(
         'GET',
         '/v2/hashtags/sparseMatches?qs=freefeed',
@@ -163,6 +169,18 @@ describe('hashtags sparseMatches', () => {
       );
       expect(result, 'to satisfy', { __httpCode: 200 });
       expect(result.hashtags, 'to have length', 1);
+      expect(result.hashtags[0].is_own, 'to be false');
+    });
+
+    it('should return most popular variant (FreeFeed not freefeed)', async () => {
+      const result = await performJSONRequest(
+        'GET',
+        '/v2/hashtags/sparseMatches?qs=freefeed',
+        null,
+        authHeaders(mars),
+      );
+      expect(result, 'to satisfy', { __httpCode: 200 });
+      expect(result.hashtags[0].name, 'to equal', 'freefeed');
     });
   });
 });

@@ -28,29 +28,32 @@ describe('sparseMatchesHashtags', () => {
     });
 
     it('should find hashtags matching "p"', async () => {
-      const names = await dbAdapter.sparseMatchesHashtags('p', user1.id);
+      const result = await dbAdapter.sparseMatchesHashtags('p', user1.id);
+      const names = result.map((h) => h.name);
       expect(names, 'to contain', 'programming', 'python');
     });
 
     it('should find hashtags matching "pr"', async () => {
-      const names = await dbAdapter.sparseMatchesHashtags('pr', user1.id);
+      const result = await dbAdapter.sparseMatchesHashtags('pr', user1.id);
+      const names = result.map((h) => h.name);
       expect(names, 'to contain', 'programming');
       expect(names, 'not to contain', 'python');
     });
 
     it('should find hashtags matching "js" (sparse)', async () => {
-      const names = await dbAdapter.sparseMatchesHashtags('js', user1.id);
+      const result = await dbAdapter.sparseMatchesHashtags('js', user1.id);
+      const names = result.map((h) => h.name);
       expect(names, 'to contain', 'javascript');
     });
 
     it('should return empty array for empty query', async () => {
-      const names = await dbAdapter.sparseMatchesHashtags('', user1.id);
-      expect(names, 'to equal', []);
+      const result = await dbAdapter.sparseMatchesHashtags('', user1.id);
+      expect(result, 'to equal', []);
     });
 
     it('should return empty array for query with only special chars', async () => {
-      const names = await dbAdapter.sparseMatchesHashtags('###', user1.id);
-      expect(names, 'to equal', []);
+      const result = await dbAdapter.sparseMatchesHashtags('###', user1.id);
+      expect(result, 'to equal', []);
     });
   });
 
@@ -70,17 +73,19 @@ describe('sparseMatchesHashtags', () => {
     after(() => user3.update({ isPrivate: '0', isProtected: '0' }));
 
     it('should not show private hashtags to other users', async () => {
-      const names = await dbAdapter.sparseMatchesHashtags('privatetag', user1.id);
+      const result = await dbAdapter.sparseMatchesHashtags('privatetag', user1.id);
+      const names = result.map((h) => h.name);
       expect(names, 'not to contain', 'privatetag');
     });
 
     it('should show private hashtags to the owner', async () => {
-      const names = await dbAdapter.sparseMatchesHashtags('privatetag', user3.id);
+      const result = await dbAdapter.sparseMatchesHashtags('privatetag', user3.id);
+      const names = result.map((h) => h.name);
       expect(names, 'to contain', 'privatetag');
     });
   });
 
-  describe('prioritization', () => {
+  describe('is_own flag', () => {
     let user4;
 
     before(async () => {
@@ -97,16 +102,21 @@ describe('sparseMatchesHashtags', () => {
       await dbAdapter.refreshHashtagStats();
     });
 
-    it('should prioritize own hashtag variant over more popular one', async () => {
-      // user4 should see their own variant first
-      const names = await dbAdapter.sparseMatchesHashtags('freefeed', user4.id);
-      expect(names[0], 'to equal', 'freefeed');
+    it('should return is_own=true for hashtags used by the user', async () => {
+      const result = await dbAdapter.sparseMatchesHashtags('freefeed', user4.id);
+      expect(result, 'to have length', 1);
+      expect(result[0].is_own, 'to be true');
     });
 
-    it('should show most popular variant for users without own usage', async () => {
-      // user2 has no freefeed usage, should see most popular
-      const names = await dbAdapter.sparseMatchesHashtags('freefeed', user2.id);
-      expect(names, 'to have length', 1);
+    it('should return is_own=false for hashtags not used by the user', async () => {
+      const result = await dbAdapter.sparseMatchesHashtags('freefeed', user2.id);
+      expect(result, 'to have length', 1);
+      expect(result[0].is_own, 'to be false');
+    });
+
+    it('should return most popular variant', async () => {
+      const result = await dbAdapter.sparseMatchesHashtags('freefeed', user2.id);
+      expect(result[0].name, 'to equal', 'freefeed');
     });
   });
 });

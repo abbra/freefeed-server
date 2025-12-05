@@ -190,11 +190,11 @@ const hashtagsTrait = (superClass) =>
 
     /**
      * Search hashtags for autocomplete.
-     * Returns hashtag names matching the query pattern.
-     * Prioritizes user's own hashtags, then by usage count.
+     * Returns hashtags matching the query pattern.
+     * For each normalized_name, returns the most popular variant.
      * @param {string} query - search query
-     * @param {string} userId - current user ID (for prioritizing own hashtags)
-     * @returns {Promise<string[]>}
+     * @param {string} userId - current user ID (for filtering visibility)
+     * @returns {Promise<{name: string, is_own: boolean}[]>}
      */
     async sparseMatchesHashtags(query, userId) {
       const normalizedQuery = normalizeHashtag(query);
@@ -206,13 +206,13 @@ const hashtagsTrait = (superClass) =>
       const sparsePattern = `%${normalizedQuery.split('').join('%')}%`;
 
       // Select best hashtag variant per normalized_name:
-      // - prioritize user's own hashtags (is_own)
-      // - then by usage_count
-      const rows = await this.database.getAll(
+      // - if user has used any variant, pick user's most popular variant
+      // - otherwise pick globally most popular variant
+      // is_own indicates if the user has used this hashtag
+      return await this.database.getAll(
         `select distinct on (hs.normalized_name) 
            hs.name,
-           (hu.user_id is not null) as is_own,
-           hs.usage_count
+           (hu.user_id is not null) as is_own
          from hashtag_stats hs
          left join hashtag_users hu on hu.hashtag_id = hs.hashtag_id and hu.user_id = :userId
          where hs.normalized_name like :sparsePattern
@@ -220,11 +220,6 @@ const hashtagsTrait = (superClass) =>
          order by hs.normalized_name, (hu.user_id is not null) desc, hs.usage_count desc`,
         { sparsePattern, userId },
       );
-
-      // Sort by own first, then by usage_count, and limit
-      return rows
-        .sort((a, b) => Number(b.is_own) - Number(a.is_own) || b.usage_count - a.usage_count)
-        .map((r) => r.name);
     }
   };
 
