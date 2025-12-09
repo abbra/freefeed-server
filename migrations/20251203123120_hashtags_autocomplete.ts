@@ -28,7 +28,7 @@ export const up = async (knex: Knex) => {
       }
 
       const values = hashtags
-        .map(({ id, name }) => pgFormat(`(%L, %L)`, id, normalizeHashtag(name)))
+        .map(({ id, name }) => pgFormat(`(%L::int, %L)`, id, normalizeHashtag(name)))
         .join(', ');
       // eslint-disable-next-line no-await-in-loop
       await knex.raw(
