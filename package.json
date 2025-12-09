@@ -24,7 +24,7 @@
     "console": "yarn babel bin/console",
     "nyc": "nyc yarn mocha",
     "data_transfer": "yarn babel bin/data_transfer",
-    "reindex_hashtags": "yarn babel bin/reindex_hashtags",
+    "reindex_hashtags": "yarn babel bin/reindex_hashtags.js",
     "notification_emails": "yarn babel bin/notification_emails",
     "bestof_emails": "yarn babel bin/bestof_emails",
     "count_stats": "yarn babel bin/count_stats",

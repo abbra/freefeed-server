@@ -9,6 +9,7 @@ import { initHandlers as initAuthTokensHandlers } from './auth-tokens';
 import { initHandlers as initFrozenUsersHandlers } from './frozen-users';
 import { initHandlers as initTranslationUsageHandlers } from './translation-usage';
 import { initHandlers as initDailyEmailsHandlers } from './daily-emails';
+import { initHandlers as initHashtagStatsHandlers } from './hashtag-stats';
 
 const debugError = createDebug('freefeed:jobs:errors');
 
@@ -20,6 +21,7 @@ export async function initHandlers(jobManager: JobManager, app: FreefeedApp) {
       initFrozenUsersHandlers,
       initTranslationUsageHandlers,
       initDailyEmailsHandlers,
+      initHashtagStatsHandlers,
     ].map((h) => h(jobManager, app)),
   );
 }

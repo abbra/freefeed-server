@@ -172,6 +172,17 @@ export class DbAdapter {
    */
   sparseMatchesUserIds(query: string): Promise<UUID[]>;
 
+  /**
+   * Returns hashtags matching the query pattern for autocomplete.
+   * For each normalized_name, returns the most popular variant.
+   */
+  sparseMatchesHashtags(query: string, userId: UUID): Promise<{ name: string; is_own: boolean }[]>;
+
+  /**
+   * Refresh hashtag materialized views for autocomplete.
+   */
+  refreshHashtagStats(): Promise<void>;
+
   setFirstUserInteraction(userId: UUID): Promise<Date | null>;
 
   getUsersIdsByIntIds(intIds: number[]): Promise<{ id: number; uid: UUID }[]>;

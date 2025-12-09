@@ -564,4 +564,9 @@ config.undo = {
   undoInterval: 'PT5M',
 };
 
+config.hashtagStats = {
+  // Interval in seconds for refreshing hashtag materialized views
+  refreshInterval: 2 * 60 * 60, // 2 hours
+};
+
 module.exports = config;
