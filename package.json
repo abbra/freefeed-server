@@ -37,7 +37,7 @@
     "url": "git://github.com/FreeFeed/freefeed-server.git"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "~3.637.0",
+    "@aws-sdk/client-s3": "~3.948.0",
     "@hapi/accept": "~6.0.3",
     "@keyv/redis": "~5.1.5",
     "@koa/cors": "~5.0.0",
