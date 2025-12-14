@@ -29,28 +29,24 @@ export type JobPayload = {
   criterion?: { type: string };
 };
 
-const entrySchema = z
-  .object({
-    id: z.string(),
-    delay: z.string().duration().default('PT0S'),
-    skipDays: z.number().int().positive().optional(),
-    criterion: z
-      .object({
-        type: z.string(),
-        // ...some other arguments
-      })
-      .optional(),
-    body: z.string(),
-    comment: z.string().optional(),
-  })
-  .strict();
+const entrySchema = z.strictObject({
+  id: z.string(),
+  delay: z.iso.duration().default('PT0S'),
+  skipDays: z.number().int().positive().optional(),
+  criterion: z
+    .object({
+      type: z.string(),
+      // ...some other arguments
+    })
+    .optional(),
+  body: z.string(),
+  comment: z.string().optional(),
+});
 
-const directsConfigSchema = z
-  .object({
-    sender: z.string(),
-    schedule: z.array(entrySchema),
-  })
-  .strict();
+const directsConfigSchema = z.strictObject({
+  sender: z.string(),
+  schedule: z.array(entrySchema),
+});
 
 type EntrySchema = z.infer<typeof entrySchema>;
 

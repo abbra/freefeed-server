@@ -16,7 +16,7 @@ import { UNDO_COMMENT_DELETE } from '../../../support/undo/comment-delete';
 import { serializeSinglePost } from '../../../serializers/v2/post';
 import { serializeCommentFull } from '../../../serializers/v2/comment';
 
-const undoInputSchema = z.object({ token: z.string().jwt() });
+const undoInputSchema = z.object({ token: z.jwt() });
 type UndoInput = z.infer<typeof undoInputSchema>;
 
 export const undo = compose([
