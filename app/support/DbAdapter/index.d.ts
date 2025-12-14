@@ -1,6 +1,6 @@
 import { Knex } from 'knex';
-import { Cache } from 'cache-manager';
-import { DatabasePool } from 'slonik';
+import type { Cache } from 'cache-manager';
+import type { DatabasePool } from 'slonik';
 import { z } from 'zod';
 
 import { IPAddr, ISO8601DateTimeString, ISO8601DurationString, Nullable, UUID } from '../types';
