@@ -1,9 +1,9 @@
 import crypto from 'crypto';
 
+import config from 'config';
+import { Keyv } from 'keyv';
+import KeyvRedis from '@keyv/redis';
 import { createCache, Cache as TCache } from 'cache-manager';
-import { ioRedisStore } from '@tirke/node-cache-manager-ioredis';
-
-import { connect as redisConnect } from '../../setup/database';
 
 const KEY_LENGTH = 16; // bytes
 
@@ -17,21 +17,21 @@ export class Cache {
     private readonly keyPrefix: string,
     private readonly ttl: number,
   ) {
-    // Type assertion needed due to ioredis version mismatch between
-    // @tirke/node-cache-manager-ioredis (expects 5.2.x) and current version (5.7.0)
-    // TODO: replace @tirke/node-cache-manager-ioredis with something supported by cache-manager
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.cache = createCache(ioRedisStore({ redisInstance: redisConnect() as any }), { ttl });
+    const redisUrl = `redis://${config.redis.host}:${config.redis.port}/${config.database}`;
+    this.cache = createCache({
+      stores: [new Keyv({ store: new KeyvRedis(redisUrl) })],
+      ttl: ttl * 1000, // cache-manager v7 uses milliseconds
+    });
   }
 
   async put<T>(data: T) {
     const key = crypto.randomBytes(KEY_LENGTH).toString('base64');
-    await this.cache.set(this.keyPrefix + key, data, this.ttl);
+    await this.cache.set(this.keyPrefix + key, data, this.ttl * 1000);
     return key;
   }
 
   async update<T>(key: string, data: T) {
-    await this.cache.set(this.keyPrefix + key, data, this.ttl);
+    await this.cache.set(this.keyPrefix + key, data, this.ttl * 1000);
   }
 
   get<T>(key: string): Promise<T | undefined> {

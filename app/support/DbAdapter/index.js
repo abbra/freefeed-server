@@ -1,8 +1,10 @@
 import _ from 'lodash';
 import NodeCache from 'node-cache';
-import { ioRedisStore } from '@tirke/node-cache-manager-ioredis';
 import config from 'config';
-import { createCache, memoryStore } from 'cache-manager';
+import { Keyv } from 'keyv';
+import KeyvRedis from '@keyv/redis';
+import { createCache } from 'cache-manager';
+import { CacheableMemory } from 'cacheable';
 import {
   createBigintTypeParser,
   createDateTypeParser,
@@ -11,7 +13,6 @@ import {
   createPool,
 } from 'slonik';
 
-import { connect as redisConnect } from '../../setup/database';
 import { createResultParserInterceptor } from '../slonik/ResultParserInterceptor';
 
 import usersTrait from './users';
@@ -66,12 +67,19 @@ class DbAdapterBase {
     this.statsCache = new NodeCache({ stdTTL: 300 });
 
     const CACHE_TTL = 60 * 60 * 24; // 24 hours
+    const CACHE_TTL_MS = CACHE_TTL * 1000;
 
-    this.memoryCache = createCache(memoryStore(), {
-      max: 5000,
-      ttl: CACHE_TTL * 1000 /* milliseconds*/,
+    // @keyv/redis uses @redis/client (not ioredis), so we pass URL instead of existing ioredis instance
+    const redisUrl = `redis://${config.redis.host}:${config.redis.port}/${config.database}`;
+
+    this.memoryCache = createCache({
+      stores: [new Keyv({ store: new CacheableMemory({ ttl: CACHE_TTL_MS, lruSize: 5000 }) })],
     });
-    this.cache = createCache(ioRedisStore({ redisInstance: redisConnect() }), { ttl: CACHE_TTL });
+    this.redisStore = new KeyvRedis(redisUrl);
+    this.cache = createCache({
+      stores: [new Keyv({ store: this.redisStore })],
+      ttl: CACHE_TTL_MS,
+    });
 
     this.searchQueriesTimeout = config.performance.searchQueriesTimeout;
     this._pgVersion = null;
