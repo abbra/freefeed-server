@@ -120,7 +120,7 @@ describe('Text translation', () => {
       },
     });
 
-    beforeEach(() => dbAdapter.cache.reset());
+    beforeEach(() => dbAdapter.cache.clear());
 
     it(`should allow to translate the same text multiple times thanks to caching`, async () => {
       for (let i = 0; i < 5; i++) {
@@ -133,13 +133,13 @@ describe('Text translation', () => {
     it(`should reach the limit without caching`, async () => {
       for (let i = 0; i < 2; i++) {
         const result = await translatePost(post.id, mars);
-        await dbAdapter.cache.reset();
+        await dbAdapter.cache.clear();
         expect(result, 'to satisfy', { __httpCode: 200 });
       }
 
       {
         const result = await translatePost(post.id, mars);
-        await dbAdapter.cache.reset();
+        await dbAdapter.cache.clear();
         expect(result, 'to satisfy', { __httpCode: 403 });
       }
     });
