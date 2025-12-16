@@ -60,8 +60,7 @@ process.stdout.write(`\n`);
 
     if (shouldClean) {
       process.stdout.write(`Cleaning hashtag tables...\n`);
-      await postgres('hashtag_usages').truncate();
-      await postgres('hashtags').truncate();
+      await postgres.raw('truncate hashtag_usages, hashtags restart identity');
       process.stdout.write(`Tables cleaned.\n`);
     }
 
