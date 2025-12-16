@@ -49,13 +49,11 @@ const usersCacheTrait = (superClass) =>
       const uniqIds = _.uniq(ids);
       let cachedUsers;
 
-      if (this.cache.store.name === 'redis') {
-        const client = await this.cache.store.getClient();
-
-        const cacheKeys = ids.map((id) => cacheKey(id));
-        const result = await client.mget(cacheKeys);
-
-        cachedUsers = result.map((x) => (x ? JSON.parse(x) : null)).map(fixCachedUserAttrs);
+      if (this.redisStore) {
+        // Use KeyvRedis getMany for batch retrieval (more efficient than individual gets)
+        const cacheKeys = uniqIds.map((id) => cacheKey(id));
+        const results = await this.redisStore.getMany(cacheKeys);
+        cachedUsers = results.map(fixCachedUserAttrs);
       } else {
         cachedUsers = await Promise.all(uniqIds.map(this.getCachedUserAttrs));
       }

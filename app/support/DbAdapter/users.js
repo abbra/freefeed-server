@@ -23,7 +23,7 @@ import { initObject, prepareModelPayload } from './utils';
 
 export const notificationsDigestRecipientSchema = z
   .object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     int_id: z.number(),
     email: z.string(),
     notifications_read_at: z.date(),

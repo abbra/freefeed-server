@@ -3,13 +3,13 @@ import fs from 'fs';
 import createDebug from 'debug';
 import Application, { DefaultState } from 'koa';
 import config from 'config';
-import koaBody from 'koa-body';
+import { koaBody } from 'koa-body';
 import methodOverride from 'koa-methodoverride';
 import morgan from 'koa-morgan';
 import responseTime from 'koa-response-time';
 import passport from 'koa-passport';
 import conditional from 'koa-conditional-get';
-import etag from 'koa-etag';
+import etag from '@koa/etag';
 import koaStatic from 'koa-static';
 import requestId from 'koa-requestid';
 
@@ -64,12 +64,12 @@ class FreefeedApp extends Application<DefaultState, AppContext> {
       methodOverride((req) => {
         if (req.body && typeof req.body === 'object' && '_method' in req.body) {
           // look in urlencoded POST bodies and delete it
-          const method = req.body._method;
+          const method = req.body._method as string;
           Reflect.deleteProperty(req.body, '_method');
           return method;
         }
 
-        return undefined; // otherwise, no need to override
+        return undefined as unknown as string; // otherwise, no need to override
       }),
     );
 

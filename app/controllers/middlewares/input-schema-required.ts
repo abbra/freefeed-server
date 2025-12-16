@@ -18,7 +18,7 @@ addFormats(ajv);
  * Accepts a Zod schema object or a JSON schema as a POJO
  */
 export function inputSchemaRequired(schema: ZodType | object): Middleware {
-  if ('_def' in schema) {
+  if (schema instanceof ZodType) {
     // Zod schema
     return async (ctx, next) => {
       const result = await schema.safeParseAsync(ctx.request.body);

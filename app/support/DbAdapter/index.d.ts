@@ -1,6 +1,6 @@
 import { Knex } from 'knex';
-import { Cache } from 'cache-manager';
-import { DatabasePool } from 'slonik';
+import type { Cache } from 'cache-manager';
+import type { DatabasePool } from 'slonik';
 import { z } from 'zod';
 
 import { IPAddr, ISO8601DateTimeString, ISO8601DurationString, Nullable, UUID } from '../types';
@@ -171,6 +171,17 @@ export class DbAdapter {
    * Returns unsorted IDs of users whose username sparse matches `query`.
    */
   sparseMatchesUserIds(query: string): Promise<UUID[]>;
+
+  /**
+   * Returns hashtags matching the query pattern for autocomplete.
+   * For each normalized_name, returns the most popular variant.
+   */
+  sparseMatchesHashtags(query: string, userId: UUID): Promise<{ name: string; is_own: boolean }[]>;
+
+  /**
+   * Refresh hashtag materialized views for autocomplete.
+   */
+  refreshHashtagStats(): Promise<void>;
 
   setFirstUserInteraction(userId: UUID): Promise<Date | null>;
 

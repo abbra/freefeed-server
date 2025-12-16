@@ -120,6 +120,7 @@ export const appTokensScopes = [
       'GET /vN/users/:username/subscribers',
       'GET /vN/users/:username/subscriptions',
       'GET /vN/users/sparseMatches',
+      'GET /vN/hashtags/sparseMatches',
     ],
   },
   {

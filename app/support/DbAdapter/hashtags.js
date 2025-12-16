@@ -1,6 +1,8 @@
 import _ from 'lodash';
 import pgFormat from 'pg-format';
 
+import { normalizeHashtag } from '../normalize-hashtags';
+
 ///////////////////////////////////////////////////
 // Hashtags
 ///////////////////////////////////////////////////
@@ -76,11 +78,12 @@ const hashtagsTrait = (superClass) =>
 
       const payload = names
         .map((name) => {
-          return pgFormat(`(%L)`, name.toLowerCase());
+          const lowerName = name.toLowerCase();
+          return pgFormat(`(%L, %L)`, lowerName, normalizeHashtag(lowerName));
         })
         .join(',');
       const res = await this.database.raw(
-        `insert into hashtags ("name") values ${payload} on conflict do nothing returning "id" `,
+        `insert into hashtags ("name", "normalized_name") values ${payload} on conflict do nothing returning "id" `,
       );
       return res.rows.map((t) => t.id);
     }
@@ -174,6 +177,49 @@ const hashtagsTrait = (superClass) =>
       }
 
       return this.unlinkHashtags(hashtagIds, commentId, false);
+    }
+
+    /**
+     * Refresh hashtag materialized views for autocomplete.
+     * Uses CONCURRENTLY to avoid blocking reads.
+     */
+    async refreshHashtagStats() {
+      await this.database.raw('refresh materialized view concurrently hashtag_stats');
+      await this.database.raw('refresh materialized view concurrently hashtag_users');
+    }
+
+    /**
+     * Search hashtags for autocomplete.
+     * Returns hashtags matching the query pattern.
+     * For each normalized_name, returns the most popular variant.
+     * @param {string} query - search query
+     * @param {string} userId - current user ID (for filtering visibility)
+     * @returns {Promise<{name: string, is_own: boolean}[]>}
+     */
+    async sparseMatchesHashtags(query, userId) {
+      const normalizedQuery = normalizeHashtag(query);
+
+      if (!normalizedQuery) {
+        return [];
+      }
+
+      const sparsePattern = `%${normalizedQuery.split('').join('%')}%`;
+
+      // Select best hashtag variant per normalized_name:
+      // - if user has used any variant, pick user's most popular variant
+      // - otherwise pick globally most popular variant
+      // is_own indicates if the user has used this hashtag
+      return await this.database.getAll(
+        `select distinct on (hs.normalized_name) 
+           hs.name,
+           (hu.user_id is not null) as is_own
+         from hashtag_stats hs
+         left join hashtag_users hu on hu.hashtag_id = hs.hashtag_id and hu.user_id = :userId
+         where hs.normalized_name like :sparsePattern
+           and (hs.is_public or hu.user_id is not null)
+         order by hs.normalized_name, (hu.user_id is not null) desc, hs.usage_count desc`,
+        { sparsePattern, userId },
+      );
     }
   };
 

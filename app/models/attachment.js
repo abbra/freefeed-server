@@ -1,4 +1,5 @@
-import { promises as fs, createReadStream } from 'fs';
+import { promises as fs, createReadStream, createWriteStream } from 'fs';
+import { pipeline } from 'stream/promises';
 import { extname, join, parse as parsePath } from 'path';
 import util from 'util';
 import os from 'os';
@@ -435,11 +436,13 @@ export function addModel(dbAdapter) {
       const dispositionName = parsePath(this.fileName).name + parsePath(destPath).ext;
       const mimeType = mime.lookup(dispositionName) || 'application/octet-stream';
 
+      const { size } = await fs.stat(sourceFile);
       await s3Client().putObject({
         ACL: 'public-read',
         Bucket: bucket,
         Key: destPath,
         Body: createReadStream(sourceFile),
+        ContentLength: size,
         ContentType: mimeType,
         ContentDisposition: this.getContentDisposition(dispositionName),
       });
@@ -560,7 +563,7 @@ export function addModel(dbAdapter) {
       const { type, bucket } = currentConfig().attachments.storage;
 
       if (type === 's3') {
-        const { Body } = await s3Client().getObject({
+        const { Body, ContentEncoding } = await s3Client().getObject({
           Key: this.getRelFilePath('', this.fileExtension),
           Bucket: bucket,
         });
@@ -569,7 +572,15 @@ export function addModel(dbAdapter) {
           throw new Error('No body in S3 response');
         }
 
-        await fs.writeFile(localFile, Body);
+        // S3rver (used in tests) doesn't properly handle chunked uploads and returns
+        // data with 'aws-chunked' encoding. Real AWS S3 doesn't have this issue.
+        if (ContentEncoding === 'aws-chunked') {
+          const bytes = decodeAwsChunked(await Body.transformToByteArray());
+          await fs.writeFile(localFile, bytes);
+        } else {
+          // Stream directly to file for memory efficiency
+          await pipeline(Body, createWriteStream(localFile));
+        }
       } else {
         const filePath = this.getLocalFilePath('', this.fileExtension);
         await fs.copyFile(filePath, localFile);
@@ -677,4 +688,52 @@ export function addModel(dbAdapter) {
       }
     }
   };
+}
+
+/**
+ * Decode aws-chunked encoding. S3rver (used in tests) doesn't properly handle
+ * chunked uploads and stores data in this format. Real AWS S3 doesn't have this issue.
+ * Each chunk has format: "<hex_size>\r\n<data>\r\n"
+ *
+ * @param {Uint8Array} bytes
+ * @returns {Buffer}
+ */
+function decodeAwsChunked(bytes) {
+  const chunks = [];
+  let offset = 0;
+
+  while (offset < bytes.length) {
+    // Find CRLF that ends the size line
+    let crlfIndex = offset;
+
+    while (crlfIndex < bytes.length - 1) {
+      if (bytes[crlfIndex] === 0x0d && bytes[crlfIndex + 1] === 0x0a) {
+        break;
+      }
+
+      crlfIndex++;
+    }
+
+    if (crlfIndex >= bytes.length - 1) {
+      break;
+    }
+
+    // Parse chunk size (hex string before CRLF)
+    const sizeHex = Buffer.from(bytes.slice(offset, crlfIndex)).toString('ascii');
+    const chunkSize = parseInt(sizeHex, 16);
+
+    if (chunkSize === 0) {
+      break; // Last chunk
+    }
+
+    // Extract chunk data (after CRLF, before next CRLF)
+    const dataStart = crlfIndex + 2;
+    const dataEnd = dataStart + chunkSize;
+    chunks.push(bytes.slice(dataStart, dataEnd));
+
+    // Move past chunk data and trailing CRLF
+    offset = dataEnd + 2;
+  }
+
+  return Buffer.concat(chunks);
 }

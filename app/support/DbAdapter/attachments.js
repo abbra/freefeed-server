@@ -177,7 +177,7 @@ const attachmentsTrait = (superClass) =>
         });
 
         if (data) {
-          await this.cache.set(key, data, cacheTTL);
+          await this.cache.set(key, data, cacheTTL * 1000);
         }
       }
 
@@ -189,17 +189,17 @@ const attachmentsTrait = (superClass) =>
         return [];
       }
 
-      if (this.cache.store.name === 'redis') {
+      if (this.redisStore) {
+        // Use KeyvRedis getMany for batch retrieval (more efficient than individual gets)
         const keys = attachmentIds.map((id) => cacheKey(id));
-        const client = await this.cache.store.getClient();
-        const data = (await client.mget(keys)).map((x) => (x ? JSON.parse(x) : null));
+        const data = await this.redisStore.getMany(keys);
 
         const missedIds = data.map((attrs, i) => (attrs ? null : attachmentIds[i])).filter(Boolean);
 
         if (missedIds.length > 0) {
           const missedData = await this.database('attachments').whereIn('uid', missedIds);
           await Promise.all(
-            missedData.map((attrs) => this.cache.set(cacheKey(attrs.uid), attrs, cacheTTL)),
+            missedData.map((attrs) => this.cache.set(cacheKey(attrs.uid), attrs, cacheTTL * 1000)),
           );
 
           for (let i = 0; i < data.length; i++) {

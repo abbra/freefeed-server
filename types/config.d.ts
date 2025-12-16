@@ -214,6 +214,10 @@ declare module 'config' {
     undo: {
       undoInterval: ISO8601DurationString;
     };
+
+    hashtagStats: {
+      refreshInterval: number;
+    };
   };
 
   export type TranslationLimits = {

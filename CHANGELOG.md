@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.27.0] - Not released
+### Added
+- Hashtag autocomplete API: new endpoint `GET /vN/hashtags/sparseMatches?qs=...`
+  returns hashtags matching the query pattern for autocomplete suggestions.
+
+  The endpoint requires authentication and returns an array of hashtag objects
+  with `name` and `is_own` fields:
+  ```json
+  { "hashtags": [{ "name": "freefeed", "is_own": true }, ...] }
+  ```
+
+  Features:
+  - Sparse matching (e.g., query `js` matches `javascript`)
+  - Only public hashtags or hashtags used by the viewer are returned
+  - For hashtags with multiple case variants (e.g., `FreeFeed` vs `freefeed`),
+    the user's own most popular variant is returned if they used it, otherwise
+    the globally most popular variant
+  - The `is_own` flag indicates whether the viewer has used this hashtag
+
+  The hashtag statistics are stored in materialized views that are refreshed
+  periodically (every 2 hours by default, configurable via
+  `hashtagStats.refreshInterval`).
+
+  To reindex hashtags from scratch, use:
+  ```
+  yarn babel bin/reindex_hashtags.js --restart
+  ```
+
 ## [2.26.0] - 2025-11-11
 ### Added
 - Account search functionality: users and groups can now be found by their

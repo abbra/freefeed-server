@@ -5,7 +5,7 @@ import { authDebugError } from '../../models/auth-tokens';
 import { verifyJWTAsync, type JWTPayload } from '../../support/verifyJWTAsync';
 
 export async function withJWT(ctx: Context, next: Next) {
-  let jwtToken;
+  let jwtToken: string | undefined;
 
   if (ctx.headers['authorization']) {
     // The Bearer authorization scheme
@@ -16,8 +16,12 @@ export async function withJWT(ctx: Context, next: Next) {
     jwtToken = ctx.headers['authorization'].replace(/^Bearer\s+/, '');
   } else {
     // The legacy X-Authentication-Token header
+    const body = ctx.request.body as { authToken?: string } | undefined;
+    const queryToken = ctx.query.authToken;
     jwtToken =
-      ctx.headers['x-authentication-token'] || ctx.request.body.authToken || ctx.query.authToken;
+      (ctx.headers['x-authentication-token'] as string | undefined) ||
+      body?.authToken ||
+      (Array.isArray(queryToken) ? queryToken[0] : queryToken);
   }
 
   if (!jwtToken) {
