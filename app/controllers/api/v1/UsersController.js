@@ -34,7 +34,7 @@ import {
 import { UsersControllerV2 } from '../../../controllers';
 import { profileCache } from '../../../support/ExtAuth';
 import { downloadURL } from '../../../support/download-url';
-import { GONE_COOLDOWN } from '../../../models/user';
+import { GONE_COOLDOWN, GONE_PAUSED } from '../../../models/user';
 
 import {
   userCreateInputSchema,
@@ -42,6 +42,7 @@ import {
   updateSubscriptionInputSchema,
   sendRequestInputSchema,
   userSuspendMeInputSchema,
+  userPauseMeInputSchema,
   userResumeMeInputSchema,
 } from './data-schemes';
 
@@ -381,6 +382,28 @@ export default class UsersController {
 
       await user.setGoneStatus(GONE_COOLDOWN);
       ctx.body = { message: 'Your account has been suspended' };
+    },
+  ]);
+
+  static pauseMe = compose([
+    authRequired(),
+    inputSchemaRequired(userPauseMeInputSchema),
+    monitored('users.pause-me'),
+    async (ctx) => {
+      const { user } = ctx.state;
+      const { password, message } = ctx.request.body;
+
+      if (!(await user.validPassword(password))) {
+        throw new ForbiddenException('Provided password is invalid');
+      }
+
+      await user.setGoneStatus(GONE_PAUSED);
+
+      if (message !== undefined) {
+        await user.setPauseMessage(message);
+      }
+
+      ctx.body = { message: 'Your account has been paused' };
     },
   ]);
 

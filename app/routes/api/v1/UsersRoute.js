@@ -11,6 +11,7 @@ export default function addRoutes(app) {
   app.post('/users/:username/sendRequest', UsersController.sendRequest);
   app.get('/users/me', UsersController.showMe);
   app.post('/users/suspend-me', UsersController.suspendMe);
+  app.post('/users/pause-me', UsersController.pauseMe);
   app.post('/users/resume-me', UsersController.resumeMe);
   app.get('/users/:username', UsersController.show);
   app.put('/users/updatePassword', UsersController.updatePassword);
