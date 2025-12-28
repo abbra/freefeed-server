@@ -244,6 +244,59 @@ describe(`User's 'gone' status`, () => {
       });
     });
 
+    it(`should save pause message when provided`, async () => {
+      const pauseMessage = 'Taking a break until February';
+      await luna.setPauseMessage(pauseMessage);
+
+      const savedMessage = await luna.getPauseMessage();
+      expect(savedMessage, 'to be', pauseMessage);
+    });
+
+    it(`should trim pause message`, async () => {
+      const pauseMessage = '  Spaces around  ';
+      await luna.setPauseMessage(pauseMessage);
+
+      const savedMessage = await luna.getPauseMessage();
+      expect(savedMessage, 'to be', 'Spaces around');
+    });
+
+    it(`should not save empty pause message`, async () => {
+      await luna.setPauseMessage('   ');
+
+      const savedMessage = await luna.getPauseMessage();
+      expect(savedMessage, 'to be', null);
+    });
+
+    it(`should reject too long pause message`, async () => {
+      const longMessage = 'a'.repeat(1501);
+
+      await expect(
+        luna.setPauseMessage(longMessage),
+        'to be rejected with',
+        /Pause message is too long/,
+      );
+    });
+
+    it(`should clear pause message when set to null`, async () => {
+      await luna.setPauseMessage('Some message');
+      await luna.setPauseMessage(null);
+
+      const savedMessage = await luna.getPauseMessage();
+      expect(savedMessage, 'to be', null);
+    });
+
+    it(`should keep pause message when status changes`, async () => {
+      await luna.setPauseMessage('Some message');
+      await luna.setGoneStatus(GONE_SUSPENDED);
+
+      const savedMessage = await luna.getPauseMessage();
+      expect(savedMessage, 'to be', 'Some message');
+
+      await luna.setGoneStatus(null);
+      const savedMessageAfter = await luna.getPauseMessage();
+      expect(savedMessageAfter, 'to be', 'Some message');
+    });
+
     it(`should restore user's fields when status is cleared`, async () => {
       await luna.setGoneStatus(null);
       const luna1 = await dbAdapter.getUserById(luna.id);

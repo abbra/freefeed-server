@@ -578,6 +578,38 @@ export function addModel(dbAdapter) {
       await Promise.all(managedGroupIds.map((id) => pubSub.globalUserUpdate(id)));
     }
 
+    /**
+     * Set or clear pause message for the user
+     * @param {string|null} message - Pause message text or null to clear
+     */
+    async setPauseMessage(message) {
+      if (message === null) {
+        await dbAdapter.setUserSysPrefs(this.id, 'pauseMessage', null);
+        return;
+      }
+
+      const trimmedMessage = message.trim();
+
+      if (!trimmedMessage) {
+        await dbAdapter.setUserSysPrefs(this.id, 'pauseMessage', null);
+        return;
+      }
+
+      if (trimmedMessage.length > 1500) {
+        throw new ValidationException('Pause message is too long (max 1500 characters)');
+      }
+
+      await dbAdapter.setUserSysPrefs(this.id, 'pauseMessage', trimmedMessage);
+    }
+
+    /**
+     * Get pause message for the user
+     * @returns {Promise<string|null>}
+     */
+    async getPauseMessage() {
+      return await dbAdapter.getUserSysPrefs(this.id, 'pauseMessage', null);
+    }
+
     get goneStatusName() {
       if (this.goneStatus === null) {
         return 'ACTIVE';
