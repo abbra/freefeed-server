@@ -18,7 +18,7 @@ import { s3Client } from '../support/s3';
 import { BadRequestException, NotFoundException, ValidationException } from '../support/exceptions';
 import { Comment, Post, PubSub as pubSub } from '../models';
 import { EventService } from '../support/EventService';
-import { userCooldownStart, userDataDeletionStart } from '../jobs/user-gone';
+import { userCooldownStart, userDataDeletionStart, userPausedStart } from '../jobs/user-gone';
 import { allExternalProviders } from '../support/ExtAuth';
 import { spawnAsync } from '../support/spawn-async';
 
@@ -30,7 +30,9 @@ const randomBytes = util.promisify(crypto.randomBytes);
 
 // Account is suspended for unknown period
 export const GONE_SUSPENDED = 10;
-// Account is suspended for cooldown period, the next state is GONE_DELETION
+// Account is paused by user themself, and can be resumed
+export const GONE_PAUSED = 15;
+// Account is suspended for cooldown period (can be resumed), the next state is GONE_DELETION
 export const GONE_COOLDOWN = 20;
 // Cooldown period is over, user data is being deleted, the next state is GONE_DELETED
 export const GONE_DELETION = 30;
@@ -39,6 +41,7 @@ export const GONE_DELETED = 40;
 
 export const GONE_NAMES = {
   [GONE_SUSPENDED]: 'SUSPENDED',
+  [GONE_PAUSED]: 'PAUSED',
   [GONE_COOLDOWN]: 'COOLDOWN',
   [GONE_DELETION]: 'DELETION',
   [GONE_DELETED]: 'DELETED',
@@ -206,7 +209,7 @@ export function addModel(dbAdapter) {
      * User.isResumable is true if user is gone but can be resumed
      */
     get isResumable() {
-      return [GONE_COOLDOWN].includes(this.goneStatus);
+      return [GONE_COOLDOWN, GONE_PAUSED].includes(this.goneStatus);
     }
 
     static stopList(skipExtraList) {
@@ -558,6 +561,10 @@ export function addModel(dbAdapter) {
 
       if (status === GONE_COOLDOWN) {
         await userCooldownStart(this);
+      }
+
+      if (status === GONE_PAUSED) {
+        await userPausedStart(this);
       }
 
       if (status === GONE_DELETION) {

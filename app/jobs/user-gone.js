@@ -2,7 +2,7 @@ import config from 'config';
 import { DateTime } from 'luxon';
 
 import { Job, dbAdapter } from '../models';
-import { GONE_COOLDOWN, GONE_DELETION, GONE_DELETED } from '../models/user';
+import { GONE_COOLDOWN, GONE_DELETION, GONE_DELETED, GONE_PAUSED } from '../models/user';
 import Mailer from '../../lib/mailer';
 import { deleteAllUserData } from '../../app/support/user-deletion';
 
@@ -11,11 +11,23 @@ export const USER_COOLDOWN_START = 'USER_COOLDOWN_START';
 export const USER_COOLDOWN_REMINDER = 'USER_COOLDOWN_REMINDER';
 export const USER_DELETION_START = 'USER_DELETION_START';
 export const USER_DELETE_DATA = 'USER_DELETE_DATA';
+export const USER_PAUSED_START = 'USER_PAUSED_START';
 
 // Job creators
 export function userCooldownStart(user) {
   return Job.create(
     USER_COOLDOWN_START,
+    {
+      id: user.id,
+      goneAt: user.goneAt.getTime(),
+    },
+    { uniqKey: user.id },
+  );
+}
+
+export function userPausedStart(user) {
+  return Job.create(
+    USER_PAUSED_START,
     {
       id: user.id,
       goneAt: user.goneAt.getTime(),
@@ -63,6 +75,20 @@ export function initHandlers(jobManager) {
           { unlockAt: deletionDate(user), uniqKey: user.id },
         ),
       ]);
+    }),
+  );
+
+  jobManager.on(
+    USER_PAUSED_START,
+    checkUserStatus(GONE_PAUSED, async (user) => {
+      // Send email to user
+      await Mailer.sendMail(
+        // User is gone so the regular .email field is empty
+        { screenName: user.screenName, email: user.hiddenEmail },
+        'You have paused your account',
+        { user },
+        `${config.appRoot}/app/scripts/views/mailer/user-pause-start.ejs`,
+      );
     }),
   );
 

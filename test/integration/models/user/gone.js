@@ -11,6 +11,7 @@ import cleanDB from '../../../dbCleaner';
 import { User, dbAdapter } from '../../../../app/models';
 import {
   GONE_SUSPENDED,
+  GONE_PAUSED,
   GONE_COOLDOWN,
   GONE_DELETION,
   GONE_DELETED,
@@ -20,6 +21,7 @@ import {
   USER_COOLDOWN_REMINDER,
   USER_DELETION_START,
   USER_DELETE_DATA,
+  USER_PAUSED_START,
 } from '../../../../app/jobs/user-gone';
 import { initJobProcessing } from '../../../../app/jobs';
 import { addMailListener } from '../../../../lib/mailer';
@@ -32,6 +34,7 @@ const jobTypes = [
   USER_COOLDOWN_REMINDER,
   USER_DELETION_START,
   USER_DELETE_DATA,
+  USER_PAUSED_START,
 ];
 
 describe(`User's 'gone' status`, () => {
@@ -209,6 +212,109 @@ describe(`User's 'gone' status`, () => {
         to: { text: '"luna" <luna@lovegood.good>' },
         subject: 'Your account has been deleted',
       });
+    });
+  });
+
+  describe(`Paused user status (GONE_PAUSED)`, () => {
+    let luna;
+
+    before(async () => {
+      await cleanDB($pg_database);
+
+      luna = new User({
+        username: 'luna',
+        screenName: 'Luna Lovegood',
+        email: 'luna@lovegood.good',
+        password: 'pw',
+      });
+      await luna.create();
+    });
+
+    it(`should clean user's fields when status is set to GONE_PAUSED`, async () => {
+      const [, now] = await Promise.all([luna.setGoneStatus(GONE_PAUSED), dbAdapter.now()]);
+      const luna1 = await dbAdapter.getUserById(luna.id);
+      expect(luna1, 'to satisfy', {
+        username: 'luna',
+        screenName: 'luna',
+        email: '',
+        isPrivate: '1',
+        isProtected: '1',
+        goneStatus: GONE_PAUSED,
+        goneAt: expect.it('to be close to', now),
+      });
+    });
+
+    it(`should restore user's fields when status is cleared`, async () => {
+      await luna.setGoneStatus(null);
+      const luna1 = await dbAdapter.getUserById(luna.id);
+      expect(
+        pick(luna1, ['username', 'screenName', 'email']),
+        'to equal',
+        pick(luna, ['username', 'screenName', 'email']),
+      );
+    });
+  });
+
+  describe(`Paused user's jobs`, () => {
+    let luna,
+      jobManager,
+      capturedMail = null;
+    let removeMailListener = () => null;
+
+    before(async () => {
+      await cleanDB($pg_database);
+
+      luna = new User({
+        username: 'luna',
+        screenName: 'Luna Lovegood',
+        email: 'luna@lovegood.good',
+        password: 'pw',
+      });
+      await luna.create();
+
+      jobManager = await initJobProcessing();
+      removeMailListener = addMailListener((r) => (capturedMail = r));
+    });
+
+    after(removeMailListener);
+
+    beforeEach(() => (capturedMail = null));
+
+    it(`should create only start job when user changes status to GONE_PAUSED`, async () => {
+      const [, now] = await Promise.all([luna.setGoneStatus(GONE_PAUSED), dbAdapter.now()]);
+
+      const jobs = await dbAdapter.getAllJobs(jobTypes);
+      expect(jobs, 'to satisfy', [
+        {
+          name: USER_PAUSED_START,
+          payload: { id: luna.id, goneAt: luna.goneAt.getTime() },
+          unlockAt: expect.it('to be close to', now),
+        },
+      ]);
+    });
+
+    it(`should send email to user's real address`, async () => {
+      await jobManager.fetchAndProcess();
+
+      expect(capturedMail, 'to satisfy', { envelope: { to: ['luna@lovegood.good'] } });
+      const parsedMail = await simpleParser(capturedMail.response);
+      expect(parsedMail, 'to satisfy', {
+        to: { text: '"luna" <luna@lovegood.good>' },
+        subject: 'You have paused your account',
+      });
+    });
+
+    it(`should not create any deletion jobs after the start job processed`, async () => {
+      const jobs = await dbAdapter.getAllJobs(jobTypes);
+      expect(jobs, 'to be empty');
+    });
+
+    it(`should allow user to resume account`, async () => {
+      await luna.setGoneStatus(null);
+      const user = await dbAdapter.getUserById(luna.id);
+
+      expect(user.goneStatus, 'to be', null);
+      expect(user.email, 'to be', 'luna@lovegood.good');
     });
   });
 });
