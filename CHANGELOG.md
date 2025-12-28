@@ -6,6 +6,46 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [2.28.0] - Not released
+### Added
+- Account pause functionality: users can now pause their accounts with an optional
+  custom message that will be displayed in their profile.
+
+  New endpoint `POST /v1/users/pause-me` allows users to pause their account:
+  ```json
+  {
+    "password": "user-password",
+    "message": "Taking a break until February" // optional
+  }
+  ```
+
+  When an account is paused:
+  - The account receives `GONE_PAUSED` status (value: 15)
+  - The account can be resumed using the existing `POST /v1/users/resume-me` endpoint
+  - The pause message (if provided) is displayed in the user's `description` field
+  - User data is not deleted (unlike suspended accounts)
+
+- New `goneStatus` field in user serialization: inactive users now include a
+  `goneStatus` field in their API representation with one of three values:
+  - `"paused"` - account is paused by the user (status `GONE_PAUSED`)
+  - `"suspended"` - account is suspended (status `GONE_SUSPENDED`)
+  - `"deleted"` - account is in deletion process or deleted (statuses `GONE_COOLDOWN`,
+    `GONE_DELETION`, or `GONE_DELETED`)
+
+  This allows clients to distinguish between different types of inactive accounts
+  and display appropriate messages to users.
+
+  Example response:
+  ```json
+  {
+    "users": {
+      "id": "...",
+      "username": "luna",
+      "isGone": true,
+      "goneStatus": "paused",
+      "description": "Taking a break until February"
+    }
+  }
+  ```
 
 ## [2.27.0] - 2025-12-16
 ### Added
