@@ -81,6 +81,9 @@ export function addModel(dbAdapter) {
       this.description = params.description || '';
       this.frontendPreferences = params.frontendPreferences || {};
       this.preferences = validateUserPrefs(params.preferences, true, params.createdAt);
+      // The .hiddenPauseMessage field holds pause message for inactive users
+      // Must be set after validateUserPrefs to get the validated value
+      this.hiddenPauseMessage = this.preferences?.pauseMessage || '';
 
       this.isPrivate = params.isPrivate;
       this.isProtected = this.isPrivate === '1' ? '1' : params.isProtected;
@@ -583,15 +586,14 @@ export function addModel(dbAdapter) {
      * @param {string|null} message - Pause message text or null to clear
      */
     async setPauseMessage(message) {
-      if (message === null) {
-        await dbAdapter.setUserSysPrefs(this.id, 'pauseMessage', null);
-        return;
-      }
+      const prefs = this.preferences || {};
 
-      const trimmedMessage = message.trim();
+      const trimmedMessage = message?.trim() ?? '';
 
       if (!trimmedMessage) {
-        await dbAdapter.setUserSysPrefs(this.id, 'pauseMessage', null);
+        delete prefs.pauseMessage;
+        await dbAdapter.updateUser(this.id, { preferences: prefs });
+        this.preferences = prefs;
         return;
       }
 
@@ -599,15 +601,21 @@ export function addModel(dbAdapter) {
         throw new ValidationException('Pause message is too long (max 1500 characters)');
       }
 
-      await dbAdapter.setUserSysPrefs(this.id, 'pauseMessage', trimmedMessage);
+      prefs.pauseMessage = trimmedMessage;
+      await dbAdapter.updateUser(this.id, { preferences: prefs });
+      this.preferences = prefs;
     }
 
     /**
      * Get pause message for the user
-     * @returns {Promise<string|null>}
+     * @returns {string|null}
      */
-    async getPauseMessage() {
-      return await dbAdapter.getUserSysPrefs(this.id, 'pauseMessage', null);
+    getPauseMessage() {
+      if (!this.isActive) {
+        return this.hiddenPauseMessage || null;
+      }
+
+      return this.preferences?.pauseMessage || null;
     }
 
     get goneStatusName() {

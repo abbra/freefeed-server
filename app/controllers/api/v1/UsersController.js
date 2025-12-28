@@ -397,11 +397,11 @@ export default class UsersController {
         throw new ForbiddenException('Provided password is invalid');
       }
 
-      await user.setGoneStatus(GONE_PAUSED);
-
       if (message !== undefined) {
         await user.setPauseMessage(message);
       }
+
+      await user.setGoneStatus(GONE_PAUSED);
 
       ctx.body = { message: 'Your account has been paused' };
     },

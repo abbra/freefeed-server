@@ -230,8 +230,9 @@ describe(`User's 'gone' status`, () => {
 
   describe(`Paused user status (GONE_PAUSED)`, () => {
     let luna;
+    let originalLunaProps;
 
-    before(async () => {
+    beforeEach(async () => {
       await cleanDB($pg_database);
 
       luna = new User({
@@ -241,6 +242,9 @@ describe(`User's 'gone' status`, () => {
         password: 'pw',
       });
       await luna.create();
+
+      // Save original props for restore test
+      originalLunaProps = pick(luna, ['username', 'screenName', 'email']);
     });
 
     it(`should clean user's fields when status is set to GONE_PAUSED`, async () => {
@@ -261,7 +265,7 @@ describe(`User's 'gone' status`, () => {
       const pauseMessage = 'Taking a break until February';
       await luna.setPauseMessage(pauseMessage);
 
-      const savedMessage = await luna.getPauseMessage();
+      const savedMessage = luna.getPauseMessage();
       expect(savedMessage, 'to be', pauseMessage);
     });
 
@@ -281,14 +285,14 @@ describe(`User's 'gone' status`, () => {
       const pauseMessage = '  Spaces around  ';
       await luna.setPauseMessage(pauseMessage);
 
-      const savedMessage = await luna.getPauseMessage();
+      const savedMessage = luna.getPauseMessage();
       expect(savedMessage, 'to be', 'Spaces around');
     });
 
     it(`should not save empty pause message`, async () => {
       await luna.setPauseMessage('   ');
 
-      const savedMessage = await luna.getPauseMessage();
+      const savedMessage = luna.getPauseMessage();
       expect(savedMessage, 'to be', null);
     });
 
@@ -306,7 +310,7 @@ describe(`User's 'gone' status`, () => {
       await luna.setPauseMessage('Some message');
       await luna.setPauseMessage(null);
 
-      const savedMessage = await luna.getPauseMessage();
+      const savedMessage = luna.getPauseMessage();
       expect(savedMessage, 'to be', null);
     });
 
@@ -314,22 +318,21 @@ describe(`User's 'gone' status`, () => {
       await luna.setPauseMessage('Some message');
       await luna.setGoneStatus(GONE_SUSPENDED);
 
-      const savedMessage = await luna.getPauseMessage();
+      luna = await dbAdapter.getUserById(luna.id);
+      const savedMessage = luna.getPauseMessage();
       expect(savedMessage, 'to be', 'Some message');
 
       await luna.setGoneStatus(null);
-      const savedMessageAfter = await luna.getPauseMessage();
+      luna = await dbAdapter.getUserById(luna.id);
+      const savedMessageAfter = luna.getPauseMessage();
       expect(savedMessageAfter, 'to be', 'Some message');
     });
 
     it(`should restore user's fields when status is cleared`, async () => {
+      await luna.setGoneStatus(GONE_PAUSED);
       await luna.setGoneStatus(null);
       const luna1 = await dbAdapter.getUserById(luna.id);
-      expect(
-        pick(luna1, ['username', 'screenName', 'email']),
-        'to equal',
-        pick(luna, ['username', 'screenName', 'email']),
-      );
+      expect(pick(luna1, ['username', 'screenName', 'email']), 'to equal', originalLunaProps);
     });
   });
 

@@ -128,27 +128,15 @@ export async function serializeUsersByIds(userIds, viewerId = null, withAdmins =
   const groupIds = allUserIds.filter((id) => usersAssoc[id]?.type === 'group');
   const blockedInGroups = viewerId ? await dbAdapter.groupIdsBlockedUser(viewerId, groupIds) : [];
 
-  // Load pause messages for GONE_PAUSED users
-  const pausedUserIds = allUserIds.filter(
-    (id) => usersAssoc[id]?.goneStatus === GONE_PAUSED && usersAssoc[id]?.type === 'user',
-  );
-  const pauseMessages = {};
-
-  if (pausedUserIds.length > 0) {
-    await Promise.all(
-      pausedUserIds.map(async (id) => {
-        pauseMessages[id] = await dbAdapter.getUserSysPrefs(id, 'pauseMessage', null);
-      }),
-    );
-  }
-
   // Serialize
   return allUserIds.map((id) => {
     const obj = pickAccountProps(usersAssoc[id]);
 
     // Add pause message to description for GONE_PAUSED users
-    if (pauseMessages[id]) {
-      obj.description = pauseMessages[id];
+    const pauseMessage = usersAssoc[id]?.getPauseMessage?.();
+
+    if (usersAssoc[id]?.goneStatus === GONE_PAUSED && pauseMessage) {
+      obj.description = pauseMessage;
     }
 
     obj.statistics = (!obj.isGone && statsAssoc[id]) || defaultStats;

@@ -434,6 +434,8 @@ config.userPreferences = {
     notifyOfCommentsOnMyPosts: false,
     // Notify of all comments on posts commented by me
     notifyOfCommentsOnCommentedPosts: false,
+    // Message to display when account is paused
+    pauseMessage: '',
   },
   /**
    *  Here you can override the default values depending on the 'createdAt' time

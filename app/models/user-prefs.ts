@@ -61,6 +61,11 @@ const schema = {
       title: 'Notify of all comments on posts commented by me',
       type: 'boolean',
     },
+    pauseMessage: {
+      title: 'Message to display when account is paused',
+      type: 'string',
+      maxLength: 1500,
+    },
   },
   additionalProperties: false,
 };
