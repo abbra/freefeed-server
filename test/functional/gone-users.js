@@ -63,7 +63,15 @@ describe('Gone users', () => {
       const resp = await performJSONRequest('GET', `/v2/timelines/${luna.username}`);
       expect(resp, 'to satisfy', {
         timelines: { posts: [], subscribers: [] },
-        users: [{ id: luna.user.id, isProtected: '1', isPrivate: '1', isGone: true }],
+        users: [
+          {
+            id: luna.user.id,
+            isProtected: '1',
+            isPrivate: '1',
+            isGone: true,
+            goneStatus: 'deleted',
+          },
+        ],
         subscriptions: [],
         subscribers: [],
         posts: [],
@@ -79,7 +87,15 @@ describe('Gone users', () => {
       );
       expect(resp, 'to satisfy', {
         timelines: { posts: [], subscribers: [] },
-        users: [{ id: luna.user.id, isProtected: '1', isPrivate: '1', isGone: true }],
+        users: [
+          {
+            id: luna.user.id,
+            isProtected: '1',
+            isPrivate: '1',
+            isGone: true,
+            goneStatus: 'deleted',
+          },
+        ],
         subscriptions: [],
         subscribers: [],
         posts: [],
@@ -247,7 +263,7 @@ describe('Gone users', () => {
             setGoneStatus(luna, GONE_SUSPENDED),
           );
           await expect(test, 'when fulfilled', 'to satisfy', {
-            user: { id: luna.user.id, isGone: true },
+            user: { id: luna.user.id, isGone: true, goneStatus: 'suspended' },
           });
         }
       });
@@ -266,7 +282,7 @@ describe('Gone users', () => {
             setGoneStatus(luna, GONE_SUSPENDED),
           );
           await expect(test, 'when fulfilled', 'to satisfy', [
-            { user: { id: luna.user.id, isGone: true } },
+            { user: { id: luna.user.id, isGone: true, goneStatus: 'suspended' } },
             { user: { id: selenites.group.id, isRestricted: '1' } },
           ]);
         });
@@ -548,7 +564,7 @@ describe('Gone users', () => {
 
       {
         const resp = await performJSONRequest('GET', `/v1/users/${luna.username}`);
-        expect(resp, 'to satisfy', { users: { isGone: true } });
+        expect(resp, 'to satisfy', { users: { isGone: true, goneStatus: 'deleted' } });
       }
     });
 

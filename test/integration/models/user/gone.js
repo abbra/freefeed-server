@@ -25,6 +25,7 @@ import {
 } from '../../../../app/jobs/user-gone';
 import { initJobProcessing } from '../../../../app/jobs';
 import { addMailListener } from '../../../../lib/mailer';
+import { serializeUsersByIds } from '../../../../app/serializers/v2/user';
 
 const expect = unexpected.clone();
 expect.use(unexpectedDate);
@@ -73,6 +74,12 @@ describe(`User's 'gone' status`, () => {
         isProtected: '1',
         goneStatus: GONE_SUSPENDED,
         goneAt: expect.it('to be close to', now),
+      });
+
+      const [serializedLuna] = await serializeUsersByIds([luna.id]);
+      expect(serializedLuna, 'to satisfy', {
+        isGone: true,
+        goneStatus: 'suspended',
       });
     });
 
@@ -206,6 +213,12 @@ describe(`User's 'gone' status`, () => {
       // Check that the user profile is really cleaned
       expect(user, 'to satisfy', { goneStatus: GONE_DELETED, hiddenEmail: '' });
 
+      const [serializedLuna] = await serializeUsersByIds([luna.id]);
+      expect(serializedLuna, 'to satisfy', {
+        isGone: true,
+        goneStatus: 'deleted',
+      });
+
       expect(capturedMail, 'to satisfy', { envelope: { to: ['luna@lovegood.good'] } });
       const parsedMail = await simpleParser(capturedMail.response);
       expect(parsedMail, 'to satisfy', {
@@ -250,6 +263,18 @@ describe(`User's 'gone' status`, () => {
 
       const savedMessage = await luna.getPauseMessage();
       expect(savedMessage, 'to be', pauseMessage);
+    });
+
+    it(`should show pause message in description when user is serialized`, async () => {
+      const pauseMessage = 'On vacation until March';
+      await luna.setGoneStatus(GONE_PAUSED);
+      await luna.setPauseMessage(pauseMessage);
+
+      const [serializedLuna] = await serializeUsersByIds([luna.id]);
+
+      expect(serializedLuna.description, 'to be', pauseMessage);
+      expect(serializedLuna.isGone, 'to be', true);
+      expect(serializedLuna.goneStatus, 'to be', 'paused');
     });
 
     it(`should trim pause message`, async () => {
