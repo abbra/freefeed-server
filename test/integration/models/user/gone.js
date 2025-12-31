@@ -22,6 +22,7 @@ import {
   USER_DELETION_START,
   USER_DELETE_DATA,
   USER_PAUSED_START,
+  USER_PAUSED_REMINDER,
 } from '../../../../app/jobs/user-gone';
 import { initJobProcessing } from '../../../../app/jobs';
 import { addMailListener } from '../../../../lib/mailer';
@@ -36,6 +37,7 @@ const jobTypes = [
   USER_DELETION_START,
   USER_DELETE_DATA,
   USER_PAUSED_START,
+  USER_PAUSED_REMINDER,
 ];
 
 describe(`User's 'gone' status`, () => {
@@ -385,9 +387,42 @@ describe(`User's 'gone' status`, () => {
       });
     });
 
-    it(`should not create any deletion jobs after the start job processed`, async () => {
+    it(`should create monthly reminder job after the start job processed`, async () => {
       const jobs = await dbAdapter.getAllJobs(jobTypes);
-      expect(jobs, 'to be empty');
+      expect(jobs, 'to satisfy', [
+        {
+          name: USER_PAUSED_REMINDER,
+          payload: { id: luna.id, goneAt: luna.goneAt.getTime() },
+          unlockAt: expect.it('to be a date'),
+        },
+      ]);
+    });
+
+    it(`should send reminder email when reminder job is processed`, async () => {
+      const jobs = await dbAdapter.getAllJobs(jobTypes);
+      const reminderJob = jobs.find((job) => job.name === USER_PAUSED_REMINDER);
+      // Manually unlock reminder job
+      await reminderJob.setUnlockAt(0);
+
+      await jobManager.fetchAndProcess();
+
+      expect(capturedMail, 'to satisfy', { envelope: { to: ['luna@lovegood.good'] } });
+      const parsedMail = await simpleParser(capturedMail.response);
+      expect(parsedMail, 'to satisfy', {
+        to: { text: '"luna" <luna@lovegood.good>' },
+        subject: 'Your account is still paused',
+      });
+    });
+
+    it(`should schedule next reminder after processing current one`, async () => {
+      const jobs = await dbAdapter.getAllJobs(jobTypes);
+      expect(jobs, 'to satisfy', [
+        {
+          name: USER_PAUSED_REMINDER,
+          payload: { id: luna.id, goneAt: luna.goneAt.getTime() },
+          unlockAt: expect.it('to be a date'),
+        },
+      ]);
     });
 
     it(`should allow user to resume account`, async () => {
@@ -396,6 +431,21 @@ describe(`User's 'gone' status`, () => {
 
       expect(user.goneStatus, 'to be', null);
       expect(user.email, 'to be', 'luna@lovegood.good');
+    });
+
+    it(`should not send reminders after user resumed account`, async () => {
+      // Jobs remain but will be skipped by checkUserStatus
+      const jobs = await dbAdapter.getAllJobs(jobTypes);
+      const reminderJob = jobs.find((job) => job.name === USER_PAUSED_REMINDER);
+
+      if (reminderJob) {
+        // Manually unlock to test that handler skips it
+        await reminderJob.setUnlockAt(0);
+        await jobManager.fetchAndProcess();
+
+        // No new email should be sent since user is no longer paused
+        expect(capturedMail, 'to be', null);
+      }
     });
   });
 });

@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - The account can be resumed using the existing `POST /v1/users/resume-me` endpoint
   - The pause message (if provided) is displayed in the user's `description` field
   - User data is not deleted (unlike suspended accounts)
+  - The user receives an initial confirmation email
+  - Monthly reminder emails are sent to the user's email address with instructions
+    on how to resume or permanently delete the account
 
 - New `goneStatus` field in user serialization: inactive users now include a
   `goneStatus` field in their API representation with one of three values:

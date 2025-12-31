@@ -1,0 +1,15 @@
+Your account is still paused
+-------------------------------
+
+Your account @<%=user.username %> has been paused since <%= user.goneAt.toLocaleDateString() %>.
+
+This is a reminder that you can resume your account at any time, 
+or delete it permanently if you no longer need it. 
+
+To resume your account, enter your username/email and password 
+in <%= config.mailer.host %>/signin and follow the instructions. 
+
+To delete your account permanently, you can do so by logging in 
+and going to Settings.
+
+<%= config.siteTitle %> Team

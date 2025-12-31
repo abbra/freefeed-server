@@ -12,6 +12,7 @@ export const USER_COOLDOWN_REMINDER = 'USER_COOLDOWN_REMINDER';
 export const USER_DELETION_START = 'USER_DELETION_START';
 export const USER_DELETE_DATA = 'USER_DELETE_DATA';
 export const USER_PAUSED_START = 'USER_PAUSED_START';
+export const USER_PAUSED_REMINDER = 'USER_PAUSED_REMINDER';
 
 // Job creators
 export function userCooldownStart(user) {
@@ -89,6 +90,31 @@ export function initHandlers(jobManager) {
         { user },
         `${config.appRoot}/app/scripts/views/mailer/user-pause-start.ejs`,
       );
+
+      // Schedule monthly reminder
+      await Job.create(
+        USER_PAUSED_REMINDER,
+        { id: user.id, goneAt: user.goneAt.getTime() },
+        { unlockAt: pauseReminderDate(user), uniqKey: user.id },
+      );
+    }),
+  );
+
+  jobManager.on(
+    USER_PAUSED_REMINDER,
+    checkUserStatus(GONE_PAUSED, async (user, job) => {
+      // Send reminder email to user
+      await Mailer.sendMail(
+        // User is gone so the regular .email field is empty
+        { screenName: user.screenName, email: user.hiddenEmail },
+        'Your account is still paused',
+        { user },
+        `${config.appRoot}/app/scripts/views/mailer/user-pause-reminder.ejs`,
+      );
+
+      // Schedule next monthly reminder
+      await job.relock(pauseReminderDate(user, 1));
+      await job.keep();
     }),
   );
 
@@ -168,4 +194,15 @@ export function deletionDate(user) {
   return DateTime.fromJSDate(user.goneAt)
     .plus({ days: config.userDeletion.cooldownDays })
     .toJSDate();
+}
+
+export function pauseReminderDate(user, monthsFromNow = 1) {
+  return (
+    DateTime.fromJSDate(user.goneAt)
+      .setZone(config.ianaTimeZone)
+      // Schedule reminder to 9:00
+      .startOf('day')
+      .plus({ months: monthsFromNow, hours: 9 })
+      .toJSDate()
+  );
 }
