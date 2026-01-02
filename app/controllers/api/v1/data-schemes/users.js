@@ -86,6 +86,24 @@ export const userSuspendMeInputSchema = {
   },
 };
 
+export const userPauseMeInputSchema = {
+  $schema: 'http://json-schema.org/schema#',
+
+  type: 'object',
+  required: ['password'],
+
+  properties: {
+    password: {
+      type: 'string',
+      description: 'Current user password',
+    },
+    message: {
+      type: 'string',
+      description: 'Optional pause message to display in profile',
+    },
+  },
+};
+
 export const userResumeMeInputSchema = {
   $schema: 'http://json-schema.org/schema#',
 
