@@ -56,7 +56,7 @@
     "classnames": "~2.5.1",
     "cld": "^2.10.1",
     "commander": "~14.0.2",
-    "config": "~4.1.1",
+    "config": "~3.3.12",
     "console-stamp": "~3.1.2",
     "debug": "~4.4.3",
     "ejs": "~3.1.10",

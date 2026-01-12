@@ -51,10 +51,7 @@ const directsConfigSchema = z.strictObject({
 type EntrySchema = z.infer<typeof entrySchema>;
 
 export async function scheduleWelcomeDirects(user: User): Promise<boolean> {
-  const directsConfigDir = join(
-    configModule.util.getEnv('NODE_CONFIG_DIR') ?? configModule.util.getEnv('CONFIG_DIR'),
-    'welcome-directs',
-  );
+  const directsConfigDir = join(configModule.util.getEnv('NODE_CONFIG_DIR'), 'welcome-directs');
   const directsConfig = configModule.util.loadFileConfigs(directsConfigDir, {
     skipConfigSources: true,
   });
