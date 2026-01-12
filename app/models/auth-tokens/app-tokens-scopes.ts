@@ -47,6 +47,7 @@ export const alwaysDisallowedRoutes = [
   'POST /vN/ext-auth/auth-finish',
   // User suspend/resume
   'POST /vN/users/suspend-me',
+  'POST /vN/users/pause-me',
   'POST /vN/users/resume-me',
   // User creation
   'POST /vN/users',

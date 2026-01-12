@@ -11,6 +11,7 @@ import cleanDB from '../../../dbCleaner';
 import { User, dbAdapter } from '../../../../app/models';
 import {
   GONE_SUSPENDED,
+  GONE_PAUSED,
   GONE_COOLDOWN,
   GONE_DELETION,
   GONE_DELETED,
@@ -20,9 +21,12 @@ import {
   USER_COOLDOWN_REMINDER,
   USER_DELETION_START,
   USER_DELETE_DATA,
+  USER_PAUSED_START,
+  USER_PAUSED_REMINDER,
 } from '../../../../app/jobs/user-gone';
 import { initJobProcessing } from '../../../../app/jobs';
 import { addMailListener } from '../../../../lib/mailer';
+import { serializeUsersByIds } from '../../../../app/serializers/v2/user';
 
 const expect = unexpected.clone();
 expect.use(unexpectedDate);
@@ -32,6 +36,8 @@ const jobTypes = [
   USER_COOLDOWN_REMINDER,
   USER_DELETION_START,
   USER_DELETE_DATA,
+  USER_PAUSED_START,
+  USER_PAUSED_REMINDER,
 ];
 
 describe(`User's 'gone' status`, () => {
@@ -70,6 +76,12 @@ describe(`User's 'gone' status`, () => {
         isProtected: '1',
         goneStatus: GONE_SUSPENDED,
         goneAt: expect.it('to be close to', now),
+      });
+
+      const [serializedLuna] = await serializeUsersByIds([luna.id]);
+      expect(serializedLuna, 'to satisfy', {
+        isGone: true,
+        goneStatus: 'suspended',
       });
     });
 
@@ -203,12 +215,237 @@ describe(`User's 'gone' status`, () => {
       // Check that the user profile is really cleaned
       expect(user, 'to satisfy', { goneStatus: GONE_DELETED, hiddenEmail: '' });
 
+      const [serializedLuna] = await serializeUsersByIds([luna.id]);
+      expect(serializedLuna, 'to satisfy', {
+        isGone: true,
+        goneStatus: 'deleted',
+      });
+
       expect(capturedMail, 'to satisfy', { envelope: { to: ['luna@lovegood.good'] } });
       const parsedMail = await simpleParser(capturedMail.response);
       expect(parsedMail, 'to satisfy', {
         to: { text: '"luna" <luna@lovegood.good>' },
         subject: 'Your account has been deleted',
       });
+    });
+  });
+
+  describe(`Paused user status (GONE_PAUSED)`, () => {
+    let luna;
+    let originalLunaProps;
+
+    beforeEach(async () => {
+      await cleanDB($pg_database);
+
+      luna = new User({
+        username: 'luna',
+        screenName: 'Luna Lovegood',
+        email: 'luna@lovegood.good',
+        password: 'pw',
+      });
+      await luna.create();
+
+      // Save original props for restore test
+      originalLunaProps = pick(luna, ['username', 'screenName', 'email']);
+    });
+
+    it(`should clean user's fields when status is set to GONE_PAUSED`, async () => {
+      const [, now] = await Promise.all([luna.setGoneStatus(GONE_PAUSED), dbAdapter.now()]);
+      const luna1 = await dbAdapter.getUserById(luna.id);
+      expect(luna1, 'to satisfy', {
+        username: 'luna',
+        screenName: 'luna',
+        email: '',
+        isPrivate: '1',
+        isProtected: '1',
+        goneStatus: GONE_PAUSED,
+        goneAt: expect.it('to be close to', now),
+      });
+    });
+
+    it(`should save pause message when provided`, async () => {
+      const pauseMessage = 'Taking a break until February';
+      await luna.setPauseMessage(pauseMessage);
+
+      const savedMessage = luna.getPauseMessage();
+      expect(savedMessage, 'to be', pauseMessage);
+    });
+
+    it(`should show pause message in description when user is serialized`, async () => {
+      const pauseMessage = 'On vacation until March';
+      await luna.setGoneStatus(GONE_PAUSED);
+      await luna.setPauseMessage(pauseMessage);
+
+      const [serializedLuna] = await serializeUsersByIds([luna.id]);
+
+      expect(serializedLuna.description, 'to be', pauseMessage);
+      expect(serializedLuna.isGone, 'to be', true);
+      expect(serializedLuna.goneStatus, 'to be', 'paused');
+    });
+
+    it(`should trim pause message`, async () => {
+      const pauseMessage = '  Spaces around  ';
+      await luna.setPauseMessage(pauseMessage);
+
+      const savedMessage = luna.getPauseMessage();
+      expect(savedMessage, 'to be', 'Spaces around');
+    });
+
+    it(`should not save empty pause message`, async () => {
+      await luna.setPauseMessage('   ');
+
+      const savedMessage = luna.getPauseMessage();
+      expect(savedMessage, 'to be', null);
+    });
+
+    it(`should reject too long pause message`, async () => {
+      const longMessage = 'a'.repeat(1501);
+
+      await expect(
+        luna.setPauseMessage(longMessage),
+        'to be rejected with',
+        /Pause message is too long/,
+      );
+    });
+
+    it(`should clear pause message when set to null`, async () => {
+      await luna.setPauseMessage('Some message');
+      await luna.setPauseMessage(null);
+
+      const savedMessage = luna.getPauseMessage();
+      expect(savedMessage, 'to be', null);
+    });
+
+    it(`should keep pause message when status changes`, async () => {
+      await luna.setPauseMessage('Some message');
+      await luna.setGoneStatus(GONE_SUSPENDED);
+
+      luna = await dbAdapter.getUserById(luna.id);
+      const savedMessage = luna.getPauseMessage();
+      expect(savedMessage, 'to be', 'Some message');
+
+      await luna.setGoneStatus(null);
+      luna = await dbAdapter.getUserById(luna.id);
+      const savedMessageAfter = luna.getPauseMessage();
+      expect(savedMessageAfter, 'to be', 'Some message');
+    });
+
+    it(`should restore user's fields when status is cleared`, async () => {
+      await luna.setGoneStatus(GONE_PAUSED);
+      await luna.setGoneStatus(null);
+      const luna1 = await dbAdapter.getUserById(luna.id);
+      expect(pick(luna1, ['username', 'screenName', 'email']), 'to equal', originalLunaProps);
+    });
+  });
+
+  describe(`Paused user's jobs`, () => {
+    let luna,
+      jobManager,
+      capturedMail = null;
+    let removeMailListener = () => null;
+
+    before(async () => {
+      await cleanDB($pg_database);
+
+      luna = new User({
+        username: 'luna',
+        screenName: 'Luna Lovegood',
+        email: 'luna@lovegood.good',
+        password: 'pw',
+      });
+      await luna.create();
+
+      jobManager = await initJobProcessing();
+      removeMailListener = addMailListener((r) => (capturedMail = r));
+    });
+
+    after(removeMailListener);
+
+    beforeEach(() => (capturedMail = null));
+
+    it(`should create only start job when user changes status to GONE_PAUSED`, async () => {
+      const [, now] = await Promise.all([luna.setGoneStatus(GONE_PAUSED), dbAdapter.now()]);
+
+      const jobs = await dbAdapter.getAllJobs(jobTypes);
+      expect(jobs, 'to satisfy', [
+        {
+          name: USER_PAUSED_START,
+          payload: { id: luna.id, goneAt: luna.goneAt.getTime() },
+          unlockAt: expect.it('to be close to', now),
+        },
+      ]);
+    });
+
+    it(`should send email to user's real address`, async () => {
+      await jobManager.fetchAndProcess();
+
+      expect(capturedMail, 'to satisfy', { envelope: { to: ['luna@lovegood.good'] } });
+      const parsedMail = await simpleParser(capturedMail.response);
+      expect(parsedMail, 'to satisfy', {
+        to: { text: '"luna" <luna@lovegood.good>' },
+        subject: 'You have paused your account',
+      });
+    });
+
+    it(`should create monthly reminder job after the start job processed`, async () => {
+      const jobs = await dbAdapter.getAllJobs(jobTypes);
+      expect(jobs, 'to satisfy', [
+        {
+          name: USER_PAUSED_REMINDER,
+          payload: { id: luna.id, goneAt: luna.goneAt.getTime() },
+          unlockAt: expect.it('to be a date'),
+        },
+      ]);
+    });
+
+    it(`should send reminder email when reminder job is processed`, async () => {
+      const jobs = await dbAdapter.getAllJobs(jobTypes);
+      const reminderJob = jobs.find((job) => job.name === USER_PAUSED_REMINDER);
+      // Manually unlock reminder job
+      await reminderJob.setUnlockAt(0);
+
+      await jobManager.fetchAndProcess();
+
+      expect(capturedMail, 'to satisfy', { envelope: { to: ['luna@lovegood.good'] } });
+      const parsedMail = await simpleParser(capturedMail.response);
+      expect(parsedMail, 'to satisfy', {
+        to: { text: '"luna" <luna@lovegood.good>' },
+        subject: 'Your account is still paused',
+      });
+    });
+
+    it(`should schedule next reminder after processing current one`, async () => {
+      const jobs = await dbAdapter.getAllJobs(jobTypes);
+      expect(jobs, 'to satisfy', [
+        {
+          name: USER_PAUSED_REMINDER,
+          payload: { id: luna.id, goneAt: luna.goneAt.getTime() },
+          unlockAt: expect.it('to be a date'),
+        },
+      ]);
+    });
+
+    it(`should allow user to resume account`, async () => {
+      await luna.setGoneStatus(null);
+      const user = await dbAdapter.getUserById(luna.id);
+
+      expect(user.goneStatus, 'to be', null);
+      expect(user.email, 'to be', 'luna@lovegood.good');
+    });
+
+    it(`should not send reminders after user resumed account`, async () => {
+      // Jobs remain but will be skipped by checkUserStatus
+      const jobs = await dbAdapter.getAllJobs(jobTypes);
+      const reminderJob = jobs.find((job) => job.name === USER_PAUSED_REMINDER);
+
+      if (reminderJob) {
+        // Manually unlock to test that handler skips it
+        await reminderJob.setUnlockAt(0);
+        await jobManager.fetchAndProcess();
+
+        // No new email should be sent since user is no longer paused
+        expect(capturedMail, 'to be', null);
+      }
     });
   });
 });

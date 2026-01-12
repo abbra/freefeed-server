@@ -526,7 +526,9 @@ function tmpFileVariant(filePath: string, variant: string, ext: string): string 
  * changes. Otherwise return false.
  */
 async function canUseJpegOriginal(localFilePath: string): Promise<boolean> {
-  const tags = await exiftool.readRaw(localFilePath, ['-G1', '-n']);
+  const tags = await exiftool.readRaw<Record<string, any>>(localFilePath, {
+    readArgs: ['-G1', '-n'],
+  });
   const {
     'File:ColorComponents': colorComponents,
     'ICC_Profile:ProfileDescription': profileDescription = null,

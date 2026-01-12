@@ -122,6 +122,7 @@ declare module 'config' {
         sanitizeMediaMetadata: boolean;
         notifyOfCommentsOnMyPosts: boolean;
         notifyOfCommentsOnCommentedPosts: boolean;
+        pauseMessage: string;
       };
       overrides: {
         [k: string]:

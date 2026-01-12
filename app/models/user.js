@@ -18,7 +18,7 @@ import { s3Client } from '../support/s3';
 import { BadRequestException, NotFoundException, ValidationException } from '../support/exceptions';
 import { Comment, Post, PubSub as pubSub } from '../models';
 import { EventService } from '../support/EventService';
-import { userCooldownStart, userDataDeletionStart } from '../jobs/user-gone';
+import { userCooldownStart, userDataDeletionStart, userPausedStart } from '../jobs/user-gone';
 import { allExternalProviders } from '../support/ExtAuth';
 import { spawnAsync } from '../support/spawn-async';
 
@@ -30,7 +30,9 @@ const randomBytes = util.promisify(crypto.randomBytes);
 
 // Account is suspended for unknown period
 export const GONE_SUSPENDED = 10;
-// Account is suspended for cooldown period, the next state is GONE_DELETION
+// Account is paused by user themself, and can be resumed
+export const GONE_PAUSED = 15;
+// Account is suspended for cooldown period (can be resumed), the next state is GONE_DELETION
 export const GONE_COOLDOWN = 20;
 // Cooldown period is over, user data is being deleted, the next state is GONE_DELETED
 export const GONE_DELETION = 30;
@@ -39,6 +41,7 @@ export const GONE_DELETED = 40;
 
 export const GONE_NAMES = {
   [GONE_SUSPENDED]: 'SUSPENDED',
+  [GONE_PAUSED]: 'PAUSED',
   [GONE_COOLDOWN]: 'COOLDOWN',
   [GONE_DELETION]: 'DELETION',
   [GONE_DELETED]: 'DELETED',
@@ -78,6 +81,9 @@ export function addModel(dbAdapter) {
       this.description = params.description || '';
       this.frontendPreferences = params.frontendPreferences || {};
       this.preferences = validateUserPrefs(params.preferences, true, params.createdAt);
+      // The .hiddenPauseMessage field holds pause message for inactive users
+      // Must be set after validateUserPrefs to get the validated value
+      this.hiddenPauseMessage = this.preferences?.pauseMessage || '';
 
       this.isPrivate = params.isPrivate;
       this.isProtected = this.isPrivate === '1' ? '1' : params.isProtected;
@@ -206,7 +212,7 @@ export function addModel(dbAdapter) {
      * User.isResumable is true if user is gone but can be resumed
      */
     get isResumable() {
-      return [GONE_COOLDOWN].includes(this.goneStatus);
+      return [GONE_COOLDOWN, GONE_PAUSED].includes(this.goneStatus);
     }
 
     static stopList(skipExtraList) {
@@ -560,6 +566,10 @@ export function addModel(dbAdapter) {
         await userCooldownStart(this);
       }
 
+      if (status === GONE_PAUSED) {
+        await userPausedStart(this);
+      }
+
       if (status === GONE_DELETION) {
         await userDataDeletionStart(this);
       }
@@ -569,6 +579,43 @@ export function addModel(dbAdapter) {
       // Some managed groups may change their isRestricted status so send update
       // for all of them (just to be safe)
       await Promise.all(managedGroupIds.map((id) => pubSub.globalUserUpdate(id)));
+    }
+
+    /**
+     * Set or clear pause message for the user
+     * @param {string|null} message - Pause message text or null to clear
+     */
+    async setPauseMessage(message) {
+      const prefs = this.preferences || {};
+
+      const trimmedMessage = message?.trim() ?? '';
+
+      if (!trimmedMessage) {
+        delete prefs.pauseMessage;
+        await dbAdapter.updateUser(this.id, { preferences: prefs });
+        this.preferences = prefs;
+        return;
+      }
+
+      if (trimmedMessage.length > 1500) {
+        throw new ValidationException('Pause message is too long (max 1500 characters)');
+      }
+
+      prefs.pauseMessage = trimmedMessage;
+      await dbAdapter.updateUser(this.id, { preferences: prefs });
+      this.preferences = prefs;
+    }
+
+    /**
+     * Get pause message for the user
+     * @returns {string|null}
+     */
+    getPauseMessage() {
+      if (!this.isActive) {
+        return this.hiddenPauseMessage || null;
+      }
+
+      return this.preferences?.pauseMessage || null;
     }
 
     get goneStatusName() {

@@ -1,6 +1,7 @@
 import { pick, uniq } from 'lodash';
 
 import { User, dbAdapter } from '../../models';
+import { GONE_PAUSED, GONE_SUSPENDED } from '../../models/user';
 
 /**
  * @typedef { import('../../support/types').UUID } UUID
@@ -54,6 +55,14 @@ function pickAccountProps(user) {
 
   if (!user.isActive) {
     s.isGone = true;
+
+    if (user.goneStatus === GONE_PAUSED) {
+      s.goneStatus = 'paused';
+    } else if (user.goneStatus === GONE_SUSPENDED) {
+      s.goneStatus = 'suspended';
+    } else {
+      s.goneStatus = 'deleted';
+    }
   }
 
   return s;
@@ -122,6 +131,14 @@ export async function serializeUsersByIds(userIds, viewerId = null, withAdmins =
   // Serialize
   return allUserIds.map((id) => {
     const obj = pickAccountProps(usersAssoc[id]);
+
+    // Add pause message to description for GONE_PAUSED users
+    const pauseMessage = usersAssoc[id]?.getPauseMessage?.();
+
+    if (usersAssoc[id]?.goneStatus === GONE_PAUSED && pauseMessage) {
+      obj.description = pauseMessage;
+    }
+
     obj.statistics = (!obj.isGone && statsAssoc[id]) || defaultStats;
 
     if (obj.type === 'group') {
