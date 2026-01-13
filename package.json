@@ -178,6 +178,11 @@
     "unexpected-sinon": "~11.1.0",
     "xml-parser": "~1.2.1"
   },
+  "dependenciesMeta": {
+    "cld": {
+      "built": true
+    }
+  },
   "resolutions": {
     "@types/node": "~18.19.4",
     "is-generator-function": "1.0.10"
