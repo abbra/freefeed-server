@@ -571,4 +571,4 @@ config.hashtagStats = {
   refreshInterval: 2 * 60 * 60, // 2 hours
 };
 
-module.exports = config;
+export default config;

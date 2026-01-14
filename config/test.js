@@ -2,7 +2,7 @@ import { resolve } from 'path';
 
 import stubTransport from 'nodemailer-stub-transport';
 
-module.exports = {
+export default {
   port: 31337,
   database: 3,
   monitorPrefix: 'tests',
