@@ -1,5 +1,4 @@
-require('tsx/cjs');
-const { loadFileConfigs } = require('config').util;
+import configModule from 'config';
 
 let env = process.env.NODE_ENV || 'development';
 
@@ -15,5 +14,5 @@ let env = process.env.NODE_ENV || 'development';
 
 const prevEnv = process.env.NODE_ENV;
 process.env.NODE_ENV = env;
-module.exports = { [env]: loadFileConfigs().postgres };
+module.exports = { [env]: configModule.util.loadFileConfigs().postgres };
 process.env.NODE_ENV = prevEnv;

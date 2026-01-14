@@ -1,7 +1,7 @@
 import fs from 'fs';
 
 import smtpTransport from 'nodemailer-smtp-transport';
-import { deferConfig as defer } from 'config/defer';
+import { deferConfig as defer } from 'config/defer.js';
 
 const stubTransport = function () {
   return {
