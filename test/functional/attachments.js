@@ -5,7 +5,6 @@ import path from 'path';
 
 import unexpected from 'unexpected';
 import unexpectedDate from 'unexpected-date';
-import { fileFrom } from 'node-fetch';
 import { beforeEach } from 'mocha';
 
 import { nodeDirname } from '../../app/support/node-dirname';
@@ -25,6 +24,7 @@ import {
   authHeaders,
   justCreatePost,
   performRequest,
+  fileFrom,
 } from './functional_test_helper';
 import Session from './realtime-session';
 

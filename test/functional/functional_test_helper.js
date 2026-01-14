@@ -2,8 +2,9 @@
 import http from 'http';
 import { stringify as qsStringify } from 'querystring';
 import util from 'util';
+import { readFile } from 'fs/promises';
+import { basename } from 'path';
 
-import { fileFrom } from 'node-fetch';
 import request from 'superagent';
 import _, { merge } from 'lodash-es';
 import socketIO from 'socket.io-client';
@@ -526,6 +527,13 @@ export function updateGroupAsync(group, adminContext, groupData) {
     user: groupData,
     _method: 'put',
   });
+}
+
+// Helper to create File from filesystem
+export async function fileFrom(filePath, mimeType) {
+  const buffer = await readFile(filePath);
+  const fileName = basename(filePath);
+  return new File([buffer], fileName, { type: mimeType });
 }
 
 export async function updateProfilePicture(userContext, filePath) {
