@@ -58,6 +58,7 @@ module.exports = {
     'import/no-named-as-default': 2,
     'import/no-named-as-default-member': 2,
     'import/no-unresolved': 2,
+    'import/consistent-type-specifier-style': ["error", "prefer-inline"],
     'import/order': [
       2,
       {
