@@ -119,7 +119,7 @@ function getQueryParams(ctx) {
     }
   }
 
-  eventTypes = _(eventTypes).intersection(ALLOWED_EVENT_TYPES).uniq().value();
+  eventTypes = _.uniq(_.intersection(eventTypes, ALLOWED_EVENT_TYPES));
 
   if (eventTypes.length === 0) {
     eventTypes = null;

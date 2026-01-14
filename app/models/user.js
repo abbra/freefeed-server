@@ -1247,7 +1247,7 @@ export function addModel(dbAdapter) {
         return [];
       }
 
-      const timelineOwnerIds = _(timelines).map('userId').uniq().value();
+      const timelineOwnerIds = _.uniq(timelines.map((t) => t.userId));
 
       if (timelineOwnerIds.length === 0) {
         return [];
