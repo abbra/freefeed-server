@@ -2,7 +2,7 @@
 import http from 'http';
 import util from 'util';
 
-import AwaitLock from 'await-lock';
+import awaitLockModule from 'await-lock';
 import createDebug from 'debug';
 
 import FreefeedApp from './freefeed-app';
@@ -13,6 +13,7 @@ import { init as initEnvironment } from './setup/environment';
 
 let app = null;
 
+const AwaitLock = awaitLockModule.default;
 const lock = new AwaitLock();
 
 /**
