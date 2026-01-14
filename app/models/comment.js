@@ -1,5 +1,5 @@
 /* eslint babel/semi: "error" */
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import GraphemeBreaker from 'grapheme-breaker';
 import monitor from 'monitor-dog';
 import config from 'config';

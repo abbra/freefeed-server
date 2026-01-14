@@ -1,7 +1,7 @@
 /* eslint-env node, mocha */
 /* global $pg_database */
 import expect from 'unexpected';
-import { zipObject } from 'lodash';
+import { zipObject } from 'lodash-es';
 
 import cleanDB from '../../dbCleaner';
 import { User } from '../../../app/models';

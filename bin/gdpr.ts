@@ -5,7 +5,7 @@ import path from 'path';
 import util from 'util';
 import url from 'url';
 
-import chunk from 'lodash/chunk';
+import chunk from 'lodash-es/chunk';
 
 import { DataProvider } from '../app/export/gdpr';
 import { dbAdapter } from '../app/models';

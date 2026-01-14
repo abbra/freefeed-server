@@ -4,7 +4,7 @@ import { escape as urlEscape } from 'querystring';
 
 import expect from 'unexpected';
 import parseXML from 'xml-parser';
-import { unescape as htmlUnescape, escape as htmlEscape } from 'lodash';
+import { unescape as htmlUnescape, escape as htmlEscape } from 'lodash-es';
 import config from 'config';
 
 import cleanDB from '../dbCleaner';

@@ -1,4 +1,4 @@
-import { xor } from 'lodash';
+import { xor } from 'lodash-es';
 import { LINK } from 'social-text-tokenizer';
 import { linkHref } from 'social-text-tokenizer/prettifiers';
 

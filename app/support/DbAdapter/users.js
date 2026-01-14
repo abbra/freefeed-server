@@ -1,5 +1,5 @@
 import config from 'config';
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import validator from 'validator';
 import { DateTime, Duration } from 'luxon';
 import { camelizeKeys } from 'humps';

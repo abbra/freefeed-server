@@ -2,7 +2,7 @@
 /* global $database, $pg_database */
 import { Readable } from 'stream';
 
-import { fromPairs } from 'lodash';
+import { fromPairs } from 'lodash-es';
 import expect from 'unexpected';
 import config from 'config';
 

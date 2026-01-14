@@ -1,4 +1,4 @@
-import { pick } from 'lodash';
+import { pick } from 'lodash-es';
 import compose from 'koa-compose';
 
 import { authRequired, inputSchemaRequired } from '../../middlewares';

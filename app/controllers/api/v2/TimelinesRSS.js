@@ -1,7 +1,7 @@
 import { escape as urlEscape } from 'querystring';
 
 import config from 'config';
-import { escape as htmlEscape } from 'lodash';
+import { escape as htmlEscape } from 'lodash-es';
 import compose from 'koa-compose';
 import builder from 'xmlbuilder';
 

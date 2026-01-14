@@ -5,7 +5,7 @@ import util from 'util';
 
 import { fileFrom } from 'node-fetch';
 import request from 'superagent';
-import _, { merge } from 'lodash';
+import _, { merge } from 'lodash-es';
 import socketIO from 'socket.io-client';
 import expect from 'unexpected';
 import Application from 'koa';

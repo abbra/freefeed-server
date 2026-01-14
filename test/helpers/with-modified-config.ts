@@ -1,6 +1,6 @@
 import { Config } from 'config';
 import { after, before } from 'mocha';
-import { merge, noop } from 'lodash';
+import { merge, noop } from 'lodash-es';
 
 import { DeepPartial } from '../../app/support/types';
 import { currentConfig, setExplicitConfig } from '../../app/support/app-async-context';

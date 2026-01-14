@@ -1,5 +1,5 @@
 import createDebug from 'debug';
-import { difference, uniq } from 'lodash';
+import { difference, uniq } from 'lodash-es';
 
 import { Job } from '../../models';
 

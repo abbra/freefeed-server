@@ -1,6 +1,6 @@
 import { encode as qsEncode } from 'querystring';
 
-import { get as _get } from 'lodash';
+import { get as _get } from 'lodash-es';
 
 import { Cache } from './Cache';
 import { Adapter, AuthStartParams, AuthFinishParams, Profile } from './Adapter';

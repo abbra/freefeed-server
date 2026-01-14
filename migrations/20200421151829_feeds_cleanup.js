@@ -1,7 +1,7 @@
 // ⚠ Warning! It is a long running (minutes) and non-reversible migration.
 
 /* eslint no-await-in-loop: 0 */
-import { difference } from 'lodash';
+import { difference } from 'lodash-es';
 
 const allFeeds = [
   'RiverOfNews',

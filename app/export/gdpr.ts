@@ -5,7 +5,7 @@ import moment from 'moment';
 import { DataFactory, Writer } from 'n3';
 import PgCursor from 'pg-cursor';
 import pgFormat from 'pg-format';
-import noop from 'lodash/noop';
+import noop from 'lodash-es/noop';
 import config from 'config';
 import { QueryResultRow } from 'pg';
 import { type Knex } from 'knex';

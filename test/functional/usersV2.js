@@ -3,7 +3,7 @@
 import unexpected from 'unexpected';
 import request from 'superagent';
 import config from 'config';
-import { sortBy, uniq } from 'lodash';
+import { sortBy, uniq } from 'lodash-es';
 
 import cleanDB from '../dbCleaner';
 import { getSingleton } from '../../app/app';

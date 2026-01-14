@@ -1,5 +1,5 @@
 /* eslint-env node, mocha */
-import { toPlainObject } from 'lodash';
+import { toPlainObject } from 'lodash-es';
 import expect from 'unexpected';
 
 import {

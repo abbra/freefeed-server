@@ -3,7 +3,7 @@ import compose from 'koa-compose';
 import { isInt } from 'validator';
 import { lookup } from 'mime-types';
 import { mediaType } from '@hapi/accept';
-import { difference } from 'lodash';
+import { difference } from 'lodash-es';
 
 import {
   reportError,

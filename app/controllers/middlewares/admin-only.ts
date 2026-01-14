@@ -1,5 +1,5 @@
 import { type Context, type Next } from 'koa';
-import { intersection } from 'lodash';
+import { intersection } from 'lodash-es';
 
 import { dbAdapter, type User } from '../../models';
 import { ForbiddenException } from '../../support/exceptions';

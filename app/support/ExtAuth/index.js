@@ -1,5 +1,5 @@
 import config from 'config';
-import { merge } from 'lodash';
+import { merge } from 'lodash-es';
 
 import { Cache } from './Cache';
 import { TestAdapter } from './TestAdapter';

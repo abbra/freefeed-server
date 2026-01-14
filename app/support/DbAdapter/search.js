@@ -1,4 +1,4 @@
-import { flatten, union, uniq } from 'lodash';
+import { flatten, union, uniq } from 'lodash-es';
 import config from 'config';
 import pgFormat from 'pg-format';
 

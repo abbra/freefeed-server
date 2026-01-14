@@ -6,7 +6,7 @@ import unexpected from 'unexpected';
 import unexpectedDate from 'unexpected-date';
 import unexpectedSinon from 'unexpected-sinon';
 import { spy } from 'sinon';
-import { difference, sortBy } from 'lodash';
+import { difference, sortBy } from 'lodash-es';
 
 import cleanDB from '../../dbCleaner';
 import { Job, dbAdapter, JobManager } from '../../../app/models';

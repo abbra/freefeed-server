@@ -9,7 +9,7 @@ import mime, { lookup } from 'mime-types';
 import mv from 'mv';
 import Raven from 'raven';
 import monitor from 'monitor-dog';
-import { uniq } from 'lodash';
+import { uniq } from 'lodash-es';
 
 import { s3Client } from '../support/s3';
 import { sanitizeMediaMetadata, SANITIZE_NONE, SANITIZE_VERSION } from '../support/sanitize-media';

@@ -1,5 +1,5 @@
 /* eslint babel/semi: "error" */
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 
 import {
   TIMELINE_VISIBILITY_NONE,

@@ -1,5 +1,5 @@
 import XRegExp from 'xregexp';
-import { flow } from 'lodash';
+import { flow } from 'lodash-es';
 import config from 'config';
 import { validate as uuidValidate } from 'uuid';
 

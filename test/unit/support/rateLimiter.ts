@@ -2,7 +2,7 @@
 import expect from 'unexpected';
 import { Context, Next } from 'koa';
 import { v4 as uuidv4 } from 'uuid';
-import { merge } from 'lodash';
+import { merge } from 'lodash-es';
 
 import { rateLimiterMiddleware, durationToSeconds } from '../../../app/support/rateLimiter';
 

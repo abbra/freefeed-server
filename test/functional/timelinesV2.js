@@ -3,7 +3,7 @@
 import { join as pathJoin } from 'path';
 
 import expect from 'unexpected';
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 
 import cleanDB from '../dbCleaner';
 import { getSingleton } from '../../app/app';

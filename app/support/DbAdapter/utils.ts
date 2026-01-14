@@ -1,5 +1,5 @@
 import pgFormat from 'pg-format';
-import { intersection } from 'lodash';
+import { intersection } from 'lodash-es';
 
 import { List, ListLike } from '../open-lists';
 

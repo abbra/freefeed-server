@@ -7,7 +7,7 @@ import { unlink } from 'fs/promises';
 
 import bcrypt from 'bcrypt';
 import GraphemeBreaker from 'grapheme-breaker';
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import monitor from 'monitor-dog';
 import mv from 'mv';
 import validator from 'validator';

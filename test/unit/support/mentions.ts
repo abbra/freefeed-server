@@ -1,5 +1,5 @@
 /* eslint-env node, mocha */
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import expect from 'unexpected';
 
 import { extractMentions, extractMentionsWithOffsets } from '../../../app/support/mentions';

@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 
 export type ListLike<T> = List<T> | T[] | { items: T[]; inclusive: boolean };
 

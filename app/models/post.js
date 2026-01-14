@@ -1,6 +1,6 @@
 /* eslint babel/semi: "error" */
 import GraphemeBreaker from 'grapheme-breaker';
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import config from 'config';
 
 import { extractHashtags } from '../support/hashtags';

@@ -1,6 +1,6 @@
 import { escape as urlEscape } from 'querystring';
 
-import { escape as htmlEscape } from 'lodash';
+import { escape as htmlEscape } from 'lodash-es';
 import { sentences } from 'sbd';
 import { HASHTAG, EMAIL, MENTION, LINK } from 'social-text-tokenizer';
 import config from 'config';

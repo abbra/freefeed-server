@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 
 export const EVENT_TYPES = {
   MENTION_IN_POST: 'mention_in_post',

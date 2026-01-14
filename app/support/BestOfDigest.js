@@ -1,5 +1,5 @@
 import createDebug from 'debug';
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import { DateTime } from 'luxon';
 
 import { dbAdapter } from '../models';

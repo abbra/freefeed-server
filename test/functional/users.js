@@ -1,7 +1,7 @@
 /* eslint-env node, mocha */
 /* global $pg_database, $should */
 import jwt from 'jsonwebtoken';
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import { mkdirp } from 'mkdirp';
 import request from 'superagent';
 import expect from 'unexpected';

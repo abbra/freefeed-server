@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import jwt from 'jsonwebtoken';
 import config from 'config';
 import Raven from 'raven';

@@ -1,4 +1,4 @@
-import { pick, uniq } from 'lodash';
+import { pick, uniq } from 'lodash-es';
 
 import { User, dbAdapter } from '../../models';
 import { GONE_PAUSED, GONE_SUSPENDED } from '../../models/user';

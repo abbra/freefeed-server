@@ -1,7 +1,7 @@
 /* eslint-env node, mocha */
 /* global $pg_database */
 
-import { noop } from 'lodash';
+import { noop } from 'lodash-es';
 import expect from 'unexpected';
 
 import { postAccessRequired } from '../../../app/controllers/middlewares';

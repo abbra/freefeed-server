@@ -1,4 +1,4 @@
-import { uniq } from 'lodash';
+import { uniq } from 'lodash-es';
 
 import { UUID } from '../../../support/types';
 import { dbAdapter } from '../../../models';
