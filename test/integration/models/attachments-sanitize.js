@@ -13,8 +13,11 @@ import { User } from '../../../app/models';
 import cleanDB from '../../dbCleaner';
 import { SANITIZE_NONE, SANITIZE_VERSION } from '../../../app/support/sanitize-media';
 import { withModifiedConfig } from '../../helpers/with-modified-config';
+import { nodeDirname } from '../../../app/support/node-dirname';
 
 import { createAttachment } from './attachment-helpers';
+
+const __dirname = nodeDirname(import.meta.url);
 
 const photoWithGPSPath = join(__dirname, '../../fixtures/photo-with-gps.jpg');
 const photoWithoutGPSPath = join(__dirname, '../../fixtures/photo-without-gps.jpg');

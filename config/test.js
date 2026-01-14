@@ -2,6 +2,10 @@ import { resolve } from 'path';
 
 import stubTransport from 'nodemailer-stub-transport';
 
+import { nodeDirname } from '../app/support/node-dirname';
+
+const __dirname = nodeDirname(import.meta.url);
+
 export default {
   port: 31337,
   database: 3,

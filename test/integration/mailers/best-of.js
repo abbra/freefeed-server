@@ -18,9 +18,12 @@ import { addMailListener } from '../../../lib/mailer';
 import { createUser } from '../helpers/users';
 import { createPost } from '../helpers/posts-and-comments';
 import { testFiles } from '../models/attachment-data';
+import { nodeDirname } from '../../../app/support/node-dirname';
 import { Attachment, dbAdapter } from '../../../app/models';
 import cleanDB from '../../dbCleaner';
 import { getSummary } from '../../../app/support/BestOfDigest';
+
+const __dirname = nodeDirname(import.meta.url);
 
 describe('BestOfDigests', () => {
   let luna, post, att;

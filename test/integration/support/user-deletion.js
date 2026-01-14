@@ -6,6 +6,7 @@ import { promises as fs } from 'fs';
 import expect from 'unexpected';
 
 import cleanDB from '../../dbCleaner';
+import { nodeDirname } from '../../../app/support/node-dirname';
 import { User, dbAdapter, Post, Comment, Group, Attachment } from '../../../app/models';
 import {
   deletePersonalInfo,
@@ -26,6 +27,8 @@ import {
 } from '../../../app/support/user-deletion';
 import { GONE_DELETION } from '../../../app/models/user';
 import { filesMustExist } from '../helpers/attachments';
+
+const __dirname = nodeDirname(import.meta.url);
 
 describe('User data deletion', () => {
   beforeEach(() => cleanDB($pg_database));

@@ -23,6 +23,9 @@ import { normalizeInputStrings } from './controllers/middlewares/normalize-input
 import { type AppContext } from './support/types';
 import { apiVersionMiddleware } from './setup/initializers/api-version';
 import { asyncContextMiddleware } from './support/app-async-context';
+import { nodeDirname } from './support/node-dirname';
+
+const __dirname = nodeDirname(import.meta.url);
 
 const env = process.env.NODE_ENV || 'development';
 

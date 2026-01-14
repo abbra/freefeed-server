@@ -17,6 +17,7 @@ import config from 'config';
 import { s3Client } from '../support/s3';
 import { BadRequestException, NotFoundException, ValidationException } from '../support/exceptions';
 import { Comment, Post, PubSub as pubSub } from '../models';
+import { nodeDirname } from '../support/node-dirname';
 import { EventService } from '../support/EventService';
 import { userCooldownStart, userDataDeletionStart, userPausedStart } from '../jobs/user-gone';
 import { allExternalProviders } from '../support/ExtAuth';
@@ -27,6 +28,8 @@ import { validate as validateUserPrefs } from './user-prefs';
 const mvAsync = util.promisify(mv);
 
 const randomBytes = util.promisify(crypto.randomBytes);
+
+const __dirname = nodeDirname(import.meta.url);
 
 // Account is suspended for unknown period
 export const GONE_SUSPENDED = 10;

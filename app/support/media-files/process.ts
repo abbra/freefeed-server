@@ -7,6 +7,7 @@ import createDebug from 'debug';
 import { spawnAsync, type SpawnAsyncArgs } from '../spawn-async';
 import { currentConfig } from '../app-async-context';
 import { ContentTooLargeException } from '../exceptions';
+import { nodeDirname } from '../node-dirname';
 
 import { detectMediaType } from './detect';
 import {
@@ -21,6 +22,8 @@ import {
 } from './types';
 import { getImagePreviewSizes, getVideoPreviewSizes } from './geometry';
 import { setExtension } from './file-ext';
+
+const __dirname = nodeDirname(import.meta.url);
 
 type FileProps = {
   fileName: string;

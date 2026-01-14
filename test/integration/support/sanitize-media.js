@@ -9,6 +9,9 @@ import expect from 'unexpected';
 import { v4 as uuidV4 } from 'uuid';
 
 import { sanitizeMediaMetadata } from '../../../app/support/sanitize-media';
+import { nodeDirname } from '../../../app/support/node-dirname';
+
+const __dirname = nodeDirname(import.meta.url);
 
 const photoWithGPSPath = join(__dirname, '../../fixtures/photo-with-gps.jpg');
 const photoWithoutGPSPath = join(__dirname, '../../fixtures/photo-without-gps.jpg');
