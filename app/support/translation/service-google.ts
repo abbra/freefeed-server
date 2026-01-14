@@ -1,4 +1,4 @@
-import { TranslationResult } from './types';
+import { type TranslationResult } from './types';
 
 export async function translate(
   text: string,

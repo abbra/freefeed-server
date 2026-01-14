@@ -1,4 +1,4 @@
-import { AdminAction, AdminRole, ROLE_ADMIN } from '../../models/admins';
+import { type AdminAction, type AdminRole, ROLE_ADMIN } from '../../models/admins';
 import { type UUID } from '../types';
 
 import { type DbAdapter } from './index';

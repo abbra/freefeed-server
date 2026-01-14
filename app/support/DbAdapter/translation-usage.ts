@@ -1,4 +1,4 @@
-import { ISO8601DateTimeString, UUID } from '../types';
+import { type ISO8601DateTimeString, type UUID } from '../types';
 
 import { type DbAdapter } from './index';
 

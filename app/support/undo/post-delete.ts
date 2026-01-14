@@ -1,4 +1,4 @@
-import { UUID } from '../types';
+import { type UUID } from '../types';
 
 import { UndoEntry } from './entry';
 

@@ -2,7 +2,7 @@ import { Duration } from 'luxon';
 import { JwtPayload, sign, verify } from 'jsonwebtoken';
 
 import { currentConfig } from '../app-async-context';
-import { UUID } from '../types';
+import { type UUID } from '../types';
 
 export type SerializedUndoEntry<Subj extends string> = {
   subject: Subj;

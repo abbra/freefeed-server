@@ -1,8 +1,8 @@
 import compose from 'koa-compose';
 import { DateTime, Duration } from 'luxon';
 
-import { User, dbAdapter } from '../../../models';
-import { Ctx } from '../../../support/types';
+import { type User, dbAdapter } from '../../../models';
+import { type Ctx } from '../../../support/types';
 import { inputSchemaRequired, targetUserRequired } from '../../middlewares';
 import { ForbiddenException, ValidationException } from '../../../support/exceptions';
 import {

@@ -1,4 +1,4 @@
-import { Branded } from './helpers';
+import { type Branded } from './helpers';
 
 export type UUID = Branded<string, 'uuid'>;
 export type IPAddr = Branded<string, 'IP address'>;

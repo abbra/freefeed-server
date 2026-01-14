@@ -1,4 +1,4 @@
-import { Config } from 'config';
+import { type Config } from 'config';
 
 import { type TranslationResult } from './types';
 import { translate as testTranslate } from './service-test';

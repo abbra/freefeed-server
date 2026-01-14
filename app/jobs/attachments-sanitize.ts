@@ -3,7 +3,7 @@ import { DateTime } from 'luxon';
 import Raven from 'raven';
 
 import { dbAdapter, Job, JobManager, type User } from '../models';
-import { UUID } from '../support/types';
+import { type UUID } from '../support/types';
 
 const debug = createDebug('freefeed:model:attachment');
 

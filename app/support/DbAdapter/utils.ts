@@ -1,7 +1,7 @@
 import pgFormat from 'pg-format';
 import { intersection } from 'lodash-es';
 
-import { List, ListLike } from '../open-lists';
+import { List, type ListLike } from '../open-lists';
 
 export function prepareModelPayload<P extends Record<string, any>>(
   payload: P,

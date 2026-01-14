@@ -3,7 +3,7 @@ import { intersection } from 'lodash-es';
 
 import { dbAdapter, type User } from '../../models';
 import { ForbiddenException } from '../../support/exceptions';
-import { AdminRole } from '../../models/admins';
+import { type AdminRole } from '../../models/admins';
 
 export function adminRolesRequired(...roles: AdminRole[]) {
   return async (ctx: Context, next: Next) => {

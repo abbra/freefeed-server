@@ -1,4 +1,4 @@
-import { Middleware } from 'koa';
+import { type Middleware } from 'koa';
 import { isEqual } from 'lodash-es';
 
 import { type User, type Post, PubSub as pubSub, dbAdapter } from '../../models';

@@ -1,5 +1,5 @@
-import { User, dbAdapter } from '../../../models';
-import { Ctx } from '../../../support/types';
+import { type User, dbAdapter } from '../../../models';
+import { type Ctx } from '../../../support/types';
 
 import { getQueryParams } from './query-params';
 import { serializeUser } from './serializers';

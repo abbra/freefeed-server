@@ -3,12 +3,12 @@ import { open } from 'fs/promises';
 import { spawnAsync } from '../spawn-async';
 
 import {
-  AvcStream,
-  FfprobeResult,
-  H264Info,
-  MediaInfo,
-  MediaInfoVideo,
-  VideoStream,
+  type AvcStream,
+  type FfprobeResult,
+  type H264Info,
+  type MediaInfo,
+  type MediaInfoVideo,
+  type VideoStream,
 } from './types';
 import { addFileExtension } from './file-ext';
 

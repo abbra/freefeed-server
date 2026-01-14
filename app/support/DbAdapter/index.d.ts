@@ -3,7 +3,13 @@ import { type Cache } from 'cache-manager';
 import { type DatabasePool } from 'slonik';
 import { z } from 'zod';
 
-import { IPAddr, ISO8601DateTimeString, ISO8601DurationString, Nullable, UUID } from '../types';
+import {
+  type IPAddr,
+  type ISO8601DateTimeString,
+  type ISO8601DurationString,
+  type Nullable,
+  type UUID,
+} from '../types';
 import { AppTokenV1, Attachment, Comment, Group, Post, Timeline, User, Job } from '../../models';
 import {
   AppTokenCreateParams,
@@ -17,7 +23,7 @@ import { T_EVENT_TYPE } from '../EventTypes';
 import { AdminAction, AdminRole } from '../../models/admins';
 import { InvitationCreationCriterion } from '../types/invitations';
 import { RefusalReason } from '../../models/invitations';
-import { List, ListLike } from '../open-lists';
+import { List, type ListLike } from '../open-lists';
 
 import { type UserStats } from './user-stats-dynamic';
 import {

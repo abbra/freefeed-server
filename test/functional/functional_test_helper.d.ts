@@ -1,4 +1,4 @@
-import { Context } from 'koa';
+import { type Context } from 'koa';
 
 import { Comment, Group, Post, User } from '../../app/models';
 import { UUID } from '../../app/support/types';

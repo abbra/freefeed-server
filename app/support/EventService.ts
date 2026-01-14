@@ -7,9 +7,9 @@ import {
   ALLOWED_EVENT_TYPES,
   COUNTABLE_EVENT_TYPES,
   EVENT_TYPES,
-  T_EVENT_TYPE,
+  type T_EVENT_TYPE,
 } from './EventTypes';
-import { Nullable, UUID } from './types';
+import { type Nullable, type UUID } from './types';
 import { extractHashedShortIds, extractShortIds, extractUUIDs } from './backlinks';
 
 type OnPostFeedsChangedParams = {

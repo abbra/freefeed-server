@@ -1,5 +1,5 @@
 import { dbAdapter } from '../../models';
-import { Nullable, UUID } from '../../support/types';
+import { type Nullable, type UUID } from '../../support/types';
 import { type EventRecord } from '../../support/DbAdapter';
 import { EVENT_TYPES, HIDDEN_CREATOR_EVENT_TYPES } from '../../support/EventTypes';
 

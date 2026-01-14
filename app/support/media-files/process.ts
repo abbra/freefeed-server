@@ -4,20 +4,20 @@ import { lookup as mimeLookup } from 'mime-types';
 import { exiftool } from 'exiftool-vendored';
 import createDebug from 'debug';
 
-import { spawnAsync, SpawnAsyncArgs } from '../spawn-async';
+import { spawnAsync, type SpawnAsyncArgs } from '../spawn-async';
 import { currentConfig } from '../app-async-context';
 import { ContentTooLargeException } from '../exceptions';
 
 import { detectMediaType } from './detect';
 import {
-  Box,
-  FilesToUpload,
-  MediaInfoAudio,
-  MediaInfoImage,
-  MediaInfoVideo,
-  MediaProcessResult,
-  NonVisualPreviews,
-  VisualPreviews,
+  type Box,
+  type FilesToUpload,
+  type MediaInfoAudio,
+  type MediaInfoImage,
+  type MediaInfoVideo,
+  type MediaProcessResult,
+  type NonVisualPreviews,
+  type VisualPreviews,
 } from './types';
 import { getImagePreviewSizes, getVideoPreviewSizes } from './geometry';
 import { setExtension } from './file-ext';
