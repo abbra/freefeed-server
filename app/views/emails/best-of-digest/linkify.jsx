@@ -1,5 +1,5 @@
 import React from 'react';
-import { default as URLFinder, shorten } from 'ff-url-finder';
+import URLFinder from 'ff-url-finder';
 
 import { LINK, AT_LINK, LOCAL_LINK, EMAIL, HASHTAG, ARROW, FRIENDFEED_POST } from './link-types';
 import Link from './link.jsx';
@@ -63,7 +63,7 @@ class Linkify extends React.Component {
         let href;
 
         if (it.type === LINK) {
-          displayedLink = shorten(it.text, MAX_URL_LENGTH).replace(/^https?:\/\//, '');
+          displayedLink = URLFinder.shorten(it.text, MAX_URL_LENGTH).replace(/^https?:\/\//, '');
           href = it.url;
         } else if (it.type === AT_LINK) {
           elements.push(
@@ -76,7 +76,7 @@ class Linkify extends React.Component {
           );
           return;
         } else if (it.type === LOCAL_LINK) {
-          displayedLink = shorten(it.text, MAX_URL_LENGTH).replace(/^https?:\/\//, '');
+          displayedLink = URLFinder.shorten(it.text, MAX_URL_LENGTH).replace(/^https?:\/\//, '');
           href = it.uri;
         } else if (it.type === EMAIL) {
           href = `mailto:${it.address}`;

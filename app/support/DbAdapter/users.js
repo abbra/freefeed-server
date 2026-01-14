@@ -2,7 +2,7 @@ import config from 'config';
 import * as _ from 'lodash-es';
 import validator from 'validator';
 import { DateTime, Duration } from 'luxon';
-import { camelizeKeys } from 'humps';
+import humps from 'humps';
 import { z } from 'zod';
 import { sql } from 'slonik';
 
@@ -698,7 +698,7 @@ const usersTrait = (superClass) =>
           limit :limit offset :offset`,
           { limit, offset },
         )
-        .then((rows) => camelizeKeys(rows));
+        .then((rows) => humps.camelizeKeys(rows));
     }
 
     async getUserSysPrefs(userId, key, defaultValue) {

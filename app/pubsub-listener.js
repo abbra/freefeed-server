@@ -11,7 +11,7 @@ import {
   noop,
   uniqBy,
 } from 'lodash-es';
-import IoServer from 'socket.io';
+import * as IoServer from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import createDebug from 'debug';
 import Raven from 'raven';
