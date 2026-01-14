@@ -14,5 +14,7 @@ let env = process.env.NODE_ENV || 'development';
 
 const prevEnv = process.env.NODE_ENV;
 process.env.NODE_ENV = env;
-module.exports = { [env]: configModule.util.loadFileConfigs().postgres };
+const knexConfig = { [env]: configModule.util.loadFileConfigs().postgres };
 process.env.NODE_ENV = prevEnv;
+
+export default knexConfig;
