@@ -5,7 +5,7 @@ import path from 'path';
 
 import unexpected from 'unexpected';
 import unexpectedDate from 'unexpected-date';
-import { Blob, fileFrom } from 'node-fetch';
+import { fileFrom } from 'node-fetch';
 import { beforeEach } from 'mocha';
 
 import { nodeDirname } from '../../app/support/node-dirname';
