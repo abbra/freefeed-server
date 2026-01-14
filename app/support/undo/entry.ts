@@ -1,5 +1,7 @@
 import { Duration } from 'luxon';
-import * as jwt from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+
+type JwtPayload = jwt.JwtPayload;
 
 import { currentConfig } from '../app-async-context';
 import { type UUID } from '../types';
@@ -62,8 +64,8 @@ export function verifyUndoToken(
   token: string,
   issuer: UUID,
   expectedSubject?: string,
-): Promise<jwt.JwtPayload> {
-  return new Promise<jwt.JwtPayload>((resolve, reject) => {
+): Promise<JwtPayload> {
+  return new Promise<JwtPayload>((resolve, reject) => {
     jwt.verify(
       token,
       currentConfig().secret,
@@ -75,11 +77,11 @@ export function verifyUndoToken(
         if (error) {
           reject(error);
         } else if (decoded) {
-          if (expectedSubject && (decoded as jwt.JwtPayload).sub !== expectedSubject) {
+          if (expectedSubject && (decoded as JwtPayload).sub !== expectedSubject) {
             reject(new Error('Wrong subject in token'));
           }
 
-          resolve(decoded as jwt.JwtPayload);
+          resolve(decoded as JwtPayload);
         }
       },
     );
