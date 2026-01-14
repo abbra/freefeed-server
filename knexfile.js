@@ -1,3 +1,4 @@
+import './loaders/register.js';
 import configModule from 'config';
 
 let env = process.env.NODE_ENV || 'development';
