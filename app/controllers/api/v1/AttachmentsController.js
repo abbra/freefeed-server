@@ -1,6 +1,6 @@
 import createDebug from 'debug';
 import compose from 'koa-compose';
-import { isInt } from 'validator';
+import validator from 'validator';
 import { lookup } from 'mime-types';
 import { mediaType } from '@hapi/accept';
 import { difference } from 'lodash-es';
@@ -83,7 +83,7 @@ export default class AttachmentsController {
         page = 1;
 
       if (typeof qLimit !== 'undefined') {
-        if (!isInt(qLimit, { min: 1 })) {
+        if (!validator.isInt(qLimit, { min: 1 })) {
           throw new ValidationException("Invalid 'limit' value");
         }
 
@@ -95,7 +95,7 @@ export default class AttachmentsController {
       }
 
       if (typeof qPage !== 'undefined') {
-        if (!isInt(qPage, { min: 1 })) {
+        if (!validator.isInt(qPage, { min: 1 })) {
           throw new ValidationException("Invalid 'page' value");
         }
 
