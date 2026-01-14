@@ -9,7 +9,7 @@ import { createUsers } from '../helpers/users';
 import { withModifiedConfig } from '../../helpers/with-modified-config';
 import {
   jobHandler,
-  JobPayload,
+  type JobPayload,
   scheduleWelcomeDirects,
   WELCOME_DIRECT,
 } from '../../../app/support/welcome-directs';
