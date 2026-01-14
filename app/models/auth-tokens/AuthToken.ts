@@ -13,8 +13,11 @@ import { authDebug, authDebugError } from '.';
  */
 export abstract class AuthToken {
   readonly hasFullAccess: boolean = false;
+  public readonly userId: UUID;
 
-  constructor(public readonly userId: UUID) {}
+  constructor(userId: UUID) {
+    this.userId = userId;
+  }
 
   abstract tokenString(): string;
 

@@ -19,7 +19,11 @@ type UpdatePostOptions = {
 };
 
 export default class pubSub {
-  constructor(private publisher: PubSubAdapter) {}
+  private publisher: PubSubAdapter;
+
+  constructor(publisher: PubSubAdapter) {
+    this.publisher = publisher;
+  }
 
   setPublisher(publisher: PubSubAdapter) {
     this.publisher = publisher;

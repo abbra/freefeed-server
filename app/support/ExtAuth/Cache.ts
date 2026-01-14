@@ -12,11 +12,12 @@ const KEY_LENGTH = 16; // bytes
  */
 export class Cache {
   private readonly cache: TCache;
+  private readonly keyPrefix: string;
+  private readonly ttl: number;
 
-  constructor(
-    private readonly keyPrefix: string,
-    private readonly ttl: number,
-  ) {
+  constructor(keyPrefix: string, ttl: number) {
+    this.keyPrefix = keyPrefix;
+    this.ttl = ttl;
     const redisUrl = `redis://${config.redis.host}:${config.redis.port}/${config.database}`;
     this.cache = createCache({
       stores: [new Keyv({ store: new KeyvRedis(redisUrl) })],

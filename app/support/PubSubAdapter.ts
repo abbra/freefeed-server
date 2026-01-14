@@ -30,7 +30,11 @@ interface IPublisher {
 }
 
 export class PubSubAdapter {
-  constructor(private publisher: IPublisher) {}
+  private publisher: IPublisher;
+
+  constructor(publisher: IPublisher) {
+    this.publisher = publisher;
+  }
 
   ///////////////////////////////////////////////////
 
