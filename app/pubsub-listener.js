@@ -11,7 +11,7 @@ import {
   noop,
   uniqBy,
 } from 'lodash-es';
-import * as IoServer from 'socket.io';
+import { Server as SocketIOServer } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import createDebug from 'debug';
 import Raven from 'raven';
@@ -49,7 +49,7 @@ export default class PubsubListener {
     const pubClient = redisConnection();
     const subClient = pubClient.duplicate();
 
-    this.io = IoServer(server, {
+    this.io = new SocketIOServer(server, {
       allowEIO3: true,
       cors: { origin: true, credentials: true },
     });
