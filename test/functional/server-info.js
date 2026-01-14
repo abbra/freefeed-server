@@ -2,7 +2,7 @@
 import config from 'config';
 import expect from 'unexpected';
 
-import { version as serverVersion } from '../../package.json' with { type: 'json' };
+import pkg from '../../package.json' with { type: 'json' };
 import { allExternalProviders } from '../../app/support/ExtAuth';
 
 import { serverInfoResponse } from './schemaV2-helper';
@@ -17,7 +17,7 @@ describe('/v2/server-info', () => {
 
   it(`should return the server version`, async () => {
     const resp = await performJSONRequest('GET', `/v2/server-info`);
-    expect(resp.version, 'to be', serverVersion);
+    expect(resp.version, 'to be', pkg.version);
   });
 
   it(`should return the externalAuthProviders`, async () => {

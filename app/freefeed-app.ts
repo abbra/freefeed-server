@@ -13,7 +13,7 @@ import etag from '@koa/etag';
 import koaStatic from 'koa-static';
 import requestId from 'koa-requestid';
 
-import { version as serverVersion } from '../package.json' with { type: 'json' };
+import pkg from '../package.json' with { type: 'json' };
 
 import { koaServerTiming } from './support/koa-server-timing';
 import { originMiddleware } from './setup/initializers/origin';
@@ -74,7 +74,7 @@ class FreefeedApp extends Application<DefaultState, AppContext> {
     );
 
     this.use(async (ctx, next) => {
-      ctx.response.set('X-Freefeed-Server', serverVersion);
+      ctx.response.set('X-Freefeed-Server', pkg.version);
       await next();
     });
 

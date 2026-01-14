@@ -1,4 +1,4 @@
-import { version } from '../../../../package.json' with { type: 'json' };
+import pkg from '../../../../package.json' with { type: 'json' };
 import { ServerInfo } from '../../../models';
 import { allExternalProviders } from '../../../support/ExtAuth';
 
@@ -14,7 +14,7 @@ export async function serverInfo(ctx) {
   }));
   const registrationOpen = await ServerInfo.isRegistrationOpen();
   ctx.body = {
-    version,
+    version: pkg.version,
     registrationOpen,
     externalAuthProvidersInfo,
     // Deprecated and keeps for backward compatibility with clients
