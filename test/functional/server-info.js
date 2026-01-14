@@ -2,7 +2,7 @@
 import config from 'config';
 import expect from 'unexpected';
 
-import { version as serverVersion } from '../../package.json';
+import { version as serverVersion } from '../../package.json' with { type: 'json' };
 import { allExternalProviders } from '../../app/support/ExtAuth';
 
 import { serverInfoResponse } from './schemaV2-helper';

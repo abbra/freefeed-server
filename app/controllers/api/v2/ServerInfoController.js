@@ -1,4 +1,4 @@
-import { version } from '../../../../package.json';
+import { version } from '../../../../package.json' with { type: 'json' };
 import { ServerInfo } from '../../../models';
 import { allExternalProviders } from '../../../support/ExtAuth';
 

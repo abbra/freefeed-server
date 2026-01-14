@@ -7,7 +7,7 @@ import config from 'config';
 import expect from 'unexpected';
 
 import { getSingleton } from '../../app/app';
-import { version as serverVersion } from '../../package.json';
+import { version as serverVersion } from '../../package.json' with { type: 'json' };
 import cleanDB from '../dbCleaner';
 import { API_VERSION_2, API_VERSION_ACTUAL, API_VERSION_MINIMAL } from '../../app/api-versions';
 
