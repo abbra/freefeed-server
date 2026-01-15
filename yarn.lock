@@ -5979,7 +5979,7 @@ __metadata:
     lodash-es: "npm:~4.17.22"
     luxon: "npm:~3.7.2"
     mailparser: "npm:~3.9.1"
-    media-type: "npm:~0.3.1"
+    media-type: "npm:~1.0.1"
     mime-types: "npm:~3.0.2"
     mkdirp: "npm:~3.0.1"
     mocha: "npm:~11.7.5"
@@ -8003,10 +8003,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"media-type@npm:~0.3.1":
-  version: 0.3.1
-  resolution: "media-type@npm:0.3.1"
-  checksum: 10c0/2286dc5e109be41d2b2df26c53dd95226f0f5e86f956e90c743e69fbb2c9840c94078435908a39ece564921cd12965d897e762577945c5dd49ef9e503be417f7
+"media-type@npm:~1.0.1":
+  version: 1.0.1
+  resolution: "media-type@npm:1.0.1"
+  checksum: 10c0/dbdb164289788f1479eeac63af66def6dc86fedaaf44b75a69b849c18520daaf69783a5166a00247921a0f0fda68f4ea9ed062eac9d8d8dfc6ed7e3484648456
   languageName: node
   linkType: hard
 

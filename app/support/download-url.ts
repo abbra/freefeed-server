@@ -5,7 +5,7 @@ import { URL } from 'url';
 import { pipeline, finished } from 'stream/promises';
 
 import meter from 'stream-meter';
-import mediaType from 'media-type';
+import { MediaType } from 'media-type';
 import config from 'config';
 
 const sizeLimits = config.attachments.fileSizeLimitByType;
@@ -36,7 +36,7 @@ export async function downloadURL(
     throw new Error('No response body');
   }
 
-  const mType = mediaType.fromString(response.headers.get('content-type') || '');
+  const mType = MediaType.parse(response.headers.get('content-type') || '');
 
   // if (mType.type !== 'image') {
   //   throw new Error(`Unsupported content type: '${mType.asString() || '-'}'`);
@@ -64,7 +64,7 @@ export async function downloadURL(
     return {
       name: originalFileName,
       size: stats.size,
-      type: mType.asString() || 'application/octet-stream',
+      type: mType?.toString() || 'application/octet-stream',
       path: filePath,
       unlink() {
         return fs.unlink(this.path);

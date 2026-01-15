@@ -84,7 +84,7 @@
     "koa-static": "~5.0.0",
     "lodash-es": "~4.17.22",
     "luxon": "~3.7.2",
-    "media-type": "~0.3.1",
+    "media-type": "~1.0.1",
     "mime-types": "~3.0.2",
     "moment": "~2.30.1",
     "monitor-dog": "2.0.0",

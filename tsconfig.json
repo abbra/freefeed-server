@@ -21,7 +21,12 @@
     "diagnostics": true,
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
-    "typeRoots": ["./types", "node_modules/@types"]
+    "typeRoots": ["./types", "node_modules/@types"],
+    "paths": {
+      // The "media-type" package has a broken exports/types configuration where TypeScript
+      // ignores the top-level "types" field when "exports" are present.
+      "media-type": ["./node_modules/media-type/index.d.ts"]
+    }
   },
   "include": ["app", "config", "lib", "migrations", "test", "types"]
 }
