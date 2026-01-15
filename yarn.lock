@@ -2402,6 +2402,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/ejs@npm:~3.1.5":
+  version: 3.1.5
+  resolution: "@types/ejs@npm:3.1.5"
+  checksum: 10c0/13d994cf0323d7e0ad33b9384914ccd3b4cd8bf282eced3649b1621b66ee7c784ac2d120a9d7b1f43d6f873518248fb8c3221b06a649b847860b9c2389a0b0ed
+  languageName: node
+  linkType: hard
+
 "@types/etag@npm:^1.8.3":
   version: 1.8.4
   resolution: "@types/etag@npm:1.8.4"
@@ -4680,7 +4687,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ejs@npm:3.1.10, ejs@npm:~3.1.10":
+"ejs@npm:3.1.10":
   version: 3.1.10
   resolution: "ejs@npm:3.1.10"
   dependencies:
@@ -4688,6 +4695,17 @@ __metadata:
   bin:
     ejs: bin/cli.js
   checksum: 10c0/52eade9e68416ed04f7f92c492183340582a36482836b11eab97b159fcdcfdedc62233a1bf0bf5e5e1851c501f2dca0e2e9afd111db2599e4e7f53ee29429ae1
+  languageName: node
+  linkType: hard
+
+"ejs@npm:~4.0.1":
+  version: 4.0.1
+  resolution: "ejs@npm:4.0.1"
+  dependencies:
+    jake: "npm:^10.9.1"
+  bin:
+    ejs: bin/cli.js
+  checksum: 10c0/e937a011c5776e6a4775d79317caa9d5b4c64331d62214ff82de97de555ed338bc435d4fa54798ccc0a6e8a2e9096395cbeb79940ab2c3b29f11213ea79b48d6
   languageName: node
   linkType: hard
 
@@ -5883,6 +5901,7 @@ __metadata:
     "@koa/router": "npm:~13.1.1"
     "@socket.io/redis-adapter": "npm:~8.3.0"
     "@types/debug": "npm:~4.1.12"
+    "@types/ejs": "npm:~3.1.5"
     "@types/humps": "npm:~2.0.6"
     "@types/js-yaml": "npm:^4.0.9"
     "@types/jsonwebtoken": "npm:~9.0.10"
@@ -5924,7 +5943,7 @@ __metadata:
     console-stamp: "npm:~3.1.2"
     cross-env: "npm:~10.1.0"
     debug: "npm:~4.4.3"
-    ejs: "npm:~3.1.10"
+    ejs: "npm:~4.0.1"
     ejs-lint: "npm:~2.0.1"
     email-validator: "npm:~2.0.4"
     esbuild: "npm:~0.27.2"
@@ -7195,7 +7214,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jake@npm:^10.8.5":
+"jake@npm:^10.8.5, jake@npm:^10.9.1":
   version: 10.9.4
   resolution: "jake@npm:10.9.4"
   dependencies:

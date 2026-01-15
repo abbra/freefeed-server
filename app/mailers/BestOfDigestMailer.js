@@ -3,7 +3,7 @@ import util from 'util';
 import createDebug from 'debug';
 import juice from 'juice';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { render as renderEJS } from 'ejs';
+import ejs from 'ejs';
 import config from 'config';
 
 import Mailer from '../../lib/mailer';
@@ -43,7 +43,7 @@ export async function sendDailyBestOfEmail(user, data, digestDate) {
 
   await Mailer.sendMail(
     user,
-    renderEJS(config.mailer.dailyBestOfDigestMailSubject, { digestDate }),
+    ejs.render(config.mailer.dailyBestOfDigestMailSubject, { digestDate }),
     {
       digest: {
         body: emailBodyWithInlineStyles,
@@ -81,7 +81,7 @@ export async function sendWeeklyBestOfEmail(user, data, digestDate) {
 
   await Mailer.sendMail(
     user,
-    renderEJS(config.mailer.weeklyBestOfDigestMailSubject, { digestDate }),
+    ejs.render(config.mailer.weeklyBestOfDigestMailSubject, { digestDate }),
     {
       digest: {
         body: emailBodyWithInlineStyles,

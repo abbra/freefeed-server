@@ -6,7 +6,7 @@ import { tmpdir } from 'os';
 import { v4 as createUuid } from 'uuid';
 import config from 'config';
 import expect from 'unexpected';
-import { render as renderEJS } from 'ejs';
+import ejs from 'ejs';
 import { simpleParser } from 'mailparser';
 
 import {
@@ -81,7 +81,7 @@ describe('BestOfDigests', () => {
       expect(capturedMail, 'to satisfy', { envelope: { to: [user.email] } });
       const parsedMail = await simpleParser(capturedMail.response);
       expect(parsedMail, 'to satisfy', {
-        subject: renderEJS(config.mailer.dailyBestOfDigestMailSubject, { digestDate }),
+        subject: ejs.render(config.mailer.dailyBestOfDigestMailSubject, { digestDate }),
         html: expect.it(
           'to contain',
           '<div class="posts"><div class="post timeline-post" data-author="luna"',
@@ -99,7 +99,7 @@ describe('BestOfDigests', () => {
       expect(capturedMail, 'to satisfy', { envelope: { to: [user.email] } });
       const parsedMail = await simpleParser(capturedMail.response);
       expect(parsedMail, 'to satisfy', {
-        subject: renderEJS(config.mailer.weeklyBestOfDigestMailSubject, { digestDate }),
+        subject: ejs.render(config.mailer.weeklyBestOfDigestMailSubject, { digestDate }),
         html: expect.it(
           'to contain',
           '<div class="posts"><div class="post timeline-post" data-author="luna"',
