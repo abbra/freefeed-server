@@ -137,7 +137,7 @@
     "@types/mime-types": "~3.0.1",
     "@types/mocha": "~10.0.10",
     "@types/n3": "~1.26.1",
-    "@types/node": "~24.10.8",
+    "@types/node": "~22.19.6",
     "@types/pg": "~8.16.0",
     "@types/pg-format": "~1.0.5",
     "@types/raven": "~2.5.7",
@@ -185,7 +185,6 @@
     }
   },
   "resolutions": {
-    "@types/node": "~18.19.4",
     "is-generator-function": "1.0.10"
   },
   "extensionless": {
