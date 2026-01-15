@@ -1,3 +1,5 @@
+const path = require('path');
+
 module.exports = {
   extends: [
     'eslint:recommended',
@@ -26,6 +28,13 @@ module.exports = {
   'globals': {
     'NodeJS': true,
     'RequestInit': true
+  },
+  settings: {
+    'import/resolver': {
+      [path.resolve("./loaders/eslint-import-resolver.js")]:{
+        extensions: ['.js', '.ts', '.jsx']
+      }
+    }
   },
   rules: {
     'prettier/prettier': [
