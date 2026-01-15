@@ -184,9 +184,6 @@
       "built": true
     }
   },
-  "resolutions": {
-    "is-generator-function": "1.0.10"
-  },
   "extensionless": {
     "lookFor": [
       "js",
