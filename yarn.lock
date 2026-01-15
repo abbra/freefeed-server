@@ -2530,16 +2530,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/koa-passport@npm:~6.0.3":
-  version: 6.0.3
-  resolution: "@types/koa-passport@npm:6.0.3"
-  dependencies:
-    "@types/koa": "npm:*"
-    "@types/passport": "npm:*"
-  checksum: 10c0/1bb37f2fd3cb73a5075d5ac4e7501f850edd80d3ce031cb8ac3d8144dee8a2dc15ac1e0abaa4534ff4b2fbcc05b2e2a1095cfc46d25e2a59593aec9d3161b940
-  languageName: node
-  linkType: hard
-
 "@types/koa-response-time@npm:~2.1.5":
   version: 2.1.5
   resolution: "@types/koa-response-time@npm:2.1.5"
@@ -2687,15 +2677,6 @@ __metadata:
   dependencies:
     undici-types: "npm:~6.21.0"
   checksum: 10c0/0d4f305ee560e4261b3aefb186d9a42c0a07d2ab2201cc8cba24b72793a13c3b2a5f0c138fe704e9aaa7a545066d6baf0b98afc1ef7e776503af25cdfd040de0
-  languageName: node
-  linkType: hard
-
-"@types/passport@npm:*":
-  version: 1.0.17
-  resolution: "@types/passport@npm:1.0.17"
-  dependencies:
-    "@types/express": "npm:*"
-  checksum: 10c0/09039429a9178117a80880c4e7d437abc83216eac5e0c97bc6f14a03a59193386cff484931dc880693f8b13a512c366ef7a51ecd8cc1a63f17366be68161f633
   languageName: node
   linkType: hard
 
@@ -5917,7 +5898,6 @@ __metadata:
     "@types/koa": "npm:~2.15.0"
     "@types/koa-conditional-get": "npm:~2.0.4"
     "@types/koa-morgan": "npm:~1.0.9"
-    "@types/koa-passport": "npm:~6.0.3"
     "@types/koa-response-time": "npm:~2.1.5"
     "@types/koa-static": "npm:~4.0.4"
     "@types/koa__router": "npm:~12.0.5"
@@ -5981,7 +5961,6 @@ __metadata:
     koa-conditional-get: "npm:~3.0.0"
     koa-methodoverride: "npm:2.0.0"
     koa-morgan: "npm:1.0.1"
-    koa-passport: "npm:~6.0.0"
     koa-requestid: "npm:~2.3.0"
     koa-response-time: "npm:~2.1.0"
     koa-static: "npm:~5.0.0"
@@ -6006,7 +5985,6 @@ __metadata:
     npm-run-all: "npm:~4.1.5"
     numeral: "npm:~2.0.6"
     nyc: "npm:~15.1.0"
-    passport-local: "npm:1.0.0"
     pg: "npm:~8.17.1"
     pg-cursor: "npm:~2.16.1"
     pg-format: "npm:~1.0.4"
@@ -7559,15 +7537,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"koa-passport@npm:~6.0.0":
-  version: 6.0.0
-  resolution: "koa-passport@npm:6.0.0"
-  dependencies:
-    passport: "npm:^0.6.0"
-  checksum: 10c0/1def6daa2e44edc86298e4527831354da7280c66de09dbbd076c23f6702671bfee46c03e48ba91ef85d503acac42845801654be0144b8413fcd1c2229031971b
-  languageName: node
-  linkType: hard
-
 "koa-requestid@npm:~2.3.0":
   version: 2.3.0
   resolution: "koa-requestid@npm:2.3.0"
@@ -9052,33 +9021,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"passport-local@npm:1.0.0":
-  version: 1.0.0
-  resolution: "passport-local@npm:1.0.0"
-  dependencies:
-    passport-strategy: "npm:1.x.x"
-  checksum: 10c0/59becb988014921a5d6056470d9373c41db452fcf113323064f39d53baa6f184e72151bf269ca6770511f7f0260e13632dacc7b6afdbf60ebf63e90327e186d4
-  languageName: node
-  linkType: hard
-
-"passport-strategy@npm:1.x.x":
-  version: 1.0.0
-  resolution: "passport-strategy@npm:1.0.0"
-  checksum: 10c0/cf4cd32e1bf2538a239651581292fbb91ccc83973cde47089f00d2014c24bed63d3e65af21da8ddef649a8896e089eb9c3ac9ca639f36c797654ae9ee4ed65e1
-  languageName: node
-  linkType: hard
-
-"passport@npm:^0.6.0":
-  version: 0.6.0
-  resolution: "passport@npm:0.6.0"
-  dependencies:
-    passport-strategy: "npm:1.x.x"
-    pause: "npm:0.0.1"
-    utils-merge: "npm:^1.0.1"
-  checksum: 10c0/1d8651a4a1a72b84ea08c498cff9cfc209aebfe18baed4cf93292ded3f8e30a04e30b404fdfce39dfb6aa7247e205f1df43fbfd7bc7c1a67a600884359d46ee6
-  languageName: node
-  linkType: hard
-
 "passthrough-counter@npm:^1.0.0":
   version: 1.0.0
   resolution: "passthrough-counter@npm:1.0.0"
@@ -9161,13 +9103,6 @@ __metadata:
   version: 4.0.0
   resolution: "path-type@npm:4.0.0"
   checksum: 10c0/666f6973f332f27581371efaf303fd6c272cc43c2057b37aa99e3643158c7e4b2626549555d88626e99ea9e046f82f32e41bbde5f1508547e9a11b149b52387c
-  languageName: node
-  linkType: hard
-
-"pause@npm:0.0.1":
-  version: 0.0.1
-  resolution: "pause@npm:0.0.1"
-  checksum: 10c0/f362655dfa7f44b946302c5a033148852ed5d05f744bd848b1c7eae6a543f743e79c7751ee896ba519fd802affdf239a358bb2ea5ca1b1c1e4e916279f83ab75
   languageName: node
   linkType: hard
 
@@ -11518,13 +11453,6 @@ __metadata:
   version: 3.10.0
   resolution: "utility-types@npm:3.10.0"
   checksum: 10c0/79a6f7ea0cdd4fcafcec8c6e68e1e0cfa657e414b6f1696552d89ae70a3634b12ac6c16b7a0a3bfdb0a222ebc3d9a7649f2de434a78f2d65d318b50f314a85e4
-  languageName: node
-  linkType: hard
-
-"utils-merge@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "utils-merge@npm:1.0.1"
-  checksum: 10c0/02ba649de1b7ca8854bfe20a82f1dfbdda3fb57a22ab4a8972a63a34553cf7aa51bc9081cf7e001b035b88186d23689d69e71b510e610a09a4c66f68aa95b672
   languageName: node
   linkType: hard
 

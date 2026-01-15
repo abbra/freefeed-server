@@ -7,7 +7,6 @@ import { koaBody } from 'koa-body';
 import methodOverride from 'koa-methodoverride';
 import morgan from 'koa-morgan';
 import responseTime from 'koa-response-time';
-import passport from 'koa-passport';
 import conditional from 'koa-conditional-get';
 import etag from '@koa/etag';
 import koaStatic from 'koa-static';
@@ -60,7 +59,6 @@ class FreefeedApp extends Application<DefaultState, AppContext> {
       ctx.request.body ??= {};
       return next();
     });
-    this.use(passport.initialize());
     this.use(originMiddleware);
     this.use(apiVersionMiddleware);
     this.use(

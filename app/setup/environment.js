@@ -1,6 +1,5 @@
 import { access, constants } from 'fs/promises';
 
-import passport from 'koa-passport';
 import Raven from 'raven';
 import createDebug from 'debug';
 import config from 'config';
@@ -8,7 +7,6 @@ import config from 'config';
 import { currentConfig } from '../support/app-async-context';
 
 import { setSearchConfig as setPostgresSearchConfig } from './postgres';
-import { init as passportInit } from './initializers/passport';
 import { addLogglyToDebug } from './loggly';
 
 addLogglyToDebug();
@@ -36,8 +34,6 @@ if (sentryIsEnabled) {
 
 const log = createDebug('freefeed:init');
 process.env.MONITOR_PREFIX = config.monitorPrefix;
-
-passportInit(passport);
 
 const checkIfMediaDirectoriesExist = async () => {
   let gotErrors = false;
