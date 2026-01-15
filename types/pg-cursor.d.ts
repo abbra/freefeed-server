@@ -1,5 +1,5 @@
 declare module 'pg-cursor' {
-  import { QueryResult, QueryResultRow, CustomTypesConfig } from 'pg';
+  import { type QueryResult, type QueryResultRow, type CustomTypesConfig } from 'pg';
 
   interface CursorQueryConfig {
     // by default rows come out as a key/value pair for each row
