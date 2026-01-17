@@ -1,4 +1,4 @@
-import Router from '@koa/router';
+import { type Router } from '@koa/router';
 import { type DefaultState } from 'koa';
 
 import { adminRolesRequired } from '../../../controllers/middlewares/admin-only';

@@ -1,5 +1,5 @@
 /* eslint babel/semi: "error" */
-import Router from '@koa/router';
+import { Router } from '@koa/router';
 import cors from '@koa/cors';
 
 import AttachmentsRoute from './routes/api/v1/AttachmentsRoute';
@@ -94,7 +94,13 @@ export function createRouter() {
   HashtagsRoute(publicRouter);
 
   const router = new Router();
-  router.use('/v([1-9]\\d*)', publicRouter.routes(), publicRouter.allowedMethods());
+
+  router.use(
+    '/v:version',
+    validateApiVersion,
+    publicRouter.routes(),
+    publicRouter.allowedMethods(),
+  );
 
   {
     const adminRouter = new Router();
@@ -118,4 +124,16 @@ export function createRouter() {
 function fixMatchedRouteMiddleware(ctx, next) {
   ctx.state.matchedRoute = ctx.matched.find((layer) => layer.methods.includes(ctx.method)).path;
   return next();
+}
+
+// Validate API version parameter (v1, v2, etc.)
+async function validateApiVersion(ctx, next) {
+  const { version } = ctx.params;
+
+  if (!/^[1-9]\d*$/.test(version)) {
+    ctx.status = 404;
+    return;
+  }
+
+  await next();
 }

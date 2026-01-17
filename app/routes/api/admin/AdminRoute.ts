@@ -1,4 +1,4 @@
-import Router from '@koa/router';
+import { type Router } from '@koa/router';
 import { type DefaultStateExtends } from 'koa';
 
 import { listUsers, promoteModerator } from '../../../controllers/api/admin/AdminController';
