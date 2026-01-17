@@ -89,7 +89,7 @@
     "monitor-dog": "2.0.0",
     "music-metadata": "~11.10.6",
     "mv": "2.1.1",
-    "n3": "~1.26.0",
+    "n3": "~2.0.1",
     "node-cache": "~5.1.2",
     "node-fetch": "~3.3.2",
     "node-loggly-bulk": "~4.0.2",

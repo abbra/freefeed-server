@@ -5970,7 +5970,7 @@ __metadata:
     monitor-dog: "npm:2.0.0"
     music-metadata: "npm:~11.10.6"
     mv: "npm:2.1.1"
-    n3: "npm:~1.26.0"
+    n3: "npm:~2.0.1"
     node-cache: "npm:~5.1.2"
     node-fetch: "npm:~3.3.2"
     node-loggly-bulk: "npm:~4.0.2"
@@ -8348,13 +8348,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"n3@npm:~1.26.0":
-  version: 1.26.0
-  resolution: "n3@npm:1.26.0"
+"n3@npm:~2.0.1":
+  version: 2.0.1
+  resolution: "n3@npm:2.0.1"
   dependencies:
     buffer: "npm:^6.0.3"
     readable-stream: "npm:^4.0.0"
-  checksum: 10c0/e8a399f9295ccbd4008113bebdbdb15e5ef824e2d396a94d70cc7c1a94261a72869622bd1d78b3e94ea48056d5cd1b42e3b6d8acd1e0261f387e94ac6403013d
+  checksum: 10c0/f8c6de2052004c83b8870445e844ce6022d34a91807003b407c696b12e56cc8d74c987fa4103fef05a3544b4a70b44b7219500f609808181207fde34faac0a32
   languageName: node
   linkType: hard
 
