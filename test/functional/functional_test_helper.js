@@ -587,7 +587,7 @@ export function groupToProtected(group, userContext) {
   return updateGroupAsync(group, userContext, { isPrivate: '0', isProtected: '1' });
 }
 
-export async function subscribeToAsync(subscriber, victim) {
+export async function subscribeToAsync(subscriber, victim, noEvents = true) {
   let victimObj;
 
   if (victim instanceof User) {
@@ -599,7 +599,7 @@ export async function subscribeToAsync(subscriber, victim) {
     victimObj = await dbAdapter.getFeedOwnerById(victim.id ?? victim.group.id);
   }
 
-  await subscriber.user.subscribeTo(victimObj);
+  await subscriber.user.subscribeTo(victimObj, { noEvents });
 }
 
 export function unsubscribeFromAsync(unsubscriber, victim) {
