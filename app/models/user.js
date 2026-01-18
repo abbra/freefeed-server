@@ -394,7 +394,10 @@ export function addModel(dbAdapter) {
           throw new ValidationException('Password cannot be blank');
         }
 
-        this.hashedPassword = await bcrypt.hash(this.plaintextPassword, 10);
+        this.hashedPassword = await bcrypt.hash(
+          this.plaintextPassword,
+          config.performance.bcryptRounds,
+        );
         this.plaintextPassword = null;
       }
     }

@@ -54,6 +54,11 @@ declare module 'config' {
       secret: string;
     };
 
+    performance: {
+      searchQueriesTimeout: number;
+      bcryptRounds: number;
+    };
+
     postgres: {
       textSearchConfigName: string;
     };

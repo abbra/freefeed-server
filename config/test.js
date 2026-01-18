@@ -13,6 +13,7 @@ export default {
   application: { EXTRA_STOP_LIST: ['thatcreepyguy', 'nicegirlnextdoor', 'perfectstranger'] },
   media: { storage: { rootDir: '/tmp/pepyatka-media/' } },
   mailer: { transport: stubTransport },
+  performance: { bcryptRounds: 4 },
   postgres: { connection: { database: 'freefeed_test' } },
   externalAuthProviders: [
     {
