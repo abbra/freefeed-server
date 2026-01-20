@@ -6,6 +6,7 @@ import { createNodeResolver, importX } from 'eslint-plugin-import-x';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
 import { fixupPluginRules } from '@eslint/compat';
 import youDontNeedLodashUnderscore from 'eslint-plugin-you-dont-need-lodash-underscore';
+import lodash from 'eslint-plugin-lodash';
 
 export default defineConfig([
   {
@@ -27,9 +28,11 @@ export default defineConfig([
   {
     plugins: {
       'you-dont-need-lodash-underscore': fixupPluginRules(youDontNeedLodashUnderscore),
+      lodash: fixupPluginRules(lodash),
     },
     rules: {
       ...youDontNeedLodashUnderscore.configs['compatible-warn'].rules,
+      ...lodash.configs['recommended'].rules,
     },
   },
   {
@@ -45,6 +48,10 @@ export default defineConfig([
           'newlines-between': 'always',
         },
       ],
+      'lodash/prefer-lodash-method': 'off',
+      'lodash/prefer-lodash-typecheck': 'off',
+      'lodash/import-scope': ['error', 'member'],
+      'lodash/prefer-constant': 'off',
     },
   },
 
