@@ -4,6 +4,8 @@ import js from '@eslint/js';
 import ts from 'typescript-eslint';
 import { createNodeResolver, importX } from 'eslint-plugin-import-x';
 import prettierRecommended from 'eslint-plugin-prettier/recommended';
+import { fixupPluginRules } from '@eslint/compat';
+import youDontNeedLodashUnderscore from 'eslint-plugin-you-dont-need-lodash-underscore';
 
 export default defineConfig([
   {
@@ -22,6 +24,14 @@ export default defineConfig([
   ts.configs.recommended,
   importX.flatConfigs.recommended,
   importX.flatConfigs.typescript,
+  {
+    plugins: {
+      'you-dont-need-lodash-underscore': fixupPluginRules(youDontNeedLodashUnderscore),
+    },
+    rules: {
+      ...youDontNeedLodashUnderscore.configs['compatible-warn'].rules,
+    },
+  },
   {
     rules: {
       'import-x/no-extraneous-dependencies': 'error',

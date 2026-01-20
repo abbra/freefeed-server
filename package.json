@@ -119,6 +119,7 @@
   },
   "devDependencies": {
     "@babel/core": "~7.28.6",
+    "@eslint/compat": "~2.0.1",
     "@eslint/js": "~9.39.2",
     "@types/debug": "~4.1.12",
     "@types/ejs": "~3.1.5",
