@@ -119,6 +119,7 @@
   },
   "devDependencies": {
     "@babel/core": "~7.28.6",
+    "@eslint/js": "~9.39.2",
     "@types/debug": "~4.1.12",
     "@types/ejs": "~3.1.5",
     "@types/humps": "~2.0.6",
@@ -155,6 +156,7 @@
     "eslint-plugin-promise": "~7.2.1",
     "eslint-plugin-you-dont-need-lodash-underscore": "~6.14.0",
     "extensionless": "~2.0.6",
+    "globals": "~17.0.0",
     "mailparser": "~3.9.1",
     "mkdirp": "~3.0.1",
     "mocha": "~11.7.5",
@@ -168,6 +170,7 @@
     "source-map-support": "~0.5.21",
     "superagent": "~10.3.0",
     "typescript": "~5.9.3",
+    "typescript-eslint": "~8.53.1",
     "unexpected": "~13.2.1",
     "unexpected-date": "~2.0.0",
     "unexpected-map": "~3.1.0",
