@@ -21,6 +21,15 @@ export default defineConfig([
       ],
     },
   },
+  {
+    files: ['test/**'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.mocha,
+      },
+    },
+  },
   js.configs.recommended,
   ts.configs.recommended,
   importX.flatConfigs.recommended,
