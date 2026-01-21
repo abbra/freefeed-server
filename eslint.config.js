@@ -67,6 +67,7 @@ export default defineConfig([
       'no-lonely-if': 'error',
       'no-native-reassign': 'error',
       'no-nested-ternary': 'error',
+      'no-constant-condition': 'error',
       'no-restricted-properties': [
         'warn',
         {
