@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 declare module 'unexpected' {
   interface Expect {
     (subj: any, assertion: string, ...args: any[]): Promise<void>;

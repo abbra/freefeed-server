@@ -65,7 +65,10 @@ async function setDeletedStatus(userId: UUID) {
 }
 
 export async function deletePersonalInfo(userId: UUID) {
-  const userRow = await dbAdapter.database.getRow(`select * from users where uid = ?`, userId);
+  const userRow = await dbAdapter.database.getRow<{ username: string }>(
+    `select * from users where uid = ?`,
+    userId,
+  );
 
   // Update all 'users' row fields to their default values except for some fields
 

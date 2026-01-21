@@ -3,12 +3,12 @@ import { intersection } from 'lodash-es';
 
 import { List, type ListLike } from '../open-lists';
 
-export function prepareModelPayload<P extends Record<string, any>>(
+export function prepareModelPayload<P extends Record<string, unknown>>(
   payload: P,
   namesMapping: Record<string, string>,
-  valuesMapping: Record<string, (val: any, p?: P) => any>,
-): Record<string, any> {
-  const result: Record<string, any> = {};
+  valuesMapping: Record<string, (val: unknown, p?: P) => unknown>,
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
   const keys = intersection(Object.keys(payload), Object.keys(namesMapping));
 
   for (const key of keys) {
@@ -23,8 +23,8 @@ export function prepareModelPayload<P extends Record<string, any>>(
   return result;
 }
 
-export function initObject<C, A extends Record<string, any>, P extends Record<string, any>>(
-  classDef: new (args: Record<string, any>) => C,
+export function initObject<C, A extends Record<string, unknown>, P extends Record<string, unknown>>(
+  classDef: new (args: Record<string, unknown>) => C,
   attrs: A,
   id: string,
   params: P,

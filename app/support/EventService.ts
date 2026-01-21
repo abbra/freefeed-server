@@ -894,7 +894,7 @@ export class EventService {
     await Promise.all(promises);
   }
 
-  static async _notifyGroupAdmins(group: Group, adminNotifier: (admin: User) => Promise<any>) {
+  static async _notifyGroupAdmins(group: Group, adminNotifier: (admin: User) => Promise<unknown>) {
     const groupAdminsIds = await dbAdapter.getGroupAdministratorsIds(group.id);
     const admins = await dbAdapter.getUsersByIds(groupAdminsIds);
 

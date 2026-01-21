@@ -18,7 +18,7 @@ const audVersion = 1;
 
 export const tokenAudience = `freefeed:undo:v${audVersion}`;
 
-export abstract class UndoEntry<Subj extends string, Payload extends {} = {}> {
+export abstract class UndoEntry<Subj extends string, Payload extends object = object> {
   public readonly subject: Subj;
 
   constructor(subject: Subj) {

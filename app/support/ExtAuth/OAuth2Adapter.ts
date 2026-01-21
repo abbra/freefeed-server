@@ -150,7 +150,7 @@ export class OAuth2Adapter extends Adapter<Query> {
     const access_token = await this.fetchAccessToken(code, redirectURL, token_endpoint);
 
     try {
-      const resp = await fetchJSON<any>(userinfo_endpoint, {
+      const resp = await fetchJSON<object>(userinfo_endpoint, {
         headers: {
           Authorization: `Bearer ${access_token}`,
           Accept: 'application/json',
@@ -168,7 +168,7 @@ export class OAuth2Adapter extends Adapter<Query> {
       const result: Partial<Profile> = {};
 
       for (const field of ['id', 'name', 'email', 'pictureURL']) {
-        // @ts-ignore
+        // @ts-expect-error dynamic field assignment into Partial<Profile>
         result[field] = _get(resp, userInfoFields[field], null);
       }
 

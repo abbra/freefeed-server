@@ -48,11 +48,11 @@ export class List<T> {
     return List.empty();
   }
 
-  static empty<X = any>() {
+  static empty<X = unknown>() {
     return new List<X>();
   }
 
-  static everything<X = any>() {
+  static everything<X = unknown>() {
     return new List<X>([], false);
   }
 
@@ -127,10 +127,10 @@ export class List<T> {
     }
 
     // unreachable
-    return new List();
+    return new List<never>();
   }
 
-  static equal(list1: any, list2: any) {
+  static equal(list1: ListLike<unknown>, list2: ListLike<unknown>) {
     list1 = List.from(list1);
     list2 = List.from(list2);
 

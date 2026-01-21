@@ -13,7 +13,7 @@ describe('Open lists', () => {
   });
 
   it('should create "everything" list', () => {
-    const list = new List<any>([], false);
+    const list = new List<number>([], false);
     expect(list.isEmpty(), 'to be false');
     expect(list.isEverything(), 'to be true');
     expect(list.items, 'to be empty');
@@ -52,8 +52,8 @@ describe('Open lists', () => {
   describe('operations', () => {
     const runTests = (
       opString: string,
-      op: (l1: List<any>, l2: List<any>) => List<any>,
-      tests: List<any>[][],
+      op: (l1: List<unknown>, l2: List<unknown>) => List<unknown>,
+      tests: List<unknown>[][],
     ) => {
       for (const [a, b, c] of tests) {
         it(`${str(a)} ${opString} ${str(b)} = ${str(c)}`, () => {
@@ -91,6 +91,6 @@ describe('Open lists', () => {
   });
 });
 
-function str(list: List<any>) {
+function str(list: List<unknown>) {
   return `${list.inclusive ? ' ' : '^'}[${list.items.join()}]`;
 }

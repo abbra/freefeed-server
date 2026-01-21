@@ -22,7 +22,7 @@ export function createUserAsync(
 export function performJSONRequest(
   method: string,
   path: string,
-  body?: any,
+  body?: unknown,
   header?: Record<string, string>,
 ): Promise<{ __httpCode: number }>;
 

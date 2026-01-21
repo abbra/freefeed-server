@@ -106,7 +106,7 @@ const adminsTrait = (superClass: typeof DbAdapter) =>
         action_name: AdminAction;
         admin_username: string;
         target_username: string | null;
-        details: any;
+        details: object;
       }[]
     > {
       return this.database.getAll(

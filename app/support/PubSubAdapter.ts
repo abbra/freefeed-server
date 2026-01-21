@@ -26,7 +26,7 @@ export const eventNames = {
 export type EventName = (typeof eventNames)[keyof typeof eventNames];
 
 interface IPublisher {
-  publish(eventName: string, payload: string): Promise<any>;
+  publish(eventName: string, payload: string): Promise<void>;
 }
 
 export class PubSubAdapter {

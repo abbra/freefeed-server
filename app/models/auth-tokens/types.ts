@@ -30,7 +30,7 @@ export type AppTokenLogPayload = {
   request: string;
   ip: IPAddr;
   user_agent: string;
-  extra: any;
+  extra: object;
 };
 
 export type SessionRecord = {

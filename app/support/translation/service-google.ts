@@ -21,12 +21,10 @@ export async function translate(
   const body = await resp.json();
 
   if (!resp.ok) {
-    throw new Error(
-      (body && (body as any).error?.message) || `Translation service error ${resp.status}`,
-    );
+    throw new Error((body && body.error?.message) || `Translation service error ${resp.status}`);
   }
 
-  const [result] = (body as any).data.translations;
+  const [result] = body.data.translations;
   return {
     translatedText: result.translatedText,
     detectedLang: result.detectedSourceLanguage,

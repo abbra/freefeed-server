@@ -35,10 +35,14 @@ import { notificationsDigestRecipientSchema } from './users';
 type QueryBindings = readonly Knex.RawBinding[] | Knex.ValueDict | Knex.RawBinding;
 
 type CommonDBHelpers = {
-  getAll<R = any>(sql: string, bindings?: QueryBindings): Promise<R[]>;
-  getRow<R = any>(sql: string, bindings?: QueryBindings): Promise<R>;
-  getOne<V = any>(sql: string, bindings?: QueryBindings, column?: string | number): Promise<V>;
-  getCol<V = any>(sql: string, bindings?: QueryBindings, column?: string | number): Promise<V[]>;
+  getAll<R = unknown>(sql: string, bindings?: QueryBindings): Promise<R[]>;
+  getRow<R = unknown>(sql: string, bindings?: QueryBindings): Promise<R>;
+  getOne<V = unknown>(sql: string, bindings?: QueryBindings, column?: string | number): Promise<V>;
+  getCol<V = unknown>(
+    sql: string,
+    bindings?: QueryBindings,
+    column?: string | number,
+  ): Promise<V[]>;
 };
 
 type TrxDBHelpers = {
@@ -413,7 +417,7 @@ export class DbAdapter {
   ): Promise<UUID[]>;
 
   // Jobs
-  createJob<T extends {}>(
+  createJob<T extends object>(
     name: string,
     payload: T,
     params: { unlockAt?: Date | number; uniqKey?: string },

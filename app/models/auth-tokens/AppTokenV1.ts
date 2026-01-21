@@ -157,7 +157,7 @@ export class AppTokenV1 extends AuthToken {
     });
   }
 
-  static addLogPayload(ctx: Context, payload: any) {
+  static addLogPayload(ctx: Context, payload: object) {
     ctx.state.appTokenLogPayload = {
       ...(ctx.state.appTokenLogPayload || {}),
       ...payload,
@@ -221,7 +221,7 @@ export class AppTokenV1 extends AuthToken {
     return this[database].deleteAppToken(this.id);
   }
 
-  checkRestrictions({ headers, remoteIP }: { headers: any; remoteIP: string }) {
+  checkRestrictions({ headers, remoteIP }: { headers: { origin?: string }; remoteIP: string }) {
     const { netmasks, origins } = this.restrictions;
 
     if (netmasks.length > 0) {
@@ -232,7 +232,7 @@ export class AppTokenV1 extends AuthToken {
       }
     }
 
-    if (origins.length > 0 && !origins.includes(headers.origin)) {
+    if (origins.length > 0 && !origins.includes(headers.origin ?? '')) {
       throw new Error(`app token is not allowed from origin ${headers.origin}`);
     }
   }

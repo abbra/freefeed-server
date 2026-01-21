@@ -529,7 +529,7 @@ function tmpFileVariant(filePath: string, variant: string, ext: string): string 
  * changes. Otherwise return false.
  */
 async function canUseJpegOriginal(localFilePath: string): Promise<boolean> {
-  const tags = await exiftool.readRaw<Record<string, any>>(localFilePath, {
+  const tags = await exiftool.readRaw<Record<string, unknown>>(localFilePath, {
     readArgs: ['-G1', '-n'],
   });
   const {
