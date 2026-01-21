@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* global $pg_database */
 import cleanDB from '../../dbCleaner';
 import { dbAdapter, User, Group } from '../../../app/models';

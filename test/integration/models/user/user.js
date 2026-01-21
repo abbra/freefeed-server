@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* global $pg_database, $should */
 import { expect } from 'chai';
 

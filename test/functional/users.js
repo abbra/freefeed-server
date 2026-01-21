@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* global $pg_database, $should */
 import jwt from 'jsonwebtoken';
 import * as _ from 'lodash-es';

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* global $pg_database */
 import unexpected from 'unexpected';
 import request from 'superagent';
