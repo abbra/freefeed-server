@@ -448,7 +448,10 @@ export function addModel(dbAdapter) {
         'preferences',
       ];
 
-      if (params.hasOwnProperty('screenName') && params.screenName != this.screenName) {
+      if (
+        Object.prototype.hasOwnProperty.call(params, 'screenName') &&
+        params.screenName != this.screenName
+      ) {
         if (!this.screenNameIsValid(params.screenName)) {
           throw new ValidationException(
             `"${params.screenName}" is not a valid display name. Names must be between 3 and 25 characters long.`,
@@ -458,12 +461,15 @@ export function addModel(dbAdapter) {
         payload.screenName = params.screenName;
       }
 
-      if (params.hasOwnProperty('email') && params.email != this.email) {
+      if (Object.prototype.hasOwnProperty.call(params, 'email') && params.email != this.email) {
         await User.validateEmail(params.email);
         payload.email = params.email;
       }
 
-      if (params.hasOwnProperty('isPrivate') && params.isPrivate != this.isPrivate) {
+      if (
+        Object.prototype.hasOwnProperty.call(params, 'isPrivate') &&
+        params.isPrivate != this.isPrivate
+      ) {
         if (params.isPrivate != '0' && params.isPrivate != '1') {
           // ???
           throw new ValidationException('bad input');
@@ -475,17 +481,23 @@ export function addModel(dbAdapter) {
       // Compatibility with pre-isProtected clients:
       // if there is only isPrivate param then isProtected becomes the same as isPrivate
       if (
-        params.hasOwnProperty('isPrivate') &&
-        (!params.hasOwnProperty('isProtected') || params.isPrivate === '1')
+        Object.prototype.hasOwnProperty.call(params, 'isPrivate') &&
+        (!Object.prototype.hasOwnProperty.call(params, 'isProtected') || params.isPrivate === '1')
       ) {
         params.isProtected = params.isPrivate;
       }
 
-      if (params.hasOwnProperty('isProtected') && params.isProtected != this.isProtected) {
+      if (
+        Object.prototype.hasOwnProperty.call(params, 'isProtected') &&
+        params.isProtected != this.isProtected
+      ) {
         payload.isProtected = params.isProtected;
       }
 
-      if (params.hasOwnProperty('description') && params.description != this.description) {
+      if (
+        Object.prototype.hasOwnProperty.call(params, 'description') &&
+        params.description != this.description
+      ) {
         if (!User.descriptionIsValid(params.description)) {
           throw new ValidationException('Description is too long');
         }
@@ -493,7 +505,7 @@ export function addModel(dbAdapter) {
         payload.description = params.description;
       }
 
-      if (params.hasOwnProperty('frontendPreferences')) {
+      if (Object.prototype.hasOwnProperty.call(params, 'frontendPreferences')) {
         // Validate the input object
         if (!User.frontendPreferencesIsValid(params.frontendPreferences)) {
           throw new ValidationException('Invalid frontendPreferences');
@@ -512,7 +524,7 @@ export function addModel(dbAdapter) {
         payload.frontendPreferences = preferences;
       }
 
-      if (params.hasOwnProperty('preferences')) {
+      if (Object.prototype.hasOwnProperty.call(params, 'preferences')) {
         if (!_.isPlainObject(params.preferences)) {
           throw new ValidationException(`Invalid 'preferences': must be a plain object`);
         }
@@ -675,7 +687,7 @@ export function addModel(dbAdapter) {
       const timelineId = await dbAdapter.getUserNamedFeedId(this.id, name);
 
       if (!timelineId) {
-        console.log(`Timeline '${name}' not found for user`, this); // eslint-disable-line no-console
+        console.log(`Timeline '${name}' not found for user`, this);
         return null;
       }
 
