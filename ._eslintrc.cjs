@@ -1,11 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  extends: [
-    'eslint:recommended',
-    'plugin:import/typescript',
-    'plugin:prettier/recommended',
-  ],
+  extends: ['eslint:recommended', 'plugin:import/typescript', 'plugin:prettier/recommended'],
   parser: '@typescript-eslint/parser',
   plugins: [
     'babel',
@@ -25,16 +21,16 @@ module.exports = {
     sourceType: 'module',
     ecmaFeatures: { jsx: true },
   },
-  'globals': {
-    'NodeJS': true,
-    'RequestInit': true
+  globals: {
+    NodeJS: true,
+    RequestInit: true,
   },
   settings: {
     'import/resolver': {
-      [path.resolve("./loaders/eslint-import-resolver.js")]:{
-        extensions: ['.js', '.ts', '.jsx']
-      }
-    }
+      [path.resolve('./loaders/eslint-import-resolver.js')]: {
+        extensions: ['.js', '.ts', '.jsx'],
+      },
+    },
   },
   rules: {
     'prettier/prettier': [
@@ -67,7 +63,7 @@ module.exports = {
     'import/no-named-as-default': 2,
     'import/no-named-as-default-member': 2,
     'import/no-unresolved': 2,
-    'import/consistent-type-specifier-style': ["error", "prefer-inline"],
+    'import/consistent-type-specifier-style': ['error', 'prefer-inline'],
     'import/order': [
       2,
       {
