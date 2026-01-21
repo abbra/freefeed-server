@@ -1,4 +1,3 @@
-/* eslint babel/semi: "error" */
 import consoleStamp from 'console-stamp';
 import monitor from 'monitor-dog';
 

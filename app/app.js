@@ -1,4 +1,3 @@
-/* eslint babel/semi: "error" */
 import http from 'http';
 import util from 'util';
 

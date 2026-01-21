@@ -1,4 +1,3 @@
-/* eslint babel/semi: "error" */
 import GraphemeBreaker from 'grapheme-breaker';
 import * as _ from 'lodash-es';
 import config from 'config';

@@ -1,4 +1,3 @@
-/* eslint babel/semi: "error" */
 import knexjs from 'knex';
 import createDebug from 'debug';
 import config from 'config';

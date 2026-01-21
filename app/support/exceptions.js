@@ -1,4 +1,3 @@
-/* eslint babel/semi: "error" */
 import createDebug from 'debug';
 import Raven from 'raven';
 import config from 'config';

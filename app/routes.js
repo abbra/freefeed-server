@@ -1,4 +1,3 @@
-/* eslint babel/semi: "error" */
 import { Router } from '@koa/router';
 import cors from '@koa/cors';
 

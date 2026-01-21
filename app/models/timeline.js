@@ -1,4 +1,3 @@
-/* eslint babel/semi: "error" */
 import * as _ from 'lodash-es';
 
 import {
