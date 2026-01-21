@@ -54,7 +54,6 @@ process.stdout.write(`\n`);
     process.stdout.write(`Processing posts starting from ${lastUID}...\n`);
     let processed = 0;
 
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const start = Date.now();
 

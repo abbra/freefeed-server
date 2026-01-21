@@ -123,7 +123,6 @@ describe('Text translation', () => {
 
     it(`should allow to translate the same text multiple times thanks to caching`, async () => {
       for (let i = 0; i < 5; i++) {
-        // eslint-disable-next-line no-await-in-loop
         const result = await translatePost(post.id, mars);
         expect(result, 'to satisfy', { __httpCode: 200 });
       }

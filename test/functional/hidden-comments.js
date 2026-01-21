@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* global $database, $pg_database */
 import expect from 'unexpected';
 

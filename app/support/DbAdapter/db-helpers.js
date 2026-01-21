@@ -7,9 +7,9 @@
 export function withDbHelpers(db) {
   // db is a function with additional properties, so extending is tricky
   const wrapper = Object.assign(function (...args) {
-    return db.apply(this, args); // eslint-disable-line prefer-reflect
+    return db.apply(this, args);
   }, dbHelpers);
-  Object.setPrototypeOf(wrapper, db); // eslint-disable-line prefer-reflect
+  Object.setPrototypeOf(wrapper, db);
   return wrapper;
 }
 
@@ -66,7 +66,6 @@ const dbHelpers = {
    * @returns {Promise<unknown>}
    */
   transaction(action) {
-    // eslint-disable-next-line prefer-reflect
     return Object.getPrototypeOf(this).transaction((trx) => action(withDbHelpers(trx)));
   },
 };

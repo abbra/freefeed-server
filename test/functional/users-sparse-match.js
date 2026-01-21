@@ -1,4 +1,3 @@
-
 import expect from 'unexpected';
 
 import cleanDB from '../dbCleaner';

@@ -35,7 +35,6 @@ process.stdout.write(`\n`);
     process.stdout.write(`Processing posts...\n`);
     let lastUID = ZERO_UID;
 
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const longIds = await dbAdapter.database.getCol(
         `SELECT uid 
@@ -69,7 +68,6 @@ process.stdout.write(`\n`);
     process.stdout.write(`Processing comments...\n`);
     lastUID = ZERO_UID;
 
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const rows = await dbAdapter.database.getAll(
         `SELECT uid as comment_id, post_id

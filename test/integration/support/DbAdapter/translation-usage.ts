@@ -1,5 +1,3 @@
-/* eslint-disable no-await-in-loop */
-
 import expect from 'unexpected';
 
 import cleanDB from '../../../dbCleaner';

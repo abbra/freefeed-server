@@ -13,7 +13,7 @@ declare module 'pg-cursor' {
   export default class Cursor {
     constructor(text: string, values?: unknown[], config?: CursorQueryConfig);
     read(
-      rowCount: Number,
+      rowCount: number,
       callback: (err: Error, rows: QueryResultRow[], result: QueryResult) => void,
     ): void;
   }

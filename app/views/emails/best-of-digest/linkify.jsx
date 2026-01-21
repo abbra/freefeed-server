@@ -32,7 +32,6 @@ class Linkify extends React.Component {
       return React.createElement('span', props, displayedLink);
     }
 
-    // eslint-disable-line no-else-return
     if (href.match(FRIENDFEED_POST)) {
       props['className'] = 'archive-post';
       props['href'] = '#';

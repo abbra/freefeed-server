@@ -202,7 +202,6 @@ async function adaptUsername(username) {
     return '';
   }
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     if (isValidUsername(username)) {
       // eslint-disable-next-line no-await-in-loop

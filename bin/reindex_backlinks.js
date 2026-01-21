@@ -70,7 +70,6 @@ process.stdout.write(`\n`);
       process.stdout.write(`Processing ${table} starting from ${lastUID}...\n`);
       let indexed = 0;
 
-      // eslint-disable-next-line no-constant-condition
       while (true) {
         let rows;
 
@@ -115,7 +114,6 @@ process.stdout.write(`\n`);
 
         let attemptsLeft = retries;
 
-        // eslint-disable-next-line no-constant-condition
         while (true) {
           const start = Date.now();
 
