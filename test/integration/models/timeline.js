@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $pg_database, $should */
 import cleanDB from '../../dbCleaner';
 import { dbAdapter, Timeline, User } from '../../../app/models';

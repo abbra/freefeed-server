@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 import { createHash } from 'crypto';
 import { promises as fs } from 'fs';
 import { tmpdir } from 'os';

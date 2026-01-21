@@ -1,4 +1,3 @@
-/* eslint-env mocha */
 import http from 'http';
 import { stringify as qsStringify } from 'querystring';
 import util from 'util';

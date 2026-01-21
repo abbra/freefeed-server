@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $pg_database */
 import request from 'superagent';
 import expect from 'unexpected';

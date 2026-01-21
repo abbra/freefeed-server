@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $database */
 
 import expect from 'unexpected';

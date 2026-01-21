@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 import expect from 'unexpected';
 
 import { extractTitle, textToHTML } from '../../../app/support/rss-text-parser';

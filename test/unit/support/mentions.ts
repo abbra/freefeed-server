@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 import * as _ from 'lodash-es';
 import expect from 'unexpected';
 

@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $database, $pg_database */
 import { Readable } from 'stream';
 

@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $pg_database, $should */
 import { expect } from 'chai';
 

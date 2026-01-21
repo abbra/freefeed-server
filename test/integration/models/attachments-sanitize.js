@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $pg_database */
 import { join } from 'path';
 import { promises as fsPromises } from 'fs';

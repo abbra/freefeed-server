@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 import config from 'config';
 import expect from 'unexpected';
 

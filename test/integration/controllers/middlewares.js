@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $pg_database */
 import compose from 'koa-compose';
 import unexpected from 'unexpected';

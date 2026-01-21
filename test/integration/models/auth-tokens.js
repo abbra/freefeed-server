@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $pg_database */
 import * as _ from 'lodash-es';
 import unexpected from 'unexpected';

@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 import { readFile, writeFile } from 'fs/promises';
 import { join, resolve } from 'path';
 import { tmpdir } from 'os';

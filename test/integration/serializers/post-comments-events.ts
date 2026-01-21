@@ -1,5 +1,4 @@
 /* eslint-disable no-await-in-loop */
-/* eslint-env node, mocha */
 
 import expect from 'unexpected';
 

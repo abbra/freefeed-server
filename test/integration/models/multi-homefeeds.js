@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $pg_database */
 import expect from 'unexpected';
 import { toPlainObject } from 'lodash-es';

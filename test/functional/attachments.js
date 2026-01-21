@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $pg_database, $database */
 import fs from 'fs';
 import path from 'path';

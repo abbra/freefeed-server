@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 import { readdirSync, statSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
