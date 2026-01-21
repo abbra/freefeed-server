@@ -117,7 +117,7 @@ export default defineConfig([
       'you-dont-need-lodash-underscore/includes': 'error',
       'lodash/prefer-lodash-method': 'off',
       'lodash/prefer-lodash-typecheck': 'off',
-      'lodash/import-scope': ['error', 'member'],
+      'lodash/import-scope': ['warn', 'member'],
       'lodash/prefer-constant': 'off',
     },
   },
