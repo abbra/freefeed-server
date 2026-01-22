@@ -120,6 +120,8 @@ export default defineConfig([
       'lodash/prefer-lodash-typecheck': 'off',
       'lodash/import-scope': ['warn', 'member'],
       'lodash/prefer-constant': 'off',
+      'lodash/prefer-noop': 'off',
+      'lodash/prefer-lodash-chain': 'off',
     },
   },
 
