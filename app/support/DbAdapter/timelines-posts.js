@@ -546,11 +546,17 @@ const timelinesPostsTrait = (superClass) =>
           results[comm.post_id].omittedComments > 0 ? folding.headComments : 0;
 
         if (params.foldComments && results[comm.post_id].omittedComments > 0) {
-          let omittedCLikes = results[comm.post_id].post.hasOwnProperty('omittedCommentLikes')
+          let omittedCLikes = Object.prototype.hasOwnProperty.call(
+            results[comm.post_id].post,
+            'omittedCommentLikes',
+          )
             ? results[comm.post_id].post.omittedCommentLikes
             : results[comm.post_id].post.commentLikes;
 
-          let omittedOwnCLikes = results[comm.post_id].post.hasOwnProperty('omittedOwnCommentLikes')
+          let omittedOwnCLikes = Object.prototype.hasOwnProperty.call(
+            results[comm.post_id].post,
+            'omittedOwnCommentLikes',
+          )
             ? results[comm.post_id].post.omittedOwnCommentLikes
             : results[comm.post_id].post.ownCommentLikes;
 
@@ -565,7 +571,7 @@ const timelinesPostsTrait = (superClass) =>
       }
 
       for (const post of postsData) {
-        if (!results[post.uid].post.hasOwnProperty('omittedCommentLikes')) {
+        if (!Object.prototype.hasOwnProperty.call(results[post.uid].post, 'omittedCommentLikes')) {
           results[post.uid].post.omittedCommentLikes = 0;
           results[post.uid].post.omittedOwnCommentLikes = 0;
         }

@@ -159,7 +159,7 @@ const groupAdminTrait = (superClass) =>
 
       const res = {};
       rows.forEach(({ group_id, user_id }) => {
-        if (!res.hasOwnProperty(group_id)) {
+        if (!Object.prototype.hasOwnProperty.call(res, group_id)) {
           res[group_id] = [];
         }
 

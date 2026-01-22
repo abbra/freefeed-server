@@ -443,7 +443,7 @@ describe('PostsController', () => {
             authToken: ctx.authToken,
           })
           .end((err, res) => {
-            _.isUndefined(res).should.be.false;
+            res.should.not.be.empty;
             res.body.should.not.be.empty;
             res.body.should.have.property('posts');
             res.body.posts.should.have.property('body');

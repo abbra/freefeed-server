@@ -49,7 +49,7 @@ export default class AttachmentsController {
           users: await serializeUsersByIds([newAttachment.userId], user.id),
         };
       } catch (e) {
-        if (e.message && e.message.indexOf('Corrupt image') > -1) {
+        if (e.message && e.message.includes('Corrupt image')) {
           this.debug(e.message);
 
           const errorDetails = { message: 'Corrupt image' };
@@ -57,7 +57,7 @@ export default class AttachmentsController {
           return;
         }
 
-        if (e.message && e.message.indexOf('LCMS encoding') > -1) {
+        if (e.message && e.message.includes('LCMS encoding')) {
           this.debug(`GraphicsMagick should be configured with --with-lcms2 option`);
 
           const errorDetails = { status: 500, message: 'Internal server error' };

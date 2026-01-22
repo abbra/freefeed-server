@@ -188,7 +188,9 @@ export async function serializeUsersByIds(userIds, viewerId = null, withAdmins =
       if (blockedInGroups.includes(id)) {
         obj.theyDid.push('block');
       } else if (obj.isRestricted === '1') {
-        obj.administrators.includes(viewerId) && obj.youCan.push('post');
+        if (obj.administrators.includes(viewerId)) {
+          obj.youCan.push('post');
+        }
       } else if (obj.isPrivate === '0' || viewerSubscribed) {
         obj.youCan.push('post');
       }

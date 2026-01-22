@@ -6,10 +6,10 @@ export async function authenticateUser(username, clearPassword) {
   try {
     let user;
 
-    if (username.indexOf('@') === -1) {
-      user = await dbAdapter.getUserByUsername(username.trim());
-    } else {
+    if (username.includes('@')) {
       user = await dbAdapter.getUserByEmail(username.trim());
+    } else {
+      user = await dbAdapter.getUserByUsername(username.trim());
     }
 
     if (user && (await user.isFrozen())) {

@@ -80,7 +80,9 @@ export async function serializeCommentsFull(
       ser.hasOwnLike = commentLikesData.has_own_like;
     }
 
-    ser.createdBy && userIds.add(ser.createdBy);
+    if (ser.createdBy) {
+      userIds.add(ser.createdBy);
+    }
 
     return ser;
   });

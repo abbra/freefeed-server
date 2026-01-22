@@ -640,7 +640,7 @@ export async function mutualSubscriptions(userContexts) {
 }
 
 export async function createAndReturnPostToFeed(feed, userContext, body) {
-  const destinations = _.isArray(feed) ? _.map(feed, 'username') : [feed.username];
+  const destinations = Array.isArray(feed) ? feed.map((f) => f.username) : [feed.username];
   const response = await postJson('/v1/posts', {
     post: { body },
     meta: { feeds: destinations },
@@ -1102,7 +1102,7 @@ export async function fetchTimeline(path, viewerContext = null) {
  */
 export function noFieldOrEmptyArray(name) {
   return function (obj) {
-    return !(name in obj) || (_.isArray(obj[name]) && obj[name].length === 0);
+    return !(name in obj) || (Array.isArray(obj[name]) && obj[name].length === 0);
   };
 }
 
@@ -1202,7 +1202,11 @@ export function withEmailCapture({ clearBeforeEach = true, multiple = false } = 
       })),
   );
   after(removeMailListener);
-  clearBeforeEach && beforeEach(() => (ref.current = multiple ? [] : null));
+
+  if (clearBeforeEach) {
+    beforeEach(() => (ref.current = multiple ? [] : null));
+  }
+
   return ref;
 }
 

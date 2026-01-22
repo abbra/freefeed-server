@@ -160,7 +160,7 @@ export const authFinish = compose([
 
           if (state.profile.nickName) {
             username = state.profile.nickName.toLowerCase().replace(/[^a-z0-9]/gi, '');
-          } else if (state.profile.email && state.profile.email.indexOf('@') !== -1) {
+          } else if (state.profile.email && state.profile.email.includes('@')) {
             username = state.profile.email
               .split('@')[0]
               .toLowerCase()

@@ -107,7 +107,7 @@ export class OAuth2Adapter extends Adapter<Query> {
       display: startParams.display || 'popup',
       prompt: startParams.mode === MODE_CONNECT ? 'consent' : '',
     };
-    const join = authUrl.indexOf('?') !== -1 ? '&' : '?';
+    const join = authUrl.includes('?') ? '&' : '?';
     return authUrl + join + qsEncode(urlParams);
   }
 

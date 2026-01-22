@@ -28,7 +28,7 @@ type LikersResult = {
   rows: LikerRow[];
 };
 
-interface RecipientRow extends UserRow {}
+type RecipientRow = UserRow;
 
 type RecipientsResult = {
   rows: RecipientRow[];

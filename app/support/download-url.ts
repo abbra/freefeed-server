@@ -51,10 +51,7 @@ export async function downloadURL(
   }
 
   try {
-    // We use 'as' here because of weird Node's typing
-    // see https://stackoverflow.com/a/66629140
-    // @ts-expect-error
-    const inStream = response.body as NodeJS.ReadableStream;
+    const inStream = response.body;
     const outStream = createWriteStream(filePath, { flags: 'w' });
     await pipeline(inStream, meter(sizeLimit), outStream);
     await finished(outStream); // wait for the file to be written and closed

@@ -251,7 +251,7 @@ const usersTrait = (superClass) =>
     async getUsersByIds(userIds) {
       const users = await this.getFeedOwnersByIds(userIds);
 
-      _.each(users, (user) => {
+      users.forEach((user) => {
         if (!(user instanceof User)) {
           throw new Error(`Expected User, got ${user.constructor.name}`);
         }
@@ -555,6 +555,7 @@ const usersTrait = (superClass) =>
       `;
 
       /** @type {DbAdapter} */
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const db = this;
       const pool = await db.getSlonik();
 

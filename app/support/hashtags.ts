@@ -7,7 +7,7 @@ import { tokenize } from './tokenize-text';
  * Extract all unique hashtags as strings from the given text
  */
 export function extractHashtags(text: string) {
-  if (typeof text !== 'string' || text === '' || text.indexOf('#') < 0) {
+  if (typeof text !== 'string' || text === '' || !text.includes('#')) {
     return [];
   }
 

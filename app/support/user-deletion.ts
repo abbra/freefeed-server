@@ -246,7 +246,10 @@ export async function deleteSubscriptions(userId: UUID, runUntil: Date) {
   await forEachAsync(userIds, async (id: UUID) => {
     if (new Date() < runUntil) {
       const friend = await dbAdapter.getUserById(id);
-      friend && (await user.unsubscribeFrom(friend));
+
+      if (friend) {
+        await user.unsubscribeFrom(friend);
+      }
     }
   });
 }
@@ -272,11 +275,12 @@ export async function deleteNotifications(userId: UUID) {
   const user = await dbAdapter.getUserById(userId);
 
   // Remove user's notifications caused by the user themself
-  user &&
-    (await dbAdapter.database.raw(
+  if (user) {
+    await dbAdapter.database.raw(
       `delete from events where user_id = ? and created_by_user_id = user_id`,
       user.intId,
-    ));
+    );
+  }
 }
 
 export async function deleteAppTokens(userId: UUID, runUntil: Date) {
@@ -317,15 +321,17 @@ export async function deleteArchives(userId: UUID) {
 
 export async function anonymizeInvitations(userId: UUID) {
   const user = await dbAdapter.getUserById(userId);
-  user &&
-    (await dbAdapter.database.raw(
+
+  if (user) {
+    await dbAdapter.database.raw(
       `update invitations set
           message='',
           lang='en',
           recommendations='{}'
        where author = ?`,
       user.intId,
-    ));
+    );
+  }
 }
 
 export async function deleteLocalBumps(userId: UUID) {
@@ -334,8 +340,10 @@ export async function deleteLocalBumps(userId: UUID) {
 
 export async function deleteSentEmailsLog(userId: UUID) {
   const user = await dbAdapter.getUserById(userId);
-  user &&
-    (await dbAdapter.database.raw(`delete from sent_emails_log where user_id = ?`, user.intId));
+
+  if (user) {
+    await dbAdapter.database.raw(`delete from sent_emails_log where user_id = ?`, user.intId);
+  }
 }
 
 export async function resetUserStatistics(userId: UUID) {

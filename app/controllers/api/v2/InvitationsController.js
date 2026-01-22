@@ -163,7 +163,7 @@ async function validateInvitation(data) {
     throw new ValidationException('Invitation lang must not be empty');
   }
 
-  if (!data.hasOwnProperty('singleUse') || !_.isBoolean(data.singleUse)) {
+  if (!Object.prototype.hasOwnProperty.call(data, 'singleUse') || !_.isBoolean(data.singleUse)) {
     throw new ValidationException('Invitation singleUse must not be empty');
   }
 }

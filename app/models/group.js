@@ -93,7 +93,10 @@ export function addModel(dbAdapter) {
     async update(params) {
       let hasChanges = false;
 
-      if (params.hasOwnProperty('screenName') && this.screenName != params.screenName) {
+      if (
+        Object.prototype.hasOwnProperty.call(params, 'screenName') &&
+        this.screenName != params.screenName
+      ) {
         if (!this.screenNameIsValid(params.screenName)) {
           throw new ValidationException(
             `"${params.screenName}" is not a valid display name. Names must be between 3 and 25 characters long.`,
@@ -104,7 +107,10 @@ export function addModel(dbAdapter) {
         hasChanges = true;
       }
 
-      if (params.hasOwnProperty('description') && params.description != this.description) {
+      if (
+        Object.prototype.hasOwnProperty.call(params, 'description') &&
+        params.description != this.description
+      ) {
         if (!User.descriptionIsValid(params.description)) {
           throw new ValidationException('Description is too long');
         }
@@ -113,7 +119,10 @@ export function addModel(dbAdapter) {
         hasChanges = true;
       }
 
-      if (params.hasOwnProperty('isPrivate') && params.isPrivate != this.isPrivate) {
+      if (
+        Object.prototype.hasOwnProperty.call(params, 'isPrivate') &&
+        params.isPrivate != this.isPrivate
+      ) {
         this.isPrivate = params.isPrivate;
         hasChanges = true;
       }
@@ -121,18 +130,24 @@ export function addModel(dbAdapter) {
       // Compatibility with pre-isProtected clients:
       // if there is only isPrivate param then isProtected becomes the same as isPrivate
       if (
-        params.hasOwnProperty('isPrivate') &&
-        (!params.hasOwnProperty('isProtected') || params.isPrivate === '1')
+        Object.prototype.hasOwnProperty.call(params, 'isPrivate') &&
+        (!Object.prototype.hasOwnProperty.call(params, 'isProtected') || params.isPrivate === '1')
       ) {
         params.isProtected = params.isPrivate;
       }
 
-      if (params.hasOwnProperty('isProtected') && params.isProtected != this.isProtected) {
+      if (
+        Object.prototype.hasOwnProperty.call(params, 'isProtected') &&
+        params.isProtected != this.isProtected
+      ) {
         this.isProtected = params.isProtected;
         hasChanges = true;
       }
 
-      if (params.hasOwnProperty('isRestricted') && params.isRestricted != this.isRestricted) {
+      if (
+        Object.prototype.hasOwnProperty.call(params, 'isRestricted') &&
+        params.isRestricted != this.isRestricted
+      ) {
         this.isRestricted = params.isRestricted;
         hasChanges = true;
       }
