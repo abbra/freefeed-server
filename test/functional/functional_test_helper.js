@@ -1,3 +1,4 @@
+/* eslint-disable you-dont-need-lodash-underscore/is-undefined */
 import http from 'http';
 import { stringify as qsStringify } from 'querystring';
 import util from 'util';
@@ -5,6 +6,7 @@ import { readFile } from 'fs/promises';
 import { basename } from 'path';
 
 import request from 'superagent';
+// eslint-disable-next-line lodash/import-scope
 import _, { merge } from 'lodash-es';
 import socketIO from 'socket.io-client';
 import expect from 'unexpected';

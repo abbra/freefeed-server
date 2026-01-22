@@ -10,6 +10,7 @@ import { tokenize } from './tokenize-text';
 
 export function extractTitle(text: string, maxLen: number): string {
   // see https://unicode.org/cldr/utility/list-unicodeset.jsp?a=%5B%3AWord_Break%3DNewline%3A%5D&g=&i=
+  // eslint-disable-next-line no-control-regex
   const [line] = text.split(/[\u0000-\u001f\u0085\u2028\u2029]/, 1);
 
   if (line.length <= maxLen) {
@@ -52,6 +53,7 @@ function trimPeriod(text: string) {
 export function textToHTML(text: string) {
   const lines = text
     .trim()
+    // eslint-disable-next-line no-control-regex
     .split(/[\u0000-\u001f\u0085\u2028\u2029]/)
     .map((l) => l.trim())
     .map((l) => linkify(l));

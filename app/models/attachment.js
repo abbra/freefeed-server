@@ -453,6 +453,7 @@ export function addModel(dbAdapter) {
       const mimeType = mime.lookup(dispositionName) || 'application/octet-stream';
 
       // Old browsers (IE8) need ASCII-only fallback filenames
+      // eslint-disable-next-line no-control-regex
       const fileNameAscii = dispositionName.replace(/[^\x00-\x7F]/g, '_');
 
       // Modern browsers support UTF-8 filenames
