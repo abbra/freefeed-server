@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 /* global $pg_database */
 import request from 'superagent';
-// eslint-disable-next-line lodash/import-scope
 import * as _ from 'lodash-es';
 import expect from 'unexpected';
 

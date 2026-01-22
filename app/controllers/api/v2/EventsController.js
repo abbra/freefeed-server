@@ -101,7 +101,7 @@ function getQueryParams(ctx) {
   const limit = parseInt(ctx.request.query.limit, 10) || DEFAULT_EVENTS_LIMIT;
   let eventGroups = ctx.request.query.filter || [];
 
-  if (!_.isArray(eventGroups)) {
+  if (!Array.isArray(eventGroups)) {
     eventGroups = [eventGroups];
   }
 

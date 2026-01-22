@@ -116,9 +116,10 @@ export default defineConfig([
       'you-dont-need-lodash-underscore/find': 'error',
       'you-dont-need-lodash-underscore/find-index': 'error',
       'you-dont-need-lodash-underscore/includes': 'error',
+      'you-dont-need-lodash-underscore/uniq': 'off',
       'lodash/prefer-lodash-method': 'off',
       'lodash/prefer-lodash-typecheck': 'off',
-      'lodash/import-scope': ['warn', 'member'],
+      'lodash/import-scope': 'off', // TODO set to `['warn', 'member']`
       'lodash/prefer-constant': 'off',
       'lodash/prefer-noop': 'off',
       'lodash/prefer-lodash-chain': 'off',

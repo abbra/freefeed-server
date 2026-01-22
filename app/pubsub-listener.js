@@ -2,7 +2,6 @@ import Redis from 'ioredis';
 import {
   cloneDeep,
   intersection,
-  isArray,
   isFunction,
   isPlainObject,
   keyBy,
@@ -135,7 +134,7 @@ export default class PubsubListener {
       }
 
       const channelListsPromises = map(data, async (channelIds, channelType) => {
-        if (!isArray(channelIds)) {
+        if (!Array.isArray(channelIds)) {
           throw new EventHandlingError(`List of ${channelType} ids has to be an array`);
         }
 
@@ -193,7 +192,7 @@ export default class PubsubListener {
       for (const channelType of Object.keys(data)) {
         const channelIds = data[channelType];
 
-        if (!isArray(channelIds)) {
+        if (!Array.isArray(channelIds)) {
           throw new EventHandlingError(
             `List of ${channelType} ids has to be an array`,
             `got bogus channel list`,
