@@ -7,6 +7,7 @@ import prettierRecommended from 'eslint-plugin-prettier/recommended';
 import { fixupPluginRules } from '@eslint/compat';
 import youDontNeedLodashUnderscore from 'eslint-plugin-you-dont-need-lodash-underscore';
 import lodash from 'eslint-plugin-lodash';
+import promise from 'eslint-plugin-promise';
 
 export default defineConfig([
   {
@@ -34,6 +35,7 @@ export default defineConfig([
   ts.configs.recommended,
   importX.flatConfigs.recommended,
   importX.flatConfigs.typescript,
+  promise.configs['flat/recommended'],
   {
     plugins: {
       'you-dont-need-lodash-underscore': fixupPluginRules(youDontNeedLodashUnderscore),
@@ -42,6 +44,13 @@ export default defineConfig([
     rules: {
       ...youDontNeedLodashUnderscore.configs['compatible-warn'].rules,
       ...lodash.configs['recommended'].rules,
+    },
+  },
+  {
+    files: ['test/**'],
+    rules: {
+      'promise/no-callback-in-promise': 'off',
+      'promise/always-return': 'off',
     },
   },
   {

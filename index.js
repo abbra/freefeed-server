@@ -8,6 +8,7 @@ consoleStamp(console, 'yyyy/mm/dd HH:MM:ss.l');
 initApp()
   .then(() => {
     monitor.increment('app.init');
+    return;
   })
   .catch((e) => {
     monitor.increment('app.crash');
