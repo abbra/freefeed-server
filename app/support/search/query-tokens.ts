@@ -17,9 +17,9 @@ export const IN_POSTS: Scope = 1 as const,
   IN_CONTENT: Scope = 3 as const, // = IN_POSTS | IN_COMMENTS
   IN_ALL: Scope = 7 as const; // = IN_POSTS | IN_COMMENTS | IN_ACCOUNTS
 
-export interface Token {
+export type Token = {
   getComplexity(): number;
-}
+};
 
 /**
  * Pipe represents the pipe symbol (`|`). This token is used only on initial

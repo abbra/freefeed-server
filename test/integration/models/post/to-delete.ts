@@ -41,7 +41,9 @@ describe('Posts in to-delete state', () => {
       const ctx = { state: { user: luna }, params: { postId: post.id } };
 
       await expect(
-        mw(ctx, () => {}),
+        mw(ctx, () => {
+          /* empty */
+        }),
         'to be rejected with',
         { status: 404 },
       );

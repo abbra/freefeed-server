@@ -48,7 +48,9 @@ const baseContext = {
   },
 } as unknown as Context;
 
-const next: Next = async () => {};
+const next: Next = async () => {
+  /* empty */
+};
 
 function sleep(sec: number) {
   console.log('Sleeping', sec);

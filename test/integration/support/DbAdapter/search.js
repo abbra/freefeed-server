@@ -737,8 +737,7 @@ describe('Search', () => {
         }),
       );
 
-      for (let i = 0; i < posts.length; i++) {
-        const post = posts[i];
+      for (const post of posts) {
         await post.create(); // eslint-disable-line no-await-in-loop
 
         const marsComment = new Comment({

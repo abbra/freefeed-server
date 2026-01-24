@@ -9,9 +9,9 @@ export type ListLike<T> = List<T> | T[] | { items: T[]; inclusive: boolean };
  */
 export class List<T> {
   public items: T[] = [];
-  public inclusive: boolean = true;
+  public inclusive = true;
 
-  constructor(items: T[] = [], inclusive: boolean = true) {
+  constructor(items: T[] = [], inclusive = true) {
     this.items = items;
     this.inclusive = inclusive;
   }

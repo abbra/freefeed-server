@@ -11,7 +11,7 @@ const adminsTrait = (superClass: typeof DbAdapter) =>
       });
     }
 
-    async getUsersAdminRolesAssoc(userIds: UUID[]): Promise<{ [id: UUID]: AdminRole[] }> {
+    async getUsersAdminRolesAssoc(userIds: UUID[]): Promise<Record<UUID, AdminRole[]>> {
       const rows = await this.database.getAll<{ id: UUID; roles: AdminRole[] }>(
         `select user_id as id, array_agg(role) as roles 
           from admin_users_roles
@@ -20,7 +20,7 @@ const adminsTrait = (superClass: typeof DbAdapter) =>
         { userIds },
       );
 
-      const result: { [id: UUID]: AdminRole[] } = {};
+      const result: Record<UUID, AdminRole[]> = {};
 
       for (const row of rows) {
         result[row.id] = row.roles;

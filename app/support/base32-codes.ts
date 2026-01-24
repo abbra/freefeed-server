@@ -13,7 +13,7 @@ export function createBase32Code(length: number): string {
   return [...bytes].map((b) => alphabet.charAt(b & 0x1f)).join('');
 }
 
-export function normalizeBase32Code(input: string, expectedLength: number = 0): Nullable<string> {
+export function normalizeBase32Code(input: string, expectedLength = 0): Nullable<string> {
   const code = input
     .toUpperCase()
     .replace(/[IL]/g, '1')

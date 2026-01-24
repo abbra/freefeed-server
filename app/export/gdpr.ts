@@ -14,15 +14,15 @@ import { DbAdapter } from '../support/DbAdapter';
 
 const { literal, namedNode, quad } = DataFactory;
 
-interface UserRow {
+type UserRow = {
   uid: string;
   username: string;
   screen_name: string;
-}
+};
 
-interface LikerRow extends UserRow {
+type LikerRow = {
   created_at: number;
-}
+} & UserRow;
 
 type LikersResult = {
   rows: LikerRow[];
@@ -34,13 +34,13 @@ type RecipientsResult = {
   rows: RecipientRow[];
 };
 
-interface CommentRow extends UserRow {
+type CommentRow = {
   comment_id: number;
   comment_uuid: string;
   body: string;
   created_at: number;
   updated_at: number;
-}
+} & UserRow;
 
 type CommentsResult = {
   rows: CommentRow[];

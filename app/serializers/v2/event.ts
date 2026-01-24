@@ -44,9 +44,7 @@ export async function serializeEvents(events: EventRecord[], viewerId: Nullable<
   const accountId2UIDs = accountIdRows.reduce(
     (acc, row) => ({ ...acc, [row.id]: row.uid }),
     {},
-  ) as {
-    [k: number]: UUID;
-  };
+  ) as Record<number, UUID>;
 
   const allPostIds = [
     ...postIdRows.map((r) => r.uid),

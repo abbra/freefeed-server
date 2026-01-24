@@ -154,17 +154,20 @@ export class DbAdapter {
   getGroupsAdministratorsIds(
     groupIds: UUID[],
     viewerId?: Nullable<UUID>,
-  ): Promise<{ [k: string]: UUID[] }>;
-  getUsersByIdsAssoc(ids: UUID[]): Promise<{ [k: string]: User | Group }>;
-  getUsersStatsAssoc(ids: UUID[]): Promise<{
-    [k: string]: {
-      posts: number;
-      likes: number;
-      comments: number;
-      subscribers: number;
-      subscriptions: number;
-    };
-  }>;
+  ): Promise<Record<string, UUID[]>>;
+  getUsersByIdsAssoc(ids: UUID[]): Promise<Record<string, User | Group>>;
+  getUsersStatsAssoc(ids: UUID[]): Promise<
+    Record<
+      string,
+      {
+        posts: number;
+        likes: number;
+        comments: number;
+        subscribers: number;
+        subscriptions: number;
+      }
+    >
+  >;
   isUserAdminOfGroup(userId: UUID, groupId: UUID): Promise<boolean>;
   getDirectModesMap(
     userIds: UUID[],
@@ -175,8 +178,8 @@ export class DbAdapter {
   getNotificationsDigestRecipients(): Promise<z.infer<typeof notificationsDigestRecipientSchema>[]>;
   getDailyBestOfDigestRecipients(): Promise<User[]>;
   getWeeklyBestOfDigestRecipients(): Promise<User[]>;
-  getDailyBestOfEmailSentAt(userIntIds: number[]): Promise<{ [userIntId: string]: Date }>;
-  getWeeklyBestOfEmailSentAt(userIntIds: number[]): Promise<{ [userIntId: string]: Date }>;
+  getDailyBestOfEmailSentAt(userIntIds: number[]): Promise<Record<string, Date>>;
+  getWeeklyBestOfEmailSentAt(userIntIds: number[]): Promise<Record<string, Date>>;
   /**
    * Returns unsorted IDs of users whose username sparse matches `query`.
    */
@@ -334,7 +337,7 @@ export class DbAdapter {
     viewerId?: UUID,
   ): Promise<Map<UUID, number[]>>;
 
-  getGroupsVisibility(accountIds: UUID[], viewerId: UUID | null): Promise<{ [k: UUID]: boolean }>;
+  getGroupsVisibility(accountIds: UUID[], viewerId: UUID | null): Promise<Record<UUID, boolean>>;
 
   // App tokens
   createAppToken(token: AppTokenCreateParams): Promise<AppTokenV1>;
@@ -450,7 +453,7 @@ export class DbAdapter {
 
   // Admin-related methods
   getUserAdminRoles(userId: UUID): Promise<AdminRole[]>;
-  getUsersAdminRolesAssoc(userIds: UUID[]): Promise<{ [id: UUID]: AdminRole[] }>;
+  getUsersAdminRolesAssoc(userIds: UUID[]): Promise<Record<UUID, AdminRole[]>>;
   setUserAdminRole(
     userId: UUID,
     role: AdminRole,

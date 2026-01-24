@@ -353,8 +353,6 @@ describe('Symmetric bans', () => {
         });
       });
     });
-
-    describe('Unlock banned comments', () => {});
   });
 
   describe('Luna wrote post, Mars commented it, Mars bans Luna', () => {

@@ -25,9 +25,9 @@ export const eventNames = {
 
 export type EventName = (typeof eventNames)[keyof typeof eventNames];
 
-interface IPublisher {
+type IPublisher = {
   publish(eventName: string, payload: string): Promise<void>;
-}
+};
 
 export class PubSubAdapter {
   private publisher: IPublisher;

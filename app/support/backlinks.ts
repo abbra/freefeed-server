@@ -6,7 +6,7 @@ import { List } from './open-lists';
 import { type UUID } from './types';
 import { SHORT_LINK, tokenize } from './tokenize-text';
 
-export function getUpdatedUUIDs(text1: string, text2: string = '') {
+export function getUpdatedUUIDs(text1: string, text2 = '') {
   if (text1 === text2) {
     return [];
   }
@@ -14,7 +14,7 @@ export function getUpdatedUUIDs(text1: string, text2: string = '') {
   return xor(extractUUIDs(text1), extractUUIDs(text2));
 }
 
-export function getUpdatedShortIds(text1: string, text2: string = '') {
+export function getUpdatedShortIds(text1: string, text2 = '') {
   if (text1 === text2) {
     return [];
   }
@@ -91,13 +91,13 @@ function onlyUnique<T>(value: T, index: number, arr: T[]) {
   return arr.indexOf(value) === index;
 }
 
-interface Visible {
+type Visible = {
   usersCanSee(): Promise<List<UUID>>;
-}
+};
 
-interface PubSub {
+type PubSub = {
   updatePost(id: UUID, options?: { onlyForUsers: List<UUID> }): Promise<void>;
-}
+};
 
 export async function notifyBacklinkedLater(entity: Visible, pubSub: PubSub, uuids: UUID[]) {
   if (uuids.length === 0) {
