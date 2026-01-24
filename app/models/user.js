@@ -156,7 +156,7 @@ export function addModel(dbAdapter) {
       return this.screenName_;
     }
     set screenName(newValue) {
-      if (_.isString(newValue)) {
+      if (typeof newValue === 'string') {
         this.screenName_ = newValue.trim();
       }
     }
@@ -165,7 +165,7 @@ export function addModel(dbAdapter) {
       return this.email_ === undefined ? '' : this.email_;
     }
     set email(newValue) {
-      if (_.isString(newValue)) {
+      if (typeof newValue === 'string') {
         this.email_ = newValue.trim();
       }
     }
@@ -188,7 +188,7 @@ export function addModel(dbAdapter) {
       return this.description_;
     }
     set description(newValue) {
-      if (_.isString(newValue)) {
+      if (typeof newValue === 'string') {
         this.description_ = newValue.trim();
       }
     }
@@ -197,7 +197,7 @@ export function addModel(dbAdapter) {
       return this.frontendPreferences_;
     }
     set frontendPreferences(newValue) {
-      if (_.isString(newValue)) {
+      if (typeof newValue === 'string') {
         newValue = JSON.parse(newValue);
       }
 

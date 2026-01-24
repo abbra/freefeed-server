@@ -1,4 +1,4 @@
-import { flatten, union, uniq } from 'lodash-es';
+import { union, uniq } from 'lodash-es';
 import config from 'config';
 import pgFormat from 'pg-format';
 
@@ -491,12 +491,12 @@ const searchTrait = (superClass) =>
                 .filter((u) => u?.isActive && u.isGroup())
                 .map((u) => u.id);
 
-              const feedIntIds = flatten(
+              const feedIntIds = (
                 await Promise.all([
                   this.getUsersNamedFeedsIntIds(userIds, ['Directs']),
                   this.getUsersNamedFeedsIntIds(groupIds, ['Posts']),
-                ]),
-              );
+                ])
+              ).flat();
               return new List(feedIntIds, !t.exclude);
             }
 

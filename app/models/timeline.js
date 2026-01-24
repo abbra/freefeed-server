@@ -125,7 +125,7 @@ export function addModel(dbAdapter) {
       const postIds = await dbAdapter.getTimelinesIntersectionPostIds(this.intId, feedIntId);
 
       await Promise.all(
-        _.flatten(postIds.map((postId) => dbAdapter.withdrawPostFromFeeds([feedIntId], postId))),
+        postIds.map((postId) => dbAdapter.withdrawPostFromFeeds([feedIntId], postId)),
       );
 
       return;

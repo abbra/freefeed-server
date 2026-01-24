@@ -1,15 +1,5 @@
 import Redis from 'ioredis';
-import {
-  cloneDeep,
-  intersection,
-  isFunction,
-  isPlainObject,
-  keyBy,
-  last,
-  map,
-  noop,
-  uniqBy,
-} from 'lodash-es';
+import { intersection, isPlainObject, keyBy, map, noop, uniqBy } from 'lodash-es';
 import { Server as SocketIOServer } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import createDebug from 'debug';
@@ -365,7 +355,7 @@ export default class PubsubListener {
         const { userId } = socket;
         // We may need to change the json data, so we create a deep copy for this
         // socket.
-        const data = cloneDeep(payload);
+        const data = structuredClone(payload);
 
         // Bans
         if (post && userId) {
@@ -1001,7 +991,8 @@ class EventHandlingError extends Error {
 const onSocketEvent = (socket, event, handler) =>
   socket.on(event, async (data, ...extra) => {
     const debugPrefix = `[socket.id=${socket.id}] '${event}' request`;
-    const callback = isFunction(last(extra)) ? last(extra) : noop;
+    const lastExtra = extra.at(-1);
+    const callback = typeof lastExtra === 'function' ? lastExtra : noop;
 
     try {
       debug(debugPrefix);

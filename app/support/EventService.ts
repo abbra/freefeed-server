@@ -1,4 +1,4 @@
-import { difference, flatten, intersectionBy, uniq, uniqBy } from 'lodash-es';
+import { difference, intersectionBy, uniq, uniqBy } from 'lodash-es';
 
 import { dbAdapter, User, Group, Post, Comment, PubSub as pubSub, Timeline } from '../models';
 
@@ -257,8 +257,7 @@ export class EventService {
       return;
     }
 
-    const groupAdminLists = await Promise.all(postGroups.map((g) => g.getAdministrators()));
-    const groupAdmins = uniqBy(flatten(groupAdminLists), 'id');
+    const groupAdmins = await getGroupsAdmins(postGroups);
 
     // Messages to other groups admins (but not to post author and not to restorer)
     const otherAdmins = groupAdmins.filter((a) => a.id !== restoredBy.id && a.id !== post.userId);
@@ -307,8 +306,7 @@ export class EventService {
       return;
     }
 
-    const groupAdminLists = await Promise.all(postGroups.map((g) => g.getAdministrators()));
-    const groupAdmins = uniqBy(flatten(groupAdminLists), 'id');
+    const groupAdmins = await getGroupsAdmins(postGroups);
 
     // Messages to other groups admins (but not to post author and not to restorer)
     const otherAdmins = groupAdmins.filter((a) => a.id !== restoredBy.id && a.id !== post.userId);
@@ -510,8 +508,7 @@ export class EventService {
       return;
     }
 
-    const groupAdminLists = await Promise.all(postGroups.map((g) => g.getAdministrators()));
-    const groupAdmins = uniqBy(flatten(groupAdminLists), 'id');
+    const groupAdmins = await getGroupsAdmins(postGroups);
 
     // Messages to other groups admins (but not to post author and not to destroyer)
     const otherAdmins = groupAdmins.filter((a) => a.id !== destroyedBy.id && a.id !== post.userId);
@@ -656,8 +653,7 @@ export class EventService {
       return;
     }
 
-    const groupAdminLists = await Promise.all(removedFromGroups.map((g) => g.getAdministrators()));
-    const groupAdmins = uniqBy(flatten(groupAdminLists), 'id');
+    const groupAdmins = await getGroupsAdmins(removedFromGroups);
 
     // Messages to other groups admins (but not to post author and not to destroyer)
     const otherAdmins = groupAdmins.filter((a) => a.id !== changedBy.id && a.id !== post.userId);
@@ -1101,4 +1097,9 @@ async function createEvent(
   await Promise.all(updates);
 
   return event;
+}
+
+async function getGroupsAdmins(groups: Group[]): Promise<User[]> {
+  const groupAdminLists = await Promise.all(groups.map((g) => g.getAdministrators()));
+  return uniqBy(groupAdminLists.flat(), 'id');
 }

@@ -609,7 +609,7 @@ export function addModel(dbAdapter) {
       timelineIntIds.push(await user.getRiverOfNewsTimelineIntId());
       timelineIntIds.push(this.feedIntIds);
 
-      return _.uniq(_.flatten(timelineIntIds));
+      return _.uniq(timelineIntIds.flat());
     }
 
     getLikesFriendOfFriendTimelineIntIds(user) {

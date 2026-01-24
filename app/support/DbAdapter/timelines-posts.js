@@ -506,7 +506,8 @@ const timelinesPostsTrait = (superClass) =>
       }
 
       for (const dest of destData) {
-        results[dest.post_id].destinations.push(_.omit(dest, 'post_id'));
+        const { post_id, ...destWithoutPostId } = dest;
+        results[post_id].destinations.push(destWithoutPostId);
       }
 
       for (const att of attData) {

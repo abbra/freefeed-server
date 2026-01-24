@@ -80,11 +80,11 @@ export default usersCacheTrait;
 ///////////////////////////////////////////////////
 
 function fixDateType(date) {
-  if (_.isString(date)) {
+  if (typeof date === 'string') {
     return new Date(date);
   }
 
-  if (_.isDate(date)) {
+  if (date instanceof Date) {
     return date;
   }
 
