@@ -1,6 +1,6 @@
 import compose from 'koa-compose';
 import monitor from 'monitor-dog';
-import { difference, uniq } from 'lodash';
+import { difference, uniq } from 'lodash-es';
 
 import { dbAdapter, Comment, AppTokenV1 } from '../../../models';
 import {

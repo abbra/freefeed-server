@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $pg_database */
 import expect from 'unexpected';
 import { simpleParser } from 'mailparser';

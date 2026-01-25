@@ -33,7 +33,6 @@ process.stdout.write(`\n`);
   try {
     let lastUID = ZERO_UID;
 
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const rows = await dbAdapter.database.getAll(
         `select uid, email from users where 

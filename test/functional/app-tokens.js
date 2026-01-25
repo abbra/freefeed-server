@@ -1,7 +1,6 @@
-/* eslint-env node, mocha */
 /* global $database, $pg_database */
 import unexpected from 'unexpected';
-import { uniq, difference } from 'lodash';
+import { uniq, difference } from 'lodash-es';
 import { DateTime } from 'luxon';
 import config from 'config';
 

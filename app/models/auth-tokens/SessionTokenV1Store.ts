@@ -1,7 +1,7 @@
-import { Context } from 'koa';
+import { type Context } from 'koa';
 
 import { DbAdapter } from '../../support/DbAdapter';
-import { UUID } from '../../support/types';
+import { type UUID } from '../../support/types';
 import { Address } from '../../support/ipv6';
 import { database, fallbackIP, fallbackUserAgent } from '../common';
 

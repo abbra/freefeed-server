@@ -1,7 +1,7 @@
-import { Context } from 'koa';
+import { type Context } from 'koa';
 
 import { Comment, Group, Post, User } from '../../app/models';
-import { UUID } from '../../app/support/types';
+import { type UUID } from '../../app/support/types';
 
 export type UserCtx = {
   authToken: string;
@@ -22,13 +22,15 @@ export function createUserAsync(
 export function performJSONRequest(
   method: string,
   path: string,
-  body?: any,
+  body?: unknown,
   header?: Record<string, string>,
 ): Promise<{ __httpCode: number }>;
 
 export function authHeaders(userCtx: Pick<UserCtx, 'authToken'> | null): {
   Authorization?: `Bearer ${string}`;
 };
+
+export function fileFrom(filePath: string, mimeType: string): Promise<File>;
 
 export function cmpBy<T>(key: keyof T): (a: T, b: T) => number;
 

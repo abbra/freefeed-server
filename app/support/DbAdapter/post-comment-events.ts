@@ -1,4 +1,4 @@
-import { UUID } from '../types';
+import { type UUID } from '../types';
 
 import { type DbAdapter } from './index';
 
@@ -14,7 +14,7 @@ export default function postCommentEventsTrait(superClass: typeof DbAdapter): ty
         return result;
       }
 
-      const rows = await this.database.getAll(
+      const rows = await this.database.getAll<{ post_id: UUID; is_enabled: boolean }>(
         `select post_id, is_enabled from user_post_events
           where user_id = :viewerId and post_id = any(:postIds)`,
         { viewerId, postIds },
@@ -28,7 +28,7 @@ export default function postCommentEventsTrait(superClass: typeof DbAdapter): ty
     }
 
     async getCommentEventsListenersForPost(postId: UUID): Promise<Map<UUID, boolean>> {
-      const rows = await this.database.getAll(
+      const rows = await this.database.getAll<{ user_id: UUID; is_enabled: boolean }>(
         `select user_id, is_enabled from user_post_events where post_id = :postId`,
         { postId },
       );

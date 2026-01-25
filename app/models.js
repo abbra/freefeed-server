@@ -1,4 +1,3 @@
-/* eslint babel/semi: "error" */
 import config from 'config';
 
 import { connect as redisConnection } from './setup/database';

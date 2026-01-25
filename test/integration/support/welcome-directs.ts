@@ -9,7 +9,7 @@ import { createUsers } from '../helpers/users';
 import { withModifiedConfig } from '../../helpers/with-modified-config';
 import {
   jobHandler,
-  JobPayload,
+  type JobPayload,
   scheduleWelcomeDirects,
   WELCOME_DIRECT,
 } from '../../../app/support/welcome-directs';
@@ -84,6 +84,7 @@ describe('Welcome Directs', () => {
       {
         const job = jobs.find((j) => j.payload.id === 'greeting_at_start');
         expect(job, 'not to be', null);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         await jobHandler(job!);
 
         const posts = await getDirectPosts(luna);
@@ -107,6 +108,7 @@ describe('Welcome Directs', () => {
       {
         const job = jobs.find((j) => j.payload.id === 'no_posts');
         expect(job, 'not to be', null);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         await jobHandler(job!);
 
         const posts = await getDirectPosts(luna);
@@ -130,6 +132,7 @@ describe('Welcome Directs', () => {
       {
         const job = jobs.find((j) => j.payload.id === 'no_subscriptions');
         expect(job, 'not to be', null);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         await jobHandler(job!);
 
         const posts = await getDirectPosts(luna);
@@ -182,7 +185,13 @@ describe('Welcome Directs', () => {
 });
 
 async function getDirectPosts(user: User): Promise<Post[]> {
-  const { intId } = (await user.getDirectsTimeline())!;
+  const feed = await user.getDirectsTimeline();
+
+  if (!feed) {
+    return [];
+  }
+
+  const { intId } = feed;
   const postIds = await dbAdapter.getTimelinePostsIds([intId], user.id, { authorsIds: [] });
   return await dbAdapter.getPostsByIds(postIds);
 }

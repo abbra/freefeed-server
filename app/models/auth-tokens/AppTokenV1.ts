@@ -1,19 +1,19 @@
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import jwt from 'jsonwebtoken';
 import config from 'config';
 import Raven from 'raven';
-import { Context, Next } from 'koa';
+import { type Context, type Next } from 'koa';
 import { isConst, isNumber, isObject, isString } from 'ts-json-check';
 
-import { DbAdapter } from '../../support/DbAdapter';
-import { IPAddr, Nullable, UUID } from '../../support/types';
+import { type DbAdapter } from '../../support/DbAdapter';
+import { type IPAddr, type Nullable, type UUID } from '../../support/types';
 import { Address } from '../../support/ipv6';
 import { database } from '../common';
 import { NotAuthorizedException } from '../../support/exceptions';
 import { createBase32Code, normalizeBase32Code } from '../../support/base32-codes';
 
 import { AuthToken } from './AuthToken';
-import { AppTokenRecord } from './types';
+import { type AppTokenRecord } from './types';
 import { alwaysAllowedRoutes, alwaysDisallowedRoutes, appTokensScopes } from './app-tokens-scopes';
 
 import { authDebugError } from '.';
@@ -157,7 +157,7 @@ export class AppTokenV1 extends AuthToken {
     });
   }
 
-  static addLogPayload(ctx: Context, payload: any) {
+  static addLogPayload(ctx: Context, payload: object) {
     ctx.state.appTokenLogPayload = {
       ...(ctx.state.appTokenLogPayload || {}),
       ...payload,
@@ -221,7 +221,7 @@ export class AppTokenV1 extends AuthToken {
     return this[database].deleteAppToken(this.id);
   }
 
-  checkRestrictions({ headers, remoteIP }: { headers: any; remoteIP: string }) {
+  checkRestrictions({ headers, remoteIP }: { headers: { origin?: string }; remoteIP: string }) {
     const { netmasks, origins } = this.restrictions;
 
     if (netmasks.length > 0) {
@@ -232,7 +232,7 @@ export class AppTokenV1 extends AuthToken {
       }
     }
 
-    if (origins.length > 0 && !origins.includes(headers.origin)) {
+    if (origins.length > 0 && !origins.includes(headers.origin ?? '')) {
       throw new Error(`app token is not allowed from origin ${headers.origin}`);
     }
   }

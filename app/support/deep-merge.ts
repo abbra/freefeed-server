@@ -20,12 +20,12 @@ export function deepMergeJSON(base: JSON, patch: JSON): JSON {
   const patchType = jsonType(patch);
 
   if (baseType === 'object' && patchType === 'object') {
-    const clone = {};
+    const baseObject = base as Record<string, JSON>;
+    const patchObject = patch as Record<string, JSON>;
+    const clone: Record<string, JSON> = {};
 
-    // @ts-ignore
-    for (const key of Object.keys(base)) {
-      // @ts-ignore
-      clone[key] = deepMergeJSON(base[key], patch[key]);
+    for (const key of Object.keys(baseObject)) {
+      clone[key] = deepMergeJSON(baseObject[key], patchObject[key]);
     }
 
     return clone;

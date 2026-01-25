@@ -1,5 +1,5 @@
-import { Middleware } from 'koa';
-import { isEqual } from 'lodash';
+import { type Middleware } from 'koa';
+import { isEqual } from 'lodash-es';
 
 import { type User, type Post, PubSub as pubSub, dbAdapter } from '../../models';
 import { ServerErrorException } from '../../support/exceptions';
@@ -33,10 +33,10 @@ export function postMayUpdateForUser(
     const result = await next();
 
     // Re-read updated post from DB
-    post = (await dbAdapter.getPostById(post.id))!;
-    const propsAfter = await post.getUserSpecificProps(user);
+    post = (await dbAdapter.getPostById(post.id)) ?? undefined;
+    const propsAfter = await post?.getUserSpecificProps(user);
 
-    if (!isEqual(propsBefore, propsAfter)) {
+    if (post && !isEqual(propsBefore, propsAfter)) {
       // Emit RT message
       await pubSub.updatePost(post.id, { onlyForUsers: List.from([user.id]) });
     }

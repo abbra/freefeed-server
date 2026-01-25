@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 import expect from 'unexpected';
 
 import { linkToText, normalizeText } from '../../../../app/support/search/norm';

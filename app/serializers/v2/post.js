@@ -1,4 +1,4 @@
-import { uniqBy, pick, compact, uniq } from 'lodash';
+import { uniqBy, pick, compact, uniq } from 'lodash-es';
 
 import { dbAdapter } from '../../models';
 import { TIMELINE_VISIBILITY_FULL } from '../../models/constants';

@@ -1,8 +1,11 @@
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 
 import stubTransport from 'nodemailer-stub-transport';
 
-module.exports = {
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+export default {
   port: 31337,
   database: 3,
   monitorPrefix: 'tests',
@@ -10,6 +13,7 @@ module.exports = {
   application: { EXTRA_STOP_LIST: ['thatcreepyguy', 'nicegirlnextdoor', 'perfectstranger'] },
   media: { storage: { rootDir: '/tmp/pepyatka-media/' } },
   mailer: { transport: stubTransport },
+  performance: { bcryptRounds: 4 },
   postgres: { connection: { database: 'freefeed_test' } },
   externalAuthProviders: [
     {

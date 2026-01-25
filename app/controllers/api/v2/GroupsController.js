@@ -1,5 +1,5 @@
 import compose from 'koa-compose';
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 
 import { dbAdapter } from '../../../models';
 import { serializeUsersByIds } from '../../../serializers/v2/user';

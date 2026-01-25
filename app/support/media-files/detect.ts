@@ -3,12 +3,12 @@ import { open } from 'fs/promises';
 import { spawnAsync } from '../spawn-async';
 
 import {
-  AvcStream,
-  FfprobeResult,
-  H264Info,
-  MediaInfo,
-  MediaInfoVideo,
-  VideoStream,
+  type AvcStream,
+  type FfprobeResult,
+  type H264Info,
+  type MediaInfo,
+  type MediaInfoVideo,
+  type VideoStream,
 } from './types';
 import { addFileExtension } from './file-ext';
 
@@ -80,9 +80,8 @@ export async function detectMediaType(
     ) as VideoStream | undefined;
     const audioStream = streams.find((s) => s.codec_type === 'audio');
 
-    if (videoStream && format.duration) {
-      let width = videoStream.width!;
-      let height = videoStream.height!;
+    if (videoStream && format.duration && videoStream.width && videoStream.height) {
+      let { width, height } = videoStream;
 
       // If video has rotation, swap width and height
       if (videoStream.side_data_list) {
@@ -150,6 +149,8 @@ async function detectAnimatedImage(
   if (
     videoStream &&
     format.duration &&
+    videoStream.width &&
+    videoStream.height &&
     videoStream.nb_frames &&
     parseInt(videoStream.nb_frames) > 1
   ) {
@@ -157,8 +158,8 @@ async function detectAnimatedImage(
       type: 'video',
       format: fmt,
       vCodec: videoStream.codec_name,
-      width: videoStream.width!,
-      height: videoStream.height!,
+      width: videoStream.width,
+      height: videoStream.height,
       duration: parseFloat(format.duration),
       bitrate: parseInt(format.bit_rate),
       isAnimatedImage: true,

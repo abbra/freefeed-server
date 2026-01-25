@@ -1,6 +1,6 @@
 import { dbAdapter } from '../../models';
-import { Nullable, UUID } from '../../support/types';
-import type { EventRecord } from '../../support/DbAdapter';
+import { type Nullable, type UUID } from '../../support/types';
+import { type EventRecord } from '../../support/DbAdapter';
 import { EVENT_TYPES, HIDDEN_CREATOR_EVENT_TYPES } from '../../support/EventTypes';
 
 import { serializeUsersByIds } from './user';
@@ -44,9 +44,7 @@ export async function serializeEvents(events: EventRecord[], viewerId: Nullable<
   const accountId2UIDs = accountIdRows.reduce(
     (acc, row) => ({ ...acc, [row.id]: row.uid }),
     {},
-  ) as {
-    [k: number]: UUID;
-  };
+  ) as Record<number, UUID>;
 
   const allPostIds = [
     ...postIdRows.map((r) => r.uid),

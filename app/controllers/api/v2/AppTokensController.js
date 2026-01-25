@@ -1,4 +1,4 @@
-import { pick, difference } from 'lodash';
+import { pick, difference } from 'lodash-es';
 import compose from 'koa-compose';
 import { DateTime } from 'luxon';
 import config from 'config';

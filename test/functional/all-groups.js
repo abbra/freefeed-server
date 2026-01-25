@@ -1,6 +1,5 @@
-/* eslint-env node, mocha */
 /* global $pg_database */
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import unexpected from 'unexpected';
 
 import cleanDB from '../dbCleaner';
@@ -110,7 +109,7 @@ describe('All groups', () => {
       before(() => {
         response = authResponse;
 
-        if (response.groups && _.isArray(response.groups)) {
+        if (response.groups && Array.isArray(response.groups)) {
           pubicGroupResp = response.groups.find((g) => g.id === pubicGroup.id);
           protectedGroupResp = response.groups.find((g) => g.id === protectedGroup.id);
         }

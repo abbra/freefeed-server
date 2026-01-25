@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 import expect from 'unexpected';
 
 import { defaultPrefs } from '../../app/models/user-prefs';

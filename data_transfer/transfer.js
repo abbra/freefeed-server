@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 
 export class DataTransfer {
   constructor(pgAdapter, redis) {

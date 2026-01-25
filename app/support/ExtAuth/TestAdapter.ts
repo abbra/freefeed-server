@@ -1,9 +1,9 @@
 import { encode as qsEncode } from 'querystring';
 
-import { Adapter, AuthStartParams, AuthFinishParams, Profile } from './Adapter';
+import { Adapter, type AuthStartParams, type AuthFinishParams, type Profile } from './Adapter';
 import { AuthError } from './AuthError';
 import { Cache } from './Cache';
-import { Query } from './OAuth2Adapter';
+import { type Query } from './OAuth2Adapter';
 
 type TestParams = {
   externalId: string;

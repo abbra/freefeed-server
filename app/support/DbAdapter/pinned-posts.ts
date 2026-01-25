@@ -33,7 +33,12 @@ export default (superClass: typeof DbAdapter) =>
          order by pp.created_at asc`,
         postIds,
       );
-      const { rows } = await this.database.raw(sql);
+      const rows = await this.database.getAll<{
+        post_id: string;
+        user_id: string;
+        created_at: string;
+        pinned_by: string;
+      }>(sql);
       const map = new Map<string, { userId: string; createdAt: string; pinnedBy: string }[]>();
 
       for (const r of rows) {
@@ -41,7 +46,7 @@ export default (superClass: typeof DbAdapter) =>
           map.set(r.post_id, []);
         }
 
-        map.get(r.post_id)!.push({
+        map.get(r.post_id)?.push({
           userId: r.user_id,
           createdAt: new Date(r.created_at).toISOString(),
           pinnedBy: r.pinned_by,

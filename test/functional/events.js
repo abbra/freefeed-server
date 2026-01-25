@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $database, $pg_database */
 import unexpected from 'unexpected';
 
@@ -32,7 +31,7 @@ import {
   revokeSubscriptionRequest,
   sendRequestToSubscribe,
   sendRequestToJoinGroup,
-  subscribeToAsync,
+  subscribeToAsync as subscribeToAsyncOrig,
   unsubscribeFromAsync,
   unsubscribeUserFromMeAsync,
   unbanUser,
@@ -50,6 +49,9 @@ import {
 
 import * as schema from './schemaV2-helper';
 import * as realtimeAssertions from './realtime_assertions';
+
+// We testing events here, so we need them on by default
+const subscribeToAsync = (a, b) => subscribeToAsyncOrig(a, b, false);
 
 const expect = unexpected.clone().use(realtimeAssertions).use(schema.freefeedAssertions);
 

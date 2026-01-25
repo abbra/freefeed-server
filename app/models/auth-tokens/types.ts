@@ -1,4 +1,4 @@
-import { IPAddr, Nullable, UUID } from '../../support/types';
+import { type IPAddr, type Nullable, type UUID } from '../../support/types';
 
 export type AppTokenCreateParams = {
   userId: UUID;
@@ -30,7 +30,7 @@ export type AppTokenLogPayload = {
   request: string;
   ip: IPAddr;
   user_agent: string;
-  extra: any;
+  extra: object;
 };
 
 export type SessionRecord = {

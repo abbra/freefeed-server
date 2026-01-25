@@ -1,9 +1,9 @@
 import createDebug from 'debug';
 import compose from 'koa-compose';
-import { isInt } from 'validator';
+import validator from 'validator';
 import { lookup } from 'mime-types';
 import { mediaType } from '@hapi/accept';
-import { difference } from 'lodash';
+import { difference } from 'lodash-es';
 
 import {
   reportError,
@@ -49,7 +49,7 @@ export default class AttachmentsController {
           users: await serializeUsersByIds([newAttachment.userId], user.id),
         };
       } catch (e) {
-        if (e.message && e.message.indexOf('Corrupt image') > -1) {
+        if (e.message && e.message.includes('Corrupt image')) {
           this.debug(e.message);
 
           const errorDetails = { message: 'Corrupt image' };
@@ -57,7 +57,7 @@ export default class AttachmentsController {
           return;
         }
 
-        if (e.message && e.message.indexOf('LCMS encoding') > -1) {
+        if (e.message && e.message.includes('LCMS encoding')) {
           this.debug(`GraphicsMagick should be configured with --with-lcms2 option`);
 
           const errorDetails = { status: 500, message: 'Internal server error' };
@@ -83,7 +83,7 @@ export default class AttachmentsController {
         page = 1;
 
       if (typeof qLimit !== 'undefined') {
-        if (!isInt(qLimit, { min: 1 })) {
+        if (!validator.isInt(qLimit, { min: 1 })) {
           throw new ValidationException("Invalid 'limit' value");
         }
 
@@ -95,7 +95,7 @@ export default class AttachmentsController {
       }
 
       if (typeof qPage !== 'undefined') {
-        if (!isInt(qPage, { min: 1 })) {
+        if (!validator.isInt(qPage, { min: 1 })) {
           throw new ValidationException("Invalid 'page' value");
         }
 

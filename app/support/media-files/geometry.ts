@@ -1,12 +1,12 @@
 import config from 'config';
 
-import { Box } from './types';
+import { type Box } from './types';
 
 export function getImagePreviewSizes(
   info: Box,
   { imagePreviewAreas, legacyImagePreviewSizes } = config.attachments.previews,
 ): ({ variant: string } & Box)[] {
-  const previews: { [variant: string]: Box } = {};
+  const previews: Record<string, Box> = {};
 
   // Modern preview sizes, area-based
   const presets = [...Object.entries(imagePreviewAreas)];
@@ -65,7 +65,7 @@ export function getVideoPreviewSizes(
   info: Box,
   { videoPreviewShortSides } = config.attachments.previews,
 ): ({ variant: string } & Box)[] {
-  const previews: { [variant: string]: Box } = {};
+  const previews: Record<string, Box> = {};
 
   const presets = [...Object.entries(videoPreviewShortSides)];
   presets.sort((a, b) => b[1] - a[1]); // Sort by descending size
@@ -131,7 +131,7 @@ export function getVideoPreviewSizes(
  * cropped to match the target aspect ratio.
  */
 export function getBestVariant(
-  variants: { [variant: string]: { w: number; h: number } },
+  variants: Record<string, { w: number; h: number }>,
   targetWidth?: number,
   targetHeight?: number,
 ): {

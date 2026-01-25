@@ -1,28 +1,30 @@
 import fs from 'fs';
 
 import createDebug from 'debug';
-import Application, { DefaultState } from 'koa';
+import Application, { type DefaultState } from 'koa';
 import config from 'config';
 import { koaBody } from 'koa-body';
 import methodOverride from 'koa-methodoverride';
 import morgan from 'koa-morgan';
 import responseTime from 'koa-response-time';
-import passport from 'koa-passport';
 import conditional from 'koa-conditional-get';
 import etag from '@koa/etag';
 import koaStatic from 'koa-static';
 import requestId from 'koa-requestid';
 
-import { version as serverVersion } from '../package.json';
+import pkg from '../package.json' with { type: 'json' };
 
 import { koaServerTiming } from './support/koa-server-timing';
 import { originMiddleware } from './setup/initializers/origin';
 import { maintenanceCheck } from './support/maintenance';
 import { reportError } from './support/exceptions';
 import { normalizeInputStrings } from './controllers/middlewares/normalize-input';
-import { AppContext } from './support/types';
+import { type AppContext } from './support/types';
 import { apiVersionMiddleware } from './setup/initializers/api-version';
 import { asyncContextMiddleware } from './support/app-async-context';
+import { nodeDirname } from './support/node-dirname';
+
+const __dirname = nodeDirname(import.meta.url);
 
 const env = process.env.NODE_ENV || 'development';
 
@@ -57,7 +59,6 @@ class FreefeedApp extends Application<DefaultState, AppContext> {
       ctx.request.body ??= {};
       return next();
     });
-    this.use(passport.initialize());
     this.use(originMiddleware);
     this.use(apiVersionMiddleware);
     this.use(
@@ -74,7 +75,7 @@ class FreefeedApp extends Application<DefaultState, AppContext> {
     );
 
     this.use(async (ctx, next) => {
-      ctx.response.set('X-Freefeed-Server', serverVersion);
+      ctx.response.set('X-Freefeed-Server', pkg.version);
       await next();
     });
 

@@ -1,5 +1,5 @@
 import compose from 'koa-compose';
-import { uniqBy } from 'lodash';
+import { uniqBy } from 'lodash-es';
 
 import { dbAdapter } from '../../../models';
 import { serializeFeed } from '../../../serializers/v2/post';

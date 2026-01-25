@@ -1,4 +1,3 @@
-/* eslint babel/semi: "error" */
 import { isatty } from 'tty';
 import { inspect } from 'util';
 

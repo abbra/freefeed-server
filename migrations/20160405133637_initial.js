@@ -1,4 +1,4 @@
-exports.up = function (knex) {
+export function up(knex) {
   return Promise.all([
     knex.raw('SET statement_timeout = 0'),
     knex.raw('SET lock_timeout = 0'),
@@ -271,9 +271,9 @@ exports.up = function (knex) {
       table.index(['feed_id', 'user_id'], 'subscriptions_feed_id_user_id_idx', 'btree');
     }),
   ]);
-};
+}
 
-exports.down = function (knex) {
+export function down(knex) {
   return Promise.all([
     knex.schema.dropTableIfExists('subscriptions'),
     knex.schema.dropTableIfExists('subscription_requests'),
@@ -287,4 +287,4 @@ exports.down = function (knex) {
     knex.schema.dropTableIfExists('posts'),
     knex.schema.dropTableIfExists('users'),
   ]);
-};
+}

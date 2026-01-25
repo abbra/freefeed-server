@@ -1,7 +1,7 @@
 import { describe, beforeEach, it } from 'mocha';
 import unexpected from 'unexpected';
 import unexpectedDate from 'unexpected-date';
-import { ParameterizedContext } from 'koa';
+import { type ParameterizedContext } from 'koa';
 
 import cleanDB from '../../../dbCleaner';
 import { Comment, dbAdapter, Group, Post, User } from '../../../../app/models';
@@ -54,6 +54,7 @@ describe('Comments in to-delete state', () => {
 
     it(`should not appear in Luna's Comments timeline`, async () => {
       const timeline = await luna.getCommentsTimelineIntId();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const p1 = (await dbAdapter.getPostById(post.id))!; // Re-read post
       expect(p1.feedIntIds, 'not to contain', timeline);
     });

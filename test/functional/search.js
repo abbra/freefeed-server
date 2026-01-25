@@ -1,6 +1,4 @@
-/* eslint-env node, mocha */
 /* global $pg_database */
-/* eslint babel/semi: "error" */
 import expect from 'unexpected';
 
 import cleanDB from '../dbCleaner';

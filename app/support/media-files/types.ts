@@ -55,9 +55,7 @@ export type MediaMetaData = {
   animatedImage?: true;
   silent?: true;
   inProgress?: true;
-} & {
-  [key: `dc:${string}`]: string;
-};
+} & Record<`dc:${string}`, string>;
 
 export type MediaPreviews = {
   image?: VisualPreviews;
@@ -83,10 +81,10 @@ export type MediaProcessResult = {
   files?: FilesToUpload;
 };
 
-export type FilesToUpload = { [variant: string]: { path: string; ext: string } };
+export type FilesToUpload = Record<string, { path: string; ext: string }>;
 
-export type VisualPreviews = { [variant: string]: { w: number; h: number; ext: string } };
-export type NonVisualPreviews = { [variant: string]: { ext: string } };
+export type VisualPreviews = Record<string, { w: number; h: number; ext: string }>;
+export type NonVisualPreviews = Record<string, { ext: string }>;
 
 type CommonStream = {
   codec_name: string;

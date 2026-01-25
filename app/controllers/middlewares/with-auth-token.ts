@@ -1,9 +1,9 @@
-import { Context, Next } from 'koa';
+import { type Context, type Next } from 'koa';
 
 import { NotAuthorizedException } from '../../support/exceptions';
 import { authDebugError, AuthToken, SessionTokenV1 } from '../../models/auth-tokens';
 import { AppTokenV1, dbAdapter, sessionTokenV1Store } from '../../models';
-import { Nullable } from '../../support/types';
+import { type Nullable } from '../../support/types';
 
 export async function withAuthToken(ctx: Context, next: Next) {
   const payload = ctx.state.authJWTPayload;
@@ -18,10 +18,10 @@ export async function withAuthToken(ctx: Context, next: Next) {
 
   if (payload.type === SessionTokenV1.TYPE) {
     // Session token v1
-    authToken = await sessionTokenV1Store.getById(payload.id!);
+    authToken = await sessionTokenV1Store.getById(payload.id);
   } else if (payload.type === AppTokenV1.TYPE) {
     // Application token v1
-    authToken = await dbAdapter.getAppTokenById(payload.id!);
+    authToken = await dbAdapter.getAppTokenById(payload.id);
   } else {
     authToken = null;
   }

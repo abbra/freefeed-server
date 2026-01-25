@@ -1,7 +1,8 @@
-/* eslint-env node, mocha */
+/* eslint-disable you-dont-need-lodash-underscore/is-undefined */
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* global $pg_database */
 import request from 'superagent';
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import expect from 'unexpected';
 
 import cleanDB from '../dbCleaner';

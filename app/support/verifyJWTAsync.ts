@@ -1,7 +1,10 @@
 import util from 'util';
 
 import config from 'config';
-import jwt, { type Secret, type VerifyOptions } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+
+type Secret = jwt.Secret;
+type VerifyOptions = jwt.VerifyOptions;
 
 export type JWTPayload = {
   type: string;

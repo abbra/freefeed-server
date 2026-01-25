@@ -4,23 +4,26 @@ import { lookup as mimeLookup } from 'mime-types';
 import { exiftool } from 'exiftool-vendored';
 import createDebug from 'debug';
 
-import { spawnAsync, SpawnAsyncArgs } from '../spawn-async';
+import { spawnAsync, type SpawnAsyncArgs } from '../spawn-async';
 import { currentConfig } from '../app-async-context';
 import { ContentTooLargeException } from '../exceptions';
+import { nodeDirname } from '../node-dirname';
 
 import { detectMediaType } from './detect';
 import {
-  Box,
-  FilesToUpload,
-  MediaInfoAudio,
-  MediaInfoImage,
-  MediaInfoVideo,
-  MediaProcessResult,
-  NonVisualPreviews,
-  VisualPreviews,
+  type Box,
+  type FilesToUpload,
+  type MediaInfoAudio,
+  type MediaInfoImage,
+  type MediaInfoVideo,
+  type MediaProcessResult,
+  type NonVisualPreviews,
+  type VisualPreviews,
 } from './types';
 import { getImagePreviewSizes, getVideoPreviewSizes } from './geometry';
 import { setExtension } from './file-ext';
+
+const __dirname = nodeDirname(import.meta.url);
 
 type FileProps = {
   fileName: string;
@@ -83,16 +86,20 @@ export async function processMediaFile(
       const artist = getKeyCaseInsensitive(info.tags, 'artist');
       const album = getKeyCaseInsensitive(info.tags, 'album');
 
+      if (!commonResult.meta) {
+        commonResult.meta = {};
+      }
+
       if (title) {
-        commonResult.meta!['dc:title'] = title;
+        commonResult.meta['dc:title'] = title;
       }
 
       if (artist) {
-        commonResult.meta!['dc:creator'] = artist;
+        commonResult.meta['dc:creator'] = artist;
       }
 
       if (album) {
-        commonResult.meta!['dc:relation.isPartOf'] = album;
+        commonResult.meta['dc:relation.isPartOf'] = album;
       }
     }
   }
@@ -260,7 +267,9 @@ async function processImage(
   if (useOriginal && !isVideoStill) {
     previews[''] = previews[maxPreviewSize.variant];
     filesToUpload[''] = filesToUpload[maxPreviewSize.variant];
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete previews[maxPreviewSize.variant];
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete filesToUpload[maxPreviewSize.variant];
   }
 
@@ -496,7 +505,9 @@ async function processVideo(
 
     videoPreviews[''] = videoPreviews[maxVariant];
     videoFiles[''] = videoFiles[maxVariant];
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete videoPreviews[maxVariant];
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete videoFiles[maxVariant];
   } else {
     videoFiles[''] = { path: localFilePath, ext: info.extension };
@@ -526,7 +537,7 @@ function tmpFileVariant(filePath: string, variant: string, ext: string): string 
  * changes. Otherwise return false.
  */
 async function canUseJpegOriginal(localFilePath: string): Promise<boolean> {
-  const tags = await exiftool.readRaw<Record<string, any>>(localFilePath, {
+  const tags = await exiftool.readRaw<Record<string, unknown>>(localFilePath, {
     readArgs: ['-G1', '-n'],
   });
   const {

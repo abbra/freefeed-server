@@ -9,7 +9,7 @@ import mime, { lookup } from 'mime-types';
 import mv from 'mv';
 import Raven from 'raven';
 import monitor from 'monitor-dog';
-import { uniq } from 'lodash';
+import { uniq } from 'lodash-es';
 
 import { s3Client } from '../support/s3';
 import { sanitizeMediaMetadata, SANITIZE_NONE, SANITIZE_VERSION } from '../support/sanitize-media';
@@ -453,6 +453,7 @@ export function addModel(dbAdapter) {
       const mimeType = mime.lookup(dispositionName) || 'application/octet-stream';
 
       // Old browsers (IE8) need ASCII-only fallback filenames
+      // eslint-disable-next-line no-control-regex
       const fileNameAscii = dispositionName.replace(/[^\x00-\x7F]/g, '_');
 
       // Modern browsers support UTF-8 filenames

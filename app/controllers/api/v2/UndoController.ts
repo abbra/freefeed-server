@@ -1,14 +1,14 @@
-import { JwtPayload } from 'jsonwebtoken';
+import { type JwtPayload } from 'jsonwebtoken';
 import compose from 'koa-compose';
 import { z } from 'zod';
 
-import { dbAdapter, User } from '../../../models';
+import { dbAdapter, type User } from '../../../models';
 import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
 } from '../../../support/exceptions';
-import { Ctx } from '../../../support/types';
+import { type Ctx } from '../../../support/types';
 import { verifyUndoToken } from '../../../support/undo/entry';
 import { authRequired, inputSchemaRequired, monitored } from '../../middlewares';
 import { UNDO_POST_DELETE } from '../../../support/undo/post-delete';

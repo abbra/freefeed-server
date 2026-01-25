@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $pg_database */
 import unexpected from 'unexpected';
 import unexpectedDate from 'unexpected-date';

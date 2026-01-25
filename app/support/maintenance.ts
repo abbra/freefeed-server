@@ -7,7 +7,7 @@ import Koa from 'koa';
 const debug = createDebug('freefeed:maintenanceCheck');
 const { messageFile } = config.maintenance;
 
-function instanceOfNodeError<T extends new (...args: any) => Error>(
+function instanceOfNodeError<T extends new () => Error>(
   value: Error,
   errorType: T,
 ): value is InstanceType<T> & NodeJS.ErrnoException {

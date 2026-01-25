@@ -1,4 +1,4 @@
-export type AuthStartParams<A extends object = {}> = {
+export type AuthStartParams<A extends object = object> = {
   provider: string;
   redirectURL: string;
   mode: 'connect' | 'sign-in';
@@ -17,7 +17,7 @@ export type Profile = {
   pictureURL: string | null;
 };
 
-export abstract class Adapter<T extends object, S extends object = {}> {
+export abstract class Adapter<T extends object, S extends object = object> {
   abstract getAuthorizeURL(startParams: AuthStartParams & S): Promise<string>;
   abstract acceptResponse(finishParams: AuthFinishParams<T>): Promise<{
     params: AuthStartParams;

@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $database */
 
 import expect from 'unexpected';
@@ -354,8 +353,6 @@ describe('Symmetric bans', () => {
         });
       });
     });
-
-    describe('Unlock banned comments', () => {});
   });
 
   describe('Luna wrote post, Mars commented it, Mars bans Luna', () => {

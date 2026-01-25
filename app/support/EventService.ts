@@ -1,4 +1,4 @@
-import _, { difference, uniqBy } from 'lodash';
+import { difference, intersectionBy, uniq, uniqBy } from 'lodash-es';
 
 import { dbAdapter, User, Group, Post, Comment, PubSub as pubSub, Timeline } from '../models';
 
@@ -7,9 +7,9 @@ import {
   ALLOWED_EVENT_TYPES,
   COUNTABLE_EVENT_TYPES,
   EVENT_TYPES,
-  T_EVENT_TYPE,
+  type T_EVENT_TYPE,
 } from './EventTypes';
-import { Nullable, UUID } from './types';
+import { type Nullable, type UUID } from './types';
 import { extractHashedShortIds, extractShortIds, extractUUIDs } from './backlinks';
 
 type OnPostFeedsChangedParams = {
@@ -19,6 +19,7 @@ type OnPostFeedsChangedParams = {
 
 type EventData = { userId: UUID; event: T_EVENT_TYPE };
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class EventService {
   static async onUserBanned(
     initiatorIntId: number,
@@ -243,22 +244,21 @@ export class EventService {
 
     // Message to the comment author
     await createEvent(
-      commentAuthor!.intId,
+      commentAuthor.intId,
       EVENT_TYPES.COMMENT_RESTORED,
       restoredBy.intId,
-      commentAuthor!.intId,
+      commentAuthor.intId,
       postGroups.length === 0 ? null : postGroups[0].intId,
       post.id,
       comment.id,
-      postAuthor!.intId,
+      postAuthor.intId,
     );
 
     if (postGroups.length === 0) {
       return;
     }
 
-    const groupAdminLists = await Promise.all(postGroups.map((g) => g.getAdministrators()));
-    const groupAdmins = _.uniqBy(_.flatten(groupAdminLists), 'id');
+    const groupAdmins = await getGroupsAdmins(postGroups);
 
     // Messages to other groups admins (but not to post author and not to restorer)
     const otherAdmins = groupAdmins.filter((a) => a.id !== restoredBy.id && a.id !== post.userId);
@@ -266,16 +266,16 @@ export class EventService {
     await Promise.all(
       otherAdmins.map(async (a) => {
         const managedGroups = await a.getManagedGroups();
-        const groups = _.intersectionBy(managedGroups, postGroups, 'id');
+        const groups = intersectionBy(managedGroups, postGroups, 'id');
         return createEvent(
           a.intId,
           EVENT_TYPES.COMMENT_RESTORED_BY_ANOTHER_ADMIN,
           restoredBy.intId,
-          commentAuthor!.intId,
+          commentAuthor.intId,
           groups[0].intId,
           post.id,
           comment.id,
-          postAuthor!.intId,
+          postAuthor.intId,
         );
       }),
     );
@@ -291,24 +291,27 @@ export class EventService {
 
     const postAuthor = await dbAdapter.getUserById(post.userId);
 
+    if (!postAuthor) {
+      return;
+    }
+
     // Message to the post author
     await createEvent(
-      postAuthor!.intId,
+      postAuthor.intId,
       EVENT_TYPES.POST_RESTORED,
       restoredBy.intId,
-      postAuthor!.intId,
+      postAuthor.intId,
       postGroups.length === 0 ? null : postGroups[0].intId,
       post.id,
       null,
-      postAuthor!.intId,
+      postAuthor.intId,
     );
 
     if (postGroups.length === 0) {
       return;
     }
 
-    const groupAdminLists = await Promise.all(postGroups.map((g) => g.getAdministrators()));
-    const groupAdmins = _.uniqBy(_.flatten(groupAdminLists), 'id');
+    const groupAdmins = await getGroupsAdmins(postGroups);
 
     // Messages to other groups admins (but not to post author and not to restorer)
     const otherAdmins = groupAdmins.filter((a) => a.id !== restoredBy.id && a.id !== post.userId);
@@ -316,16 +319,16 @@ export class EventService {
     await Promise.all(
       otherAdmins.map(async (a) => {
         const managedGroups = await a.getManagedGroups();
-        const groups = _.intersectionBy(managedGroups, postGroups, 'id');
+        const groups = intersectionBy(managedGroups, postGroups, 'id');
         return createEvent(
           a.intId,
           EVENT_TYPES.POST_RESTORED_BY_ANOTHER_ADMIN,
           restoredBy.intId,
-          postAuthor!.intId,
+          postAuthor.intId,
           groups[0].intId,
           post.id,
           null,
-          postAuthor!.intId,
+          postAuthor.intId,
         );
       }),
     );
@@ -404,6 +407,11 @@ export class EventService {
     const usersCanSeeComment = await comment.usersCanSee();
     const targetUsers = affectedUsers.filter((u) => usersCanSeeComment.includes(u.id));
 
+    if (!postAuthor || !commentAuthor) {
+      // Just in case
+      return;
+    }
+
     // Create events
     await Promise.all(
       (
@@ -414,12 +422,12 @@ export class EventService {
         createEvent(
           user.intId,
           event,
-          commentAuthor!.intId,
+          commentAuthor.intId,
           user.intId,
           postGroupIntId,
           post.id,
           comment.id,
-          postAuthor!.intId,
+          postAuthor.intId,
         ),
       ),
     );
@@ -442,10 +450,14 @@ export class EventService {
       post.getGroupsPostedTo(),
     ]);
 
+    if (!postAuthor) {
+      return;
+    }
+
     // Message to the comment author
     if (commentAuthor) {
       // Is post belongs to any group managed by destroyer?
-      const groups = _.intersectionBy(destroyerGroups, postGroups, 'id');
+      const groups = intersectionBy(destroyerGroups, postGroups, 'id');
       await createEvent(
         commentAuthor.intId,
         EVENT_TYPES.COMMENT_MODERATED,
@@ -454,7 +466,7 @@ export class EventService {
         groups.length === 0 ? null : groups[0].intId,
         post.id,
         null,
-        postAuthor!.intId,
+        postAuthor.intId,
       );
     }
 
@@ -470,7 +482,7 @@ export class EventService {
     await Promise.all(
       otherAdmins.map(async (a) => {
         const managedGroups = await a.getManagedGroups();
-        const groups = _.intersectionBy(managedGroups, postGroups, 'id');
+        const groups = intersectionBy(managedGroups, postGroups, 'id');
         return createEvent(
           a.intId,
           EVENT_TYPES.COMMENT_MODERATED_BY_ANOTHER_ADMIN,
@@ -479,7 +491,7 @@ export class EventService {
           groups[0].intId,
           post.id,
           null,
-          postAuthor!.intId,
+          postAuthor.intId,
         );
       }),
     );
@@ -494,12 +506,16 @@ export class EventService {
 
     const postAuthor = await dbAdapter.getUserById(post.userId);
 
+    if (!postAuthor) {
+      return;
+    }
+
     // Message to the post author
     await createEvent(
-      postAuthor!.intId,
+      postAuthor.intId,
       EVENT_TYPES.POST_MODERATED,
       destroyedBy.intId,
-      postAuthor!.intId,
+      postAuthor.intId,
       postGroups.length === 0 ? null : postGroups[0].intId,
       null,
       null,
@@ -510,8 +526,7 @@ export class EventService {
       return;
     }
 
-    const groupAdminLists = await Promise.all(postGroups.map((g) => g.getAdministrators()));
-    const groupAdmins = _.uniqBy(_.flatten(groupAdminLists), 'id');
+    const groupAdmins = await getGroupsAdmins(postGroups);
 
     // Messages to other groups admins (but not to post author and not to destroyer)
     const otherAdmins = groupAdmins.filter((a) => a.id !== destroyedBy.id && a.id !== post.userId);
@@ -519,12 +534,12 @@ export class EventService {
     await Promise.all(
       otherAdmins.map(async (a) => {
         const managedGroups = await a.getManagedGroups();
-        const groups = _.intersectionBy(managedGroups, postGroups, 'id');
+        const groups = intersectionBy(managedGroups, postGroups, 'id');
         return createEvent(
           a.intId,
           EVENT_TYPES.POST_MODERATED_BY_ANOTHER_ADMIN,
           destroyedBy.intId,
-          postAuthor!.intId,
+          postAuthor.intId,
           groups[0].intId,
           null,
           null,
@@ -539,6 +554,11 @@ export class EventService {
       dbAdapter.getUserById(post.userId),
       group.getAdministrators(),
     ]);
+
+    if (!postAuthor) {
+      return;
+    }
+
     const recipients = uniqBy((postAuthor ? [postAuthor] : []).concat(admins), 'id');
     await Promise.all(
       recipients.map((u) =>
@@ -550,7 +570,7 @@ export class EventService {
           group.intId,
           post.id,
           null,
-          postAuthor!.intId,
+          postAuthor.intId,
         ),
       ),
     );
@@ -561,6 +581,11 @@ export class EventService {
       dbAdapter.getUserById(post.userId),
       group.getAdministrators(),
     ]);
+
+    if (!postAuthor) {
+      return;
+    }
+
     const recipients = uniqBy((postAuthor ? [postAuthor] : []).concat(admins), 'id');
     await Promise.all(
       recipients.map((u) =>
@@ -572,7 +597,7 @@ export class EventService {
           group.intId,
           post.id,
           null,
-          postAuthor!.intId,
+          postAuthor.intId,
         ),
       ),
     );
@@ -640,12 +665,16 @@ export class EventService {
 
     const postAuthor = await dbAdapter.getUserById(post.userId);
 
+    if (!postAuthor) {
+      return;
+    }
+
     // Message to the post author
     await createEvent(
-      postAuthor!.intId,
+      postAuthor.intId,
       EVENT_TYPES.POST_MODERATED,
       changedBy.intId,
-      postAuthor!.intId,
+      postAuthor.intId,
       removedFromGroups.length === 0 ? null : removedFromGroups[0].intId,
       post.id,
       null,
@@ -656,8 +685,7 @@ export class EventService {
       return;
     }
 
-    const groupAdminLists = await Promise.all(removedFromGroups.map((g) => g.getAdministrators()));
-    const groupAdmins = _.uniqBy(_.flatten(groupAdminLists), 'id');
+    const groupAdmins = await getGroupsAdmins(removedFromGroups);
 
     // Messages to other groups admins (but not to post author and not to destroyer)
     const otherAdmins = groupAdmins.filter((a) => a.id !== changedBy.id && a.id !== post.userId);
@@ -665,16 +693,16 @@ export class EventService {
     await Promise.all(
       otherAdmins.map(async (a) => {
         const managedGroups = await a.getManagedGroups();
-        const groups = _.intersectionBy(managedGroups, removedFromGroups, 'id');
+        const groups = intersectionBy(managedGroups, removedFromGroups, 'id');
         return createEvent(
           a.intId,
           EVENT_TYPES.POST_MODERATED_BY_ANOTHER_ADMIN,
           changedBy.intId,
-          postAuthor!.intId,
+          postAuthor.intId,
           groups[0].intId,
           post.id,
           null,
-          postAuthor!.intId,
+          postAuthor.intId,
         );
       }),
     );
@@ -691,8 +719,8 @@ export class EventService {
       return;
     }
 
-    // Posts can have non-unique destinationFeedIds, so we need to _.uniq them
-    const postFeeds = await dbAdapter.getTimelinesByIntIds(_.uniq(post.destinationFeedIds));
+    // Posts can have non-unique destinationFeedIds, so we need to uniq them
+    const postFeeds = await dbAdapter.getTimelinesByIntIds(uniq(post.destinationFeedIds));
 
     const participantIds = postFeeds.filter((f) => f.isDirects()).map((f) => f.userId);
     const participants = await dbAdapter.getUsersByIds(participantIds);
@@ -812,7 +840,7 @@ export class EventService {
   }
 
   static async _processMentionsInPost(post: Post, destinationFeeds: Timeline[], author: User) {
-    const mentionedUsernames = _.uniq(extractMentions(post.body));
+    const mentionedUsernames = uniq(extractMentions(post.body));
 
     if (mentionedUsernames.length === 0) {
       return;
@@ -894,7 +922,7 @@ export class EventService {
     await Promise.all(promises);
   }
 
-  static async _notifyGroupAdmins(group: Group, adminNotifier: (admin: User) => Promise<any>) {
+  static async _notifyGroupAdmins(group: Group, adminNotifier: (admin: User) => Promise<unknown>) {
     const groupAdminsIds = await dbAdapter.getGroupAdministratorsIds(group.id);
     const admins = await dbAdapter.getUsersByIds(groupAdminsIds);
 
@@ -911,7 +939,7 @@ async function getPostCommentEvents(post: Post) {
 }
 
 async function getMentionInCommentEvents(text: string): Promise<EventData[]> {
-  const mentions = _.uniqBy(extractMentionsWithOffsets(text), 'username');
+  const mentions = uniqBy(extractMentionsWithOffsets(text), 'username');
   const mentionedUsers = (await dbAdapter.getFeedOwnersByUsernames(mentions.map((u) => u.username)))
     // Only users (not groups)
     .filter((u) => u.isUser()) as User[];
@@ -1092,8 +1120,8 @@ async function createEvent(
     if (recipientIntId !== createdByUserIntId) {
       updates.push(pubSub.updateUnreadNotifications(recipientIntId));
 
-      if (eventType === EVENT_TYPES.SUBSCRIPTION_REQUEST_APPROVED) {
-        updates.push(pubSub.updateUnreadNotifications(createdByUserIntId!));
+      if (eventType === EVENT_TYPES.SUBSCRIPTION_REQUEST_APPROVED && createdByUserIntId) {
+        updates.push(pubSub.updateUnreadNotifications(createdByUserIntId));
       }
     }
   }
@@ -1101,4 +1129,9 @@ async function createEvent(
   await Promise.all(updates);
 
   return event;
+}
+
+async function getGroupsAdmins(groups: Group[]): Promise<User[]> {
+  const groupAdminLists = await Promise.all(groups.map((g) => g.getAdministrators()));
+  return uniqBy(groupAdminLists.flat(), 'id');
 }

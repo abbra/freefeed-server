@@ -1,7 +1,6 @@
-/* eslint-env node, mocha */
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* global $pg_database, $should */
 import expect from 'unexpected';
-import { isNull } from 'lodash';
 
 import cleanDB from '../../dbCleaner';
 import { dbAdapter, Comment, Post, User } from '../../../app/models';
@@ -229,10 +228,10 @@ describe('Comment', () => {
       await comment.destroy();
 
       const oldComment = await dbAdapter.getCommentById(comment.id);
-      isNull(oldComment).should.be.true;
+      expect(oldComment, 'to be null');
 
       comments = await post.getComments();
-      comments.should.be.empty;
+      expect(comments, 'to be empty');
     });
   });
 

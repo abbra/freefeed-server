@@ -1,4 +1,4 @@
-import { AdminAction, AdminRole, ROLE_ADMIN } from '../../models/admins';
+import { type AdminAction, type AdminRole, ROLE_ADMIN } from '../../models/admins';
 import { type UUID } from '../types';
 
 import { type DbAdapter } from './index';
@@ -11,7 +11,7 @@ const adminsTrait = (superClass: typeof DbAdapter) =>
       });
     }
 
-    async getUsersAdminRolesAssoc(userIds: UUID[]): Promise<{ [id: UUID]: AdminRole[] }> {
+    async getUsersAdminRolesAssoc(userIds: UUID[]): Promise<Record<UUID, AdminRole[]>> {
       const rows = await this.database.getAll<{ id: UUID; roles: AdminRole[] }>(
         `select user_id as id, array_agg(role) as roles 
           from admin_users_roles
@@ -20,7 +20,7 @@ const adminsTrait = (superClass: typeof DbAdapter) =>
         { userIds },
       );
 
-      const result: { [id: UUID]: AdminRole[] } = {};
+      const result: Record<UUID, AdminRole[]> = {};
 
       for (const row of rows) {
         result[row.id] = row.roles;
@@ -106,7 +106,7 @@ const adminsTrait = (superClass: typeof DbAdapter) =>
         action_name: AdminAction;
         admin_username: string;
         target_username: string | null;
-        details: any;
+        details: object;
       }[]
     > {
       return this.database.getAll(

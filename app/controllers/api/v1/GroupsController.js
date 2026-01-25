@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import compose from 'koa-compose';
 
 import { dbAdapter, Group, AppTokenV1 } from '../../../models';
@@ -58,7 +58,7 @@ export default class GroupsController {
       'isRestricted',
     ]);
 
-    if (!_.isArray(ctx.request.body.admins)) {
+    if (!Array.isArray(ctx.request.body.admins)) {
       throw new BadRequestException('"admins" should be an array of strings');
     }
 

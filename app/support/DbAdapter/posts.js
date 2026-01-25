@@ -1,6 +1,6 @@
 import { randomBytes } from 'crypto';
 
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import validator from 'validator';
 import pgFormat from 'pg-format';
 

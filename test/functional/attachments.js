@@ -1,13 +1,12 @@
-/* eslint-env node, mocha */
 /* global $pg_database, $database */
 import fs from 'fs';
 import path from 'path';
 
 import unexpected from 'unexpected';
 import unexpectedDate from 'unexpected-date';
-import { Blob, fileFrom } from 'node-fetch';
 import { beforeEach } from 'mocha';
 
+import { nodeDirname } from '../../app/support/node-dirname';
 import cleanDB from '../dbCleaner';
 import { dbAdapter, PubSub } from '../../app/models';
 import { initJobProcessing } from '../../app/jobs';
@@ -24,8 +23,11 @@ import {
   authHeaders,
   justCreatePost,
   performRequest,
+  fileFrom,
 } from './functional_test_helper';
 import Session from './realtime-session';
+
+const __dirname = nodeDirname(import.meta.url);
 
 const expect = unexpected.clone().use(unexpectedDate);
 

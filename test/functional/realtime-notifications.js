@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $database, $pg_database */
 import expect from 'unexpected';
 
@@ -60,7 +59,7 @@ describe('Realtime Notifications', () => {
 
   it(`should send '${EVENT_TYPES.USER_SUBSCRIBED}' event to mars`, async () => {
     const test = marsSession.receiveWhile(eventNames.EVENT_CREATED, () =>
-      subscribeToAsync(luna, mars),
+      subscribeToAsync(luna, mars, false),
     );
     await expect(test, 'to be fulfilled with', {
       Notifications: [{ event_type: EVENT_TYPES.USER_SUBSCRIBED }],

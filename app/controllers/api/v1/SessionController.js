@@ -1,4 +1,3 @@
-import passport from 'koa-passport';
 import jwt from 'jsonwebtoken';
 import config from 'config';
 import compose from 'koa-compose';
@@ -8,49 +7,43 @@ import { authRequired, inputSchemaRequired } from '../../middlewares';
 import { BadRequestException } from '../../../support/exceptions';
 import { CLOSED, statusTitles } from '../../../models/auth-tokens/SessionTokenV1';
 import { sessionTokenV1Store } from '../../../models';
+import { authenticateUser } from '../../../support/local-auth';
 
 import UsersController from './UsersController';
 import { updateListInputSchema } from './data-schemes/sessions';
 
 export default class SessionController {
-  static create(ctx) {
-    return passport.authenticate('local', async (err, user, msg) => {
-      if (err) {
-        ctx.status = 401;
-        ctx.body = { err: err.message };
+  static async create(ctx) {
+    const { username, password } = ctx.request.body;
 
-        if (err.isResumable) {
-          const { secret } = config;
-          ctx.body.resumeToken = jwt.sign(
-            {
-              type: 'resume-account',
-              userId: err.userId,
-            },
-            secret,
-            { expiresIn: config.goneUsers.resumeTokenTTL },
-          );
-        }
+    const result = await authenticateUser(username, password);
 
-        return;
+    if (result.error) {
+      ctx.status = 401;
+      ctx.body = { err: result.error.message };
+
+      if (result.error.isResumable) {
+        const { secret } = config;
+        ctx.body.resumeToken = jwt.sign(
+          {
+            type: 'resume-account',
+            userId: result.error.userId,
+          },
+          secret,
+          { expiresIn: config.goneUsers.resumeTokenTTL },
+        );
       }
 
-      if (user === false) {
-        if (!msg) {
-          msg = { message: 'Internal server error' };
-        }
+      return;
+    }
 
-        ctx.status = 401;
-        ctx.body = { err: msg.message };
-        return;
-      }
+    const { user } = result;
+    const authToken = (await sessionTokenV1Store.create(user.id, ctx)).tokenString();
 
-      const authToken = (await sessionTokenV1Store.create(user.id, ctx)).tokenString();
-
-      // The same output as of the UsersController.show with 'authToken'
-      ctx.params['username'] = user.username;
-      await UsersController.show(ctx);
-      ctx.body.authToken = authToken;
-    })(ctx);
+    // The same output as of the UsersController.show with 'authToken'
+    ctx.params['username'] = user.username;
+    await UsersController.show(ctx);
+    ctx.body.authToken = authToken;
   }
 
   // Close current session

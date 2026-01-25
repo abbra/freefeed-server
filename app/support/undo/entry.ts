@@ -1,8 +1,10 @@
 import { Duration } from 'luxon';
-import { JwtPayload, sign, verify } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+
+type JwtPayload = jwt.JwtPayload;
 
 import { currentConfig } from '../app-async-context';
-import { UUID } from '../types';
+import { type UUID } from '../types';
 
 export type SerializedUndoEntry<Subj extends string> = {
   subject: Subj;
@@ -16,7 +18,7 @@ const audVersion = 1;
 
 export const tokenAudience = `freefeed:undo:v${audVersion}`;
 
-export abstract class UndoEntry<Subj extends string, Payload extends {} = {}> {
+export abstract class UndoEntry<Subj extends string, Payload extends object = object> {
   public readonly subject: Subj;
 
   constructor(subject: Subj) {
@@ -49,7 +51,7 @@ export abstract class UndoEntry<Subj extends string, Payload extends {} = {}> {
   }
 
   private createToken(issuer: UUID, payload: object) {
-    return sign(payload, currentConfig().secret, {
+    return jwt.sign(payload, currentConfig().secret, {
       subject: this.subject,
       issuer,
       audience: tokenAudience,
@@ -64,7 +66,7 @@ export function verifyUndoToken(
   expectedSubject?: string,
 ): Promise<JwtPayload> {
   return new Promise<JwtPayload>((resolve, reject) => {
-    verify(
+    jwt.verify(
       token,
       currentConfig().secret,
       {

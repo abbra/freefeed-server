@@ -6,7 +6,7 @@ import { tokenize } from './tokenize-text';
  * Extract all mentions with their start offsets from the given text
  */
 export function extractMentionsWithOffsets(text: string) {
-  if (typeof text !== 'string' || text === '' || text.indexOf('@') < 0) {
+  if (typeof text !== 'string' || text === '' || !text.includes('@')) {
     return [];
   }
 
