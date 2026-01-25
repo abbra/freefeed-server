@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking change**: Migrated from `tsx` to native Node.js TypeScript
   execution. This requires Node.js version 22.18.0 or higher. The project now
   uses native ES modules support without transpilation.
+- Update ESLint to v9 and apply the corresponding fixes to the codebase.
 
 ## [2.28.0] - 2026-01-12
 ### Added
