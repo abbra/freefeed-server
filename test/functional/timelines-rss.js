@@ -117,7 +117,7 @@ describe('TimelinesAsRSS', () => {
       expect(item.children, 'to have an item satisfying', {
         name: 'enclosure',
         attributes: {
-          url: `${config.host}/attachments/${att1.id}.jpg`,
+          url: `${config.host}/v4/attachments/${att1.id}/original?redirect`,
           length: `${att1.fileSize}`,
           type: 'image/jpeg',
         },
@@ -125,7 +125,7 @@ describe('TimelinesAsRSS', () => {
       expect(item.children, 'to have an item satisfying', {
         name: 'enclosure',
         attributes: {
-          url: `${config.host}/attachments/${att2.id}.jpg`,
+          url: `${config.host}/v4/attachments/${att2.id}/original?redirect`,
           length: `${att2.fileSize}`,
           type: 'image/jpeg',
         },
@@ -144,12 +144,11 @@ describe('TimelinesAsRSS', () => {
           textToHTML(post.body),
           `</div>`,
           `<p class="freefeed-images">` +
-            // Strange src and href here because of incomplete attach implementation in createMockAttachmentAsync
-            `<a href="${config.host}/attachments/${att1.id}.jpg">` +
-            `<img src="${config.host}/attachments/thumbnails/${att1.id}.jpg" width="${att1.imageSizes.t.w}" height="${att1.imageSizes.t.h}"></a>` +
+            `<a href="${config.host}/v4/attachments/${att1.id}/original?redirect">` +
+            `<img src="${config.host}/v4/attachments/${att1.id}/image?redirect&amp;width=428&amp;height=374&amp;format=jpeg" width="428" height="374"></a>` +
             ` ` +
-            `<a href="${config.host}/attachments/${att2.id}.jpg">` +
-            `<img src="${config.host}/attachments/thumbnails/${att2.id}.jpg" width="${att2.imageSizes.t.w}" height="${att2.imageSizes.t.h}"></a>` +
+            `<a href="${config.host}/v4/attachments/${att2.id}/original?redirect">` +
+            `<img src="${config.host}/v4/attachments/${att2.id}/image?redirect&amp;width=428&amp;height=374&amp;format=jpeg" width="428" height="374"></a>` +
             `</p>`,
         ].join('\n'),
       );
@@ -381,7 +380,7 @@ const fetchUserTimelineAsRSS = async (userContext, viewerContext = null) => {
     headers['X-Authentication-Token'] = viewerContext.authToken;
   }
 
-  const response = await performRequest(`/v2/timelines-rss/${userContext.username}`, { headers });
+  const response = await performRequest(`/v4/timelines-rss/${userContext.username}`, { headers });
 
   if (response.status !== 200) {
     const { err } = await response.json();

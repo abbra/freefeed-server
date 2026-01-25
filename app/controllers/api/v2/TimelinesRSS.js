@@ -9,6 +9,7 @@ import { dbAdapter } from '../../../models';
 import { extractTitle, textToHTML } from '../../../support/rss-text-parser';
 import { monitored } from '../../middlewares';
 import { serializeComment } from '../../../serializers/v2/post';
+import { fitIntoArea } from '../../../support/media-files/geometry';
 
 import { userTimeline, ORD_CREATED } from './TimelinesController';
 
@@ -132,18 +133,30 @@ async function postItemMaker(postId, data, ctx) {
     ({ mediaType }) => mediaType !== 'image' && mediaType !== 'audio',
   );
 
+  const originalUrl = (a) =>
+    `${config.host}/v${ctx.state.apiVersion}/attachments/${a.id}/original?redirect`;
+
   if (imageAtts.length > 0) {
     const tags = imageAtts.map((a) => {
-      const sz = a.imageSizes.t || a.imageSizes.o;
+      if ('imageSizes' in a) {
+        // Pre-v4 attachments API
+        const sz = a.imageSizes.t || a.imageSizes.o;
 
-      if (!sz) {
-        // Some very old images has empty imageSizes object
-        return `<a href="${htmlEscape(a.url)}"><img src="${htmlEscape(a.url)}"></a>`;
+        if (!sz) {
+          // Some very old images has empty imageSizes object
+          return `<a href="${htmlEscape(a.url)}"><img src="${htmlEscape(a.url)}"></a>`;
+        }
+
+        return `<a href="${htmlEscape(a.url)}"><img src="${htmlEscape(sz.url)}" width="${htmlEscape(
+          sz.w,
+        )}" height="${htmlEscape(sz.h)}"></a>`;
       }
 
-      return `<a href="${htmlEscape(a.url)}"><img src="${htmlEscape(sz.url)}" width="${htmlEscape(
-        sz.w,
-      )}" height="${htmlEscape(sz.h)}"></a>`;
+      // v4 attachments API
+      const previewArea = 400 * 400;
+      const { width, height } = fitIntoArea(a, previewArea);
+      const previewUrl = `${config.host}/v${ctx.state.apiVersion}/attachments/${a.id}/image?redirect&width=${width}&height=${height}&format=jpeg`;
+      return `<a href="${htmlEscape(originalUrl(a))}"><img src="${htmlEscape(previewUrl)}" width="${width}" height="${height}"></a>`;
     });
     descriptionLines.push(`<p class="freefeed-images">${tags.join(' ')}</p>`);
   }
@@ -151,7 +164,7 @@ async function postItemMaker(postId, data, ctx) {
   descriptionLines.push(
     ...audioAtts.map(
       (a) =>
-        `<p class="freefeed-attachment">🎵 <a href="${htmlEscape(a.url)}">${htmlEscape(
+        `<p class="freefeed-attachment">🎵 <a href="${htmlEscape(originalUrl(a))}">${htmlEscape(
           a.title ? `${a.title} (${a.fileName})` : a.fileName,
         )}</a></p>`,
     ),
@@ -159,7 +172,7 @@ async function postItemMaker(postId, data, ctx) {
   descriptionLines.push(
     ...otherAtts.map(
       (a) =>
-        `<p class="freefeed-attachment">📄 <a href="${htmlEscape(a.url)}">${htmlEscape(
+        `<p class="freefeed-attachment">📄 <a href="${htmlEscape(originalUrl(a))}">${htmlEscape(
           a.fileName,
         )}</a></p>`,
     ),
@@ -214,7 +227,7 @@ async function postItemMaker(postId, data, ctx) {
     for (const attach of attachments) {
       item
         .ele('enclosure')
-        .att('url', attach.url)
+        .att('url', originalUrl(attach))
         .att('length', attach.fileSize)
         .att('type', attachMimeType(attach));
     }

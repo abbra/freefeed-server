@@ -174,9 +174,9 @@ export function getBestVariant(
   };
 }
 
-// Internals
+// Utils
 
-function fitIntoArea({ width, height }: Box, area: number): Box {
+export function fitIntoArea({ width, height }: Box, area: number): Box {
   if (width * height > area) {
     const ratio = Math.sqrt(area / (width * height));
 
@@ -186,7 +186,10 @@ function fitIntoArea({ width, height }: Box, area: number): Box {
   return { width, height };
 }
 
-function fitIntoBox({ width, height }: Box, { width: boxWidth, height: boxHeight }: Box): Box {
+export function fitIntoBox(
+  { width, height }: Box,
+  { width: boxWidth, height: boxHeight }: Box,
+): Box {
   const wRatio = width / boxWidth;
   const hRatio = height / boxHeight;
 
