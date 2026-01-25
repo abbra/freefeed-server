@@ -1,6 +1,6 @@
-/* eslint-env node, mocha */
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* global $pg_database */
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 
 import cleanDB from '../../../../dbCleaner';
 import { dbAdapter, User } from '../../../../../app/models';

@@ -1,6 +1,6 @@
 import compose from 'koa-compose';
 import config from 'config';
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import monitor from 'monitor-dog';
 import { validate as validateEmail } from 'email-validator';
 

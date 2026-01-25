@@ -1,8 +1,8 @@
-import { Context, Next } from 'koa';
+import { type Context, type Next } from 'koa';
 
 import { dbAdapter } from '../../models';
 import { NotAuthorizedException } from '../../support/exceptions';
-import { UUID } from '../../support/types';
+import { type UUID } from '../../support/types';
 import { currentConfig } from '../../support/app-async-context';
 
 import { authDebug, authDebugError } from '.';
@@ -13,8 +13,11 @@ import { authDebug, authDebugError } from '.';
  */
 export abstract class AuthToken {
   readonly hasFullAccess: boolean = false;
+  public readonly userId: UUID;
 
-  constructor(public readonly userId: UUID) {}
+  constructor(userId: UUID) {
+    this.userId = userId;
+  }
 
   abstract tokenString(): string;
 

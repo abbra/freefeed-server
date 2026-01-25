@@ -1,6 +1,6 @@
 import { after, before, describe, it } from 'mocha';
 import expect from 'unexpected';
-import { Context } from 'koa';
+import { type Context } from 'koa';
 
 import { withModifiedConfig } from '../helpers/with-modified-config';
 

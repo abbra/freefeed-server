@@ -3,7 +3,7 @@ import unexpected from 'unexpected';
 import unexpectedDate from 'unexpected-date';
 
 import cleanDB from '../../../dbCleaner';
-import { dbAdapter, Post, User, Group } from '../../../../app/models';
+import { dbAdapter, Post, User, Group, type Timeline } from '../../../../app/models';
 import { createUser } from '../../helpers/users';
 import { createPost } from '../../helpers/posts-and-comments';
 import { postAccessRequired } from '../../../../app/controllers/middlewares';
@@ -41,7 +41,9 @@ describe('Posts in to-delete state', () => {
       const ctx = { state: { user: luna }, params: { postId: post.id } };
 
       await expect(
-        mw(ctx, () => {}),
+        mw(ctx, () => {
+          /* empty */
+        }),
         'to be rejected with',
         { status: 404 },
       );
@@ -53,8 +55,8 @@ describe('Posts in to-delete state', () => {
     });
 
     it(`should not appear in Luna's timeline`, async () => {
-      const timeline = await luna.getPostsTimeline();
-      expect(await dbAdapter.getTimelinePostsIds([timeline!.intId], luna.id), 'to be empty');
+      const timeline = (await luna.getPostsTimeline()) as Timeline;
+      expect(await dbAdapter.getTimelinePostsIds([timeline.intId], luna.id), 'to be empty');
     });
 
     it(`should not appear in search results`, async () => {

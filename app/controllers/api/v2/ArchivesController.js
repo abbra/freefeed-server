@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import expect from 'unexpected';
 import compose from 'koa-compose';
 import config from 'config';

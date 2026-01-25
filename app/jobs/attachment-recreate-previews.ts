@@ -1,6 +1,6 @@
 import createDebug from 'debug';
 
-import { UUID } from '../support/types';
+import { type UUID } from '../support/types';
 import { dbAdapter, Job, JobManager } from '../models';
 
 type Payload = { attId: UUID };

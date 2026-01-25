@@ -1,7 +1,12 @@
-global.$database = require('../app/setup/database').default; // used by realtime-tests
+import { should } from 'chai';
 
-global.$should = require('chai').should();
-global.$postgres = require('../app/setup/postgres');
+import redisDb from '../app/setup/database';
+import * as postgresDb from '../app/setup/postgres';
+
+global.$database = redisDb; // used by realtime-tests
+
+global.$should = should();
+global.$postgres = postgresDb;
 
 global.$pg_database = global.$postgres.connect();
 

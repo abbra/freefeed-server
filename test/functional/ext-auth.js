@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $pg_database */
 import { URL } from 'url';
 import { parse as qsParse } from 'querystring';

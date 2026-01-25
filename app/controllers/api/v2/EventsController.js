@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import compose from 'koa-compose';
 
 import { dbAdapter } from '../../../models';
@@ -101,7 +101,7 @@ function getQueryParams(ctx) {
   const limit = parseInt(ctx.request.query.limit, 10) || DEFAULT_EVENTS_LIMIT;
   let eventGroups = ctx.request.query.filter || [];
 
-  if (!_.isArray(eventGroups)) {
+  if (!Array.isArray(eventGroups)) {
     eventGroups = [eventGroups];
   }
 
@@ -119,7 +119,7 @@ function getQueryParams(ctx) {
     }
   }
 
-  eventTypes = _(eventTypes).intersection(ALLOWED_EVENT_TYPES).uniq().value();
+  eventTypes = _.uniq(_.intersection(eventTypes, ALLOWED_EVENT_TYPES));
 
   if (eventTypes.length === 0) {
     eventTypes = null;

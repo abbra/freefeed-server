@@ -1,4 +1,4 @@
-import _, { difference, differenceBy, uniqBy } from 'lodash';
+import _, { difference, differenceBy, uniqBy } from 'lodash-es';
 import monitor from 'monitor-dog';
 import compose from 'koa-compose';
 

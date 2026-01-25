@@ -1,12 +1,19 @@
-import { ISO8601DateString as DateString } from '../types';
+import { type ISO8601DateString as DateString } from '../types';
 
 const dateExpressions = [
   /^(?<op>=|>=?|<=?)?(?<date>\d{4}(?:-\d{2}(?:-\d{2})?)?)$/, // "=YYYY-MM-DD", ">=YYYY-MM", "<=YYYY"
   /^(?<start>\d{4}(?:-\d{2}(?:-\d{2})?)?|\*)\.\.(?<end>\d{4}(?:-\d{2}(?:-\d{2})?)?|\*)$/, // "YYYY-MM-DD..YYYY-MM-DD" or "YYYY-MM-DD..*"
 ];
 
+type DateGroups = {
+  op?: '=' | '>=' | '<=' | '>' | '<';
+  date?: string;
+  start?: string;
+  end?: string;
+};
+
 export function parseDateExpression(dateExpr: string): [DateString | '', DateString | ''] | null {
-  let match = null;
+  let match: RegExpExecArray | null = null;
 
   for (const expression of dateExpressions) {
     if ((match = expression.exec(dateExpr)) !== null) {
@@ -18,7 +25,7 @@ export function parseDateExpression(dateExpr: string): [DateString | '', DateStr
     return null;
   }
 
-  const { op, date, start, end } = match.groups!;
+  const { op, date, start, end } = match.groups as DateGroups;
 
   // The returning dates will be used in the SQL query as "date BETWEEN start
   // AND end", which is equivalent to "date >= start AND date <= end". The date
@@ -39,11 +46,11 @@ export function parseDateExpression(dateExpr: string): [DateString | '', DateStr
     return [startOf(date), endOf(date)];
   }
 
-  if (isValidDate(start) && isValidDate(end)) {
+  if (start && end && isValidDate(start) && isValidDate(end)) {
     return [startOf(start), endOf(end)];
-  } else if (isValidDate(start)) {
+  } else if (start && isValidDate(start)) {
     return [startOf(start), ''];
-  } else if (isValidDate(end)) {
+  } else if (end && isValidDate(end)) {
     return ['', endOf(end)];
   }
 

@@ -1,4 +1,4 @@
-/* eslint-env node, mocha */
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* global $pg_database */
 import request from 'superagent';
 

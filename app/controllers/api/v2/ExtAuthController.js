@@ -1,4 +1,4 @@
-import { pick } from 'lodash';
+import { pick } from 'lodash-es';
 import compose from 'koa-compose';
 
 import { authRequired, inputSchemaRequired } from '../../middlewares';
@@ -160,7 +160,7 @@ export const authFinish = compose([
 
           if (state.profile.nickName) {
             username = state.profile.nickName.toLowerCase().replace(/[^a-z0-9]/gi, '');
-          } else if (state.profile.email && state.profile.email.indexOf('@') !== -1) {
+          } else if (state.profile.email && state.profile.email.includes('@')) {
             username = state.profile.email
               .split('@')[0]
               .toLowerCase()
@@ -202,7 +202,6 @@ async function adaptUsername(username) {
     return '';
   }
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     if (isValidUsername(username)) {
       // eslint-disable-next-line no-await-in-loop

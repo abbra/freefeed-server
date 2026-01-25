@@ -1,8 +1,7 @@
-/* eslint-env node, mocha */
 /* global $pg_database */
 import unexpected from 'unexpected';
 import unexpectedDate from 'unexpected-date';
-import { pick, sortBy } from 'lodash';
+import { pick, sortBy } from 'lodash-es';
 import { DateTime } from 'luxon';
 import { simpleParser } from 'mailparser';
 import config from 'config';

@@ -4,7 +4,7 @@
  * @param values
  * @param processor
  */
-export async function forEachAsync<T>(values: T[], processor: (v: T) => Promise<any>) {
+export async function forEachAsync<T>(values: T[], processor: (v: T) => Promise<unknown>) {
   await values.reduce(async (prev: Promise<void>, v: T) => {
     await prev;
     await processor(v);

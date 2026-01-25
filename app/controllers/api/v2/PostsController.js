@@ -1,5 +1,5 @@
 import config from 'config';
-import _, { difference } from 'lodash';
+import _, { difference } from 'lodash-es';
 import compose from 'koa-compose';
 
 import { dbAdapter, PubSub as pubSub } from '../../../models';

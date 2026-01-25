@@ -1,6 +1,6 @@
 import { type Knex } from 'knex';
 
-import { Branded, UUID } from '../types';
+import { type Branded, type UUID } from '../types';
 
 export type LockType = Branded<number, 'advisoryLockType'>;
 

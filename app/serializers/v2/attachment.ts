@@ -1,9 +1,13 @@
 import { API_VERSION_3 } from '../../api-versions';
-import type { Attachment } from '../../models';
+import { type Attachment } from '../../models';
 import { currentConfig } from '../../support/app-async-context';
 import { setExtension } from '../../support/media-files/file-ext';
-import type { MediaMetaData, MediaPreviews, MediaType } from '../../support/media-files/types';
-import type { ISO8601DateTimeString, UUID } from '../../support/types';
+import {
+  type MediaMetaData,
+  type MediaPreviews,
+  type MediaType,
+} from '../../support/media-files/types';
+import { type ISO8601DateTimeString, type UUID } from '../../support/types';
 
 type SerializedAttachmentV2 = {
   id: UUID;
@@ -110,6 +114,7 @@ function serializeAttachmentV2(att: Attachment): SerializedAttachmentV2 {
         }
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       result.imageSizes['o'] = { w: att.width!, h: att.height!, url: result.url };
     } else {
       // Show it as 'general'

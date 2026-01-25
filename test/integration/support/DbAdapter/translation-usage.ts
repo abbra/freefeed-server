@@ -1,12 +1,9 @@
-/* eslint-disable no-await-in-loop */
-/* eslint-env node, mocha */
-
 import expect from 'unexpected';
 
 import cleanDB from '../../../dbCleaner';
 import { dbAdapter } from '../../../../app/models';
 import { createTestUser } from '../../../functional/functional_test_helper';
-import { UUID } from '../../../../app/support/types';
+import { type UUID } from '../../../../app/support/types';
 
 const thisDate = '2023-01-15T14:00:00Z';
 const nextMonth = '2023-02-10T12:00:00Z';

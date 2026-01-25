@@ -1,7 +1,6 @@
-/* eslint-env node, mocha */
 /* global $pg_database */
 import expect from 'unexpected';
-import { toPlainObject } from 'lodash';
+import { toPlainObject } from 'lodash-es';
 
 import cleanDB from '../../dbCleaner';
 import { User, Timeline, dbAdapter } from '../../../app/models';

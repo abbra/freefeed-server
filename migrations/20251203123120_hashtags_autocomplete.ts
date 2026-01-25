@@ -1,4 +1,4 @@
-import type { Knex } from 'knex';
+import { type Knex } from 'knex';
 import pgFormat from 'pg-format';
 
 import { normalizeHashtag } from '../app/support/normalize-hashtags';
@@ -15,7 +15,6 @@ export const up = async (knex: Knex) => {
     const BATCH_SIZE = 100;
     let offset = 0;
 
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       // eslint-disable-next-line no-await-in-loop
       const { rows: hashtags }: { rows: { id: number; name: string }[] } = await knex.raw(

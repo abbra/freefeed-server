@@ -1,5 +1,5 @@
-require('tsx/cjs');
-const { loadFileConfigs } = require('config').util;
+import './loaders/register.js';
+import configModule from 'config';
 
 let env = process.env.NODE_ENV || 'development';
 
@@ -15,5 +15,7 @@ let env = process.env.NODE_ENV || 'development';
 
 const prevEnv = process.env.NODE_ENV;
 process.env.NODE_ENV = env;
-module.exports = { [env]: loadFileConfigs().postgres };
+const knexConfig = { [env]: configModule.util.loadFileConfigs().postgres };
 process.env.NODE_ENV = prevEnv;
+
+export default knexConfig;

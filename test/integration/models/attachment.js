@@ -18,9 +18,12 @@ import { withModifiedConfig } from '../../helpers/with-modified-config';
 import { initJobProcessing } from '../../../app/jobs';
 import { ATTACHMENT_PREPARE_VIDEO } from '../../../app/jobs/attachment-prepare-video';
 import { setExtension } from '../../../app/support/media-files/file-ext';
+import { nodeDirname } from '../../../app/support/node-dirname';
 
 import { testFiles } from './attachment-data';
 import { fakeS3Storage } from './fake-s3';
+
+const __dirname = nodeDirname(import.meta.url);
 
 const fixturesDir = resolve(__dirname, '../../fixtures');
 

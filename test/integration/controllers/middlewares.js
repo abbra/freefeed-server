@@ -1,9 +1,8 @@
-/* eslint-env node, mocha */
 /* global $pg_database */
 import compose from 'koa-compose';
 import unexpected from 'unexpected';
 import unexpectedSinon from 'unexpected-sinon';
-import { noop } from 'lodash';
+import { noop } from 'lodash-es';
 import { spy, stub } from 'sinon';
 
 import cleanDB from '../../dbCleaner';

@@ -1,15 +1,15 @@
 import jwt from 'jsonwebtoken';
 import config from 'config';
 import { isConst, isNumber, isObject, isString } from 'ts-json-check';
-import { Context, Next } from 'koa';
+import { type Context, type Next } from 'koa';
 
 import { DbAdapter } from '../../support/DbAdapter';
-import { IPAddr, Nullable, UUID } from '../../support/types';
+import { type IPAddr, type Nullable, type UUID } from '../../support/types';
 import { Address } from '../../support/ipv6';
 import { database, fallbackUserAgent } from '../common';
 import { NotAuthorizedException } from '../../support/exceptions';
 
-import { SessionRecord } from './types';
+import { type SessionRecord } from './types';
 import { AuthToken } from './AuthToken';
 
 // Session statuses:

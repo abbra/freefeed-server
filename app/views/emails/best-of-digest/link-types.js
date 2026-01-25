@@ -8,7 +8,7 @@ export const ARROW = 'arrow';
 const linkTypes = [LINK, AT_LINK, LOCAL_LINK, EMAIL, HASHTAG, ARROW];
 
 export function isLink({ type }) {
-  return linkTypes.indexOf(type) !== -1;
+  return linkTypes.includes(type);
 }
 
 export const FRIENDFEED_POST = new RegExp(`^http://friendfeed.com/[^/]+/([0-9a-f]{8})(?:/|$)`);

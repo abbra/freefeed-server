@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 
 export type ListLike<T> = List<T> | T[] | { items: T[]; inclusive: boolean };
 
@@ -8,10 +8,13 @@ export type ListLike<T> = List<T> | T[] | { items: T[]; inclusive: boolean };
  * 2. All items EXCEPT of these (when 'inclusive' is false).
  */
 export class List<T> {
-  constructor(
-    public items: T[] = [],
-    public inclusive: boolean = true,
-  ) {}
+  public items: T[] = [];
+  public inclusive = true;
+
+  constructor(items: T[] = [], inclusive = true) {
+    this.items = items;
+    this.inclusive = inclusive;
+  }
 
   isEmpty() {
     return this.inclusive && this.items.length === 0;
@@ -45,11 +48,11 @@ export class List<T> {
     return List.empty();
   }
 
-  static empty<X = any>() {
+  static empty<X = unknown>() {
     return new List<X>();
   }
 
-  static everything<X = any>() {
+  static everything<X = unknown>() {
     return new List<X>([], false);
   }
 
@@ -124,10 +127,10 @@ export class List<T> {
     }
 
     // unreachable
-    return new List();
+    return new List<never>();
   }
 
-  static equal(list1: any, list2: any) {
+  static equal(list1: ListLike<unknown>, list2: ListLike<unknown>) {
     list1 = List.from(list1);
     list2 = List.from(list2);
 

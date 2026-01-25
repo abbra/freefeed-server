@@ -1,11 +1,10 @@
 /* eslint-disable no-await-in-loop */
-/* eslint-env node, mocha */
 
 import expect from 'unexpected';
 
 import cleanDB from '../../dbCleaner';
 import { User, dbAdapter, Post, Comment } from '../../../app/models';
-import { UUID } from '../../../app/support/types';
+import { type UUID } from '../../../app/support/types';
 import { serializeFeed } from '../../../app/serializers/v2/post';
 
 describe(`'notifyOfAllComments' field in serialized posts`, () => {

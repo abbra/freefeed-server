@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 import expect from 'unexpected';
 
 import { isBlockedEmailDomain, normalizeEmail } from '../../../app/support/email-norm';

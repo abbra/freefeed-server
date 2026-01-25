@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import compose from 'koa-compose';
 
 import { dbAdapter } from '../../../models';
@@ -163,7 +163,7 @@ async function validateInvitation(data) {
     throw new ValidationException('Invitation lang must not be empty');
   }
 
-  if (!data.hasOwnProperty('singleUse') || !_.isBoolean(data.singleUse)) {
+  if (!Object.prototype.hasOwnProperty.call(data, 'singleUse') || !_.isBoolean(data.singleUse)) {
     throw new ValidationException('Invitation singleUse must not be empty');
   }
 }

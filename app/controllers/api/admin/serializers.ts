@@ -1,6 +1,6 @@
-import { uniq } from 'lodash';
+import { uniq } from 'lodash-es';
 
-import { UUID } from '../../../support/types';
+import { type UUID } from '../../../support/types';
 import { dbAdapter } from '../../../models';
 
 export async function serializeUsers(userIds: UUID[]) {

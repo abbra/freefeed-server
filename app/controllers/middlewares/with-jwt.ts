@@ -1,4 +1,4 @@
-import { Context, Next } from 'koa';
+import { type Context, type Next } from 'koa';
 
 import { NotAuthorizedException } from '../../support/exceptions';
 import { authDebugError } from '../../models/auth-tokens';

@@ -1,4 +1,3 @@
-/* eslint-disable no-redeclare */
 import { spawn, type SpawnOptionsWithoutStdio } from 'child_process';
 
 export type SpawnAsyncOptions = SpawnOptionsWithoutStdio & { binary?: true };

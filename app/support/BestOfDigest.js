@@ -1,5 +1,5 @@
 import createDebug from 'debug';
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import { DateTime } from 'luxon';
 
 import { dbAdapter } from '../models';
@@ -197,25 +197,19 @@ function preparePosts(payload, recipient) {
       .map((userId) => payload.subscribers.find((subscriber) => subscriber.id === userId))
       .filter((user) => user);
 
-    post.attachments = _(post.attachments || [])
-      .map((attachmentId) => {
-        return payload.attachments.find((att) => att.id === attachmentId);
-      })
-      .value();
+    post.attachments = (post.attachments || []).map((attachmentId) => {
+      return payload.attachments.find((att) => att.id === attachmentId);
+    });
 
-    post.usersLikedPost = _(post.likes || [])
-      .map((userId) => {
-        return payload.users.find((user) => user.id === userId);
-      })
-      .value();
+    post.usersLikedPost = (post.likes || []).map((userId) => {
+      return payload.users.find((user) => user.id === userId);
+    });
 
-    post.comments = _(post.comments || [])
-      .map((commentId) => {
-        const theComment = payload.comments.find((comment) => comment.id === commentId);
-        theComment.createdBy = payload.users.find((user) => user.id === theComment.createdBy);
-        return theComment;
-      })
-      .value();
+    post.comments = (post.comments || []).map((commentId) => {
+      const theComment = payload.comments.find((comment) => comment.id === commentId);
+      theComment.createdBy = payload.users.find((user) => user.id === theComment.createdBy);
+      return theComment;
+    });
   }
 
   payload.user = recipient;

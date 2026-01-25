@@ -2,7 +2,7 @@ import { Comment, dbAdapter, Post } from './models';
 import { serializeTimeline } from './serializers/v2/timeline';
 import { List } from './support/open-lists';
 import { PubSubAdapter } from './support/PubSubAdapter';
-import { Nullable, UUID } from './support/types';
+import { type Nullable, type UUID } from './support/types';
 
 export class DummyPublisher extends PubSubAdapter {
   constructor() {
@@ -19,7 +19,11 @@ type UpdatePostOptions = {
 };
 
 export default class pubSub {
-  constructor(private publisher: PubSubAdapter) {}
+  private publisher: PubSubAdapter;
+
+  constructor(publisher: PubSubAdapter) {
+    this.publisher = publisher;
+  }
 
   setPublisher(publisher: PubSubAdapter) {
     this.publisher = publisher;

@@ -1,11 +1,11 @@
-/* eslint-env node, mocha */
 /* global $pg_database */
 import { join as pathJoin } from 'path';
 
 import expect from 'unexpected';
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 
 import cleanDB from '../dbCleaner';
+import { nodeDirname } from '../../app/support/node-dirname';
 import { getSingleton } from '../../app/app';
 import { DummyPublisher } from '../../app/pubsub';
 import {
@@ -42,6 +42,8 @@ import {
   justCreateComment,
   createTestUser,
 } from './functional_test_helper';
+
+const __dirname = nodeDirname(import.meta.url);
 
 describe('TimelinesControllerV2', () => {
   let app;

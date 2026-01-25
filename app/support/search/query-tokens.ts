@@ -17,9 +17,9 @@ export const IN_POSTS: Scope = 1 as const,
   IN_CONTENT: Scope = 3 as const, // = IN_POSTS | IN_COMMENTS
   IN_ALL: Scope = 7 as const; // = IN_POSTS | IN_COMMENTS | IN_ACCOUNTS
 
-export interface Token {
+export type Token = {
   getComplexity(): number;
-}
+};
 
 /**
  * Pipe represents the pipe symbol (`|`). This token is used only on initial
@@ -45,7 +45,11 @@ export class Plus implements Token {
  * ScopeStart marks the start of global query scope.
  */
 export class ScopeStart implements Token {
-  constructor(public scope: Scope) {}
+  public scope: Scope;
+
+  constructor(scope: Scope) {
+    this.scope = scope;
+  }
 
   getComplexity() {
     return 0;
@@ -56,11 +60,15 @@ export class ScopeStart implements Token {
  * Condition is the some post/comment non-textual filter.
  */
 export class Condition implements Token {
-  constructor(
-    public exclude: boolean,
-    public condition: string,
-    public args: string[],
-  ) {}
+  public exclude: boolean;
+  public condition: string;
+  public args: string[];
+
+  constructor(exclude: boolean, condition: string, args: string[]) {
+    this.exclude = exclude;
+    this.condition = condition;
+    this.args = args;
+  }
 
   getComplexity() {
     return 0.5 * this.args.length;
@@ -72,11 +80,15 @@ export class Condition implements Token {
  * quoted phrase. It is an atomic piece of query and have no internal elements.
  */
 export class Text implements Token {
-  constructor(
-    public exclude: boolean,
-    public phrase: boolean,
-    public text: string,
-  ) {}
+  public exclude: boolean;
+  public phrase: boolean;
+  public text: string;
+
+  constructor(exclude: boolean, phrase: boolean, text: string) {
+    this.exclude = exclude;
+    this.phrase = phrase;
+    this.text = text;
+  }
 
   getComplexity() {
     return this.phrase ? this.text.split(/\s+/).length : 1;
@@ -141,7 +153,11 @@ export class Text implements Token {
  * AnyText.
  */
 export class AnyText implements Token {
-  constructor(public children: Text[]) {}
+  public children: Text[];
+
+  constructor(children: Text[]) {
+    this.children = children;
+  }
 
   getComplexity() {
     return this.children.reduce((acc, t) => acc + t.getComplexity(), 0);
@@ -158,7 +174,11 @@ export class AnyText implements Token {
  * specific order. Even a single AnyText must be wrapped in SeqTexts.
  */
 export class SeqTexts implements Token {
-  constructor(public children: AnyText[]) {}
+  public children: AnyText[];
+
+  constructor(children: AnyText[]) {
+    this.children = children;
+  }
 
   getComplexity() {
     return this.children.reduce((acc, t) => acc + t.getComplexity(), 0);
@@ -174,10 +194,13 @@ export class SeqTexts implements Token {
  * InScope contains the subquery that have a specific local scope.
  */
 export class InScope implements Token {
-  constructor(
-    public scope: Scope,
-    public text: AnyText,
-  ) {}
+  public scope: Scope;
+  public text: AnyText;
+
+  constructor(scope: Scope, text: AnyText) {
+    this.scope = scope;
+    this.text = text;
+  }
 
   getComplexity() {
     return this.text.getComplexity();

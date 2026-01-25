@@ -54,6 +54,11 @@ declare module 'config' {
       secret: string;
     };
 
+    performance: {
+      searchQueriesTimeout: number;
+      bcryptRounds: number;
+    };
+
     postgres: {
       textSearchConfigName: string;
     };
@@ -124,11 +129,10 @@ declare module 'config' {
         notifyOfCommentsOnCommentedPosts: boolean;
         pauseMessage: string;
       };
-      overrides: {
-        [k: string]:
-          | { createdSince: string; value: unknown }
-          | { createdBefore: string; value: unknown };
-      };
+      overrides: Record<
+        string,
+        { createdSince: string; value: unknown } | { createdBefore: string; value: unknown }
+      >;
     };
 
     mailer: {
@@ -205,12 +209,13 @@ declare module 'config' {
       allowLocalhostOrigins: boolean;
     };
 
-    dailyMails: {
-      [key: string]: {
+    dailyMails: Record<
+      string,
+      {
         enabled: boolean;
         sendAt: string;
-      };
-    };
+      }
+    >;
 
     undo: {
       undoInterval: ISO8601DurationString;
@@ -228,16 +233,15 @@ declare module 'config' {
 
   export type PreviewsConfiguration = {
     imagePreviewQuality: number;
-    imagePreviewAreas: { [k: string]: number };
-    legacyImagePreviewSizes: {
-      [k: string]: {
+    imagePreviewAreas: Record<string, number>;
+    legacyImagePreviewSizes: Record<
+      string,
+      {
         width: number;
         height: number;
-      };
-    };
-    videoPreviewShortSides: {
-      [k: string]: number;
-    };
+      }
+    >;
+    videoPreviewShortSides: Record<string, number>;
   };
 
   export type MediaStorage =
@@ -254,13 +258,13 @@ declare module 'config' {
         s3ConfigOptions: Record<string, unknown>;
       };
 
-  interface Util {
+  type Util = {
     getEnv(key: string): string;
     loadFileConfigs<C = unknown>(
       configDir: string | null,
       options?: { skipConfigSources?: boolean },
     ): C;
-  }
+  };
 
   const c: Config & { util: Util };
   export default c;

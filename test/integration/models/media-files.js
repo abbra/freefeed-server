@@ -5,7 +5,9 @@ import { describe, it } from 'mocha';
 import expect from 'unexpected';
 
 import { detectMediaType } from '../../../app/support/media-files/detect';
+import { nodeDirname } from '../../../app/support/node-dirname';
 
+const __dirname = nodeDirname(import.meta.url);
 const samplesDir = join(__dirname, '../../fixtures/media-files');
 const filesData = JSON.parse(readFileSync(join(samplesDir, 'file-info.json'), 'utf8'));
 

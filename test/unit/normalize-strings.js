@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 import expect from 'unexpected';
 
 import { normalizeStrings } from '../../app/controllers/middlewares/normalize-input';

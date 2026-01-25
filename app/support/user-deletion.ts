@@ -5,7 +5,7 @@ import { GONE_DELETED } from '../models/user';
 
 import { forEachAsync } from './forEachAsync';
 import { delay } from './timers';
-import { UUID } from './types';
+import { type UUID } from './types';
 
 const debug = createDebug('freefeed:user-gone');
 
@@ -65,7 +65,10 @@ async function setDeletedStatus(userId: UUID) {
 }
 
 export async function deletePersonalInfo(userId: UUID) {
-  const userRow = await dbAdapter.database.getRow(`select * from users where uid = ?`, userId);
+  const userRow = await dbAdapter.database.getRow<{ username: string }>(
+    `select * from users where uid = ?`,
+    userId,
+  );
 
   // Update all 'users' row fields to their default values except for some fields
 
@@ -243,7 +246,10 @@ export async function deleteSubscriptions(userId: UUID, runUntil: Date) {
   await forEachAsync(userIds, async (id: UUID) => {
     if (new Date() < runUntil) {
       const friend = await dbAdapter.getUserById(id);
-      friend && (await user.unsubscribeFrom(friend));
+
+      if (friend) {
+        await user.unsubscribeFrom(friend);
+      }
     }
   });
 }
@@ -269,11 +275,12 @@ export async function deleteNotifications(userId: UUID) {
   const user = await dbAdapter.getUserById(userId);
 
   // Remove user's notifications caused by the user themself
-  user &&
-    (await dbAdapter.database.raw(
+  if (user) {
+    await dbAdapter.database.raw(
       `delete from events where user_id = ? and created_by_user_id = user_id`,
       user.intId,
-    ));
+    );
+  }
 }
 
 export async function deleteAppTokens(userId: UUID, runUntil: Date) {
@@ -314,15 +321,17 @@ export async function deleteArchives(userId: UUID) {
 
 export async function anonymizeInvitations(userId: UUID) {
   const user = await dbAdapter.getUserById(userId);
-  user &&
-    (await dbAdapter.database.raw(
+
+  if (user) {
+    await dbAdapter.database.raw(
       `update invitations set
           message='',
           lang='en',
           recommendations='{}'
        where author = ?`,
       user.intId,
-    ));
+    );
+  }
 }
 
 export async function deleteLocalBumps(userId: UUID) {
@@ -331,8 +340,10 @@ export async function deleteLocalBumps(userId: UUID) {
 
 export async function deleteSentEmailsLog(userId: UUID) {
   const user = await dbAdapter.getUserById(userId);
-  user &&
-    (await dbAdapter.database.raw(`delete from sent_emails_log where user_id = ?`, user.intId));
+
+  if (user) {
+    await dbAdapter.database.raw(`delete from sent_emails_log where user_id = ?`, user.intId);
+  }
 }
 
 export async function resetUserStatistics(userId: UUID) {

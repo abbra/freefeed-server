@@ -1,6 +1,5 @@
-/* eslint babel/semi: "error" */
 import GraphemeBreaker from 'grapheme-breaker';
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import config from 'config';
 
 import { extractHashtags } from '../support/hashtags';
@@ -610,7 +609,7 @@ export function addModel(dbAdapter) {
       timelineIntIds.push(await user.getRiverOfNewsTimelineIntId());
       timelineIntIds.push(this.feedIntIds);
 
-      return _.uniq(_.flatten(timelineIntIds));
+      return _.uniq(timelineIntIds.flat());
     }
 
     getLikesFriendOfFriendTimelineIntIds(user) {

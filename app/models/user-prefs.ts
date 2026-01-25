@@ -1,5 +1,5 @@
 import Ajv from 'ajv';
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import config from 'config';
 
 import { deepMergeJSON } from '../support/deep-merge';

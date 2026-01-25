@@ -1,5 +1,3 @@
-/* eslint-env node, mocha */
-
 import unexpected from 'unexpected';
 import unexpectedDate from 'unexpected-date';
 
@@ -107,7 +105,7 @@ describe('Basic digests functions', () => {
           const dailyEmailsSentAt = await dbAdapter.getDailyBestOfEmailSentAt(userIntIds);
           const weeklyEmailsSentAt = await dbAdapter.getWeeklyBestOfEmailSentAt(userIntIds);
 
-          let shouldSend: { [userIntId: string]: boolean } = {};
+          let shouldSend: Record<string, boolean> = {};
 
           for (const intId of userIntIds) {
             shouldSend[intId] = shouldSendDailyBestOfDigest(

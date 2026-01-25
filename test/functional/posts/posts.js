@@ -1,7 +1,7 @@
-/* eslint-env node, mocha */
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* global $pg_database, $should */
 import request from 'superagent';
-import _ from 'lodash';
+import * as _ from 'lodash-es';
 import expect from 'unexpected';
 
 import cleanDB from '../../dbCleaner';
@@ -443,7 +443,7 @@ describe('PostsController', () => {
             authToken: ctx.authToken,
           })
           .end((err, res) => {
-            _.isUndefined(res).should.be.false;
+            res.should.not.be.empty;
             res.body.should.not.be.empty;
             res.body.should.have.property('posts');
             res.body.posts.should.have.property('body');

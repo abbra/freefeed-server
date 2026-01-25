@@ -2,8 +2,9 @@
   "compilerOptions": {
     // Target latest version of ECMAScript.
     "target": "esnext",
+    "module": "esnext",
     // Search under node_modules for non-relative imports.
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     // Process & infer types from .js files.
     "allowJs": true,
     // Don't emit; allow Babel to transform files.
@@ -19,7 +20,14 @@
     "allowSyntheticDefaultImports": true,
     "diagnostics": true,
     "resolveJsonModule": true,
-    "typeRoots": ["./types", "node_modules/@types"]
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "typeRoots": ["./types", "node_modules/@types"],
+    "paths": {
+      // The "media-type" package has a broken exports/types configuration where TypeScript
+      // ignores the top-level "types" field when "exports" are present.
+      "media-type": ["./node_modules/media-type/index.d.ts"]
+    }
   },
   "include": ["app", "config", "lib", "migrations", "test", "types"]
 }

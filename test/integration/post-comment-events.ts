@@ -1,5 +1,3 @@
-/* eslint-env node, mocha */
-
 import expect from 'unexpected';
 
 import { Group, Post, User, dbAdapter } from '../../app/models';

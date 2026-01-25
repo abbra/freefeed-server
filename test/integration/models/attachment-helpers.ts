@@ -2,7 +2,7 @@ import path from 'path';
 import os from 'os';
 import { writeFile } from 'fs/promises';
 
-import { UUID } from '../../../app/support/types';
+import { type UUID } from '../../../app/support/types';
 import { Attachment, dbAdapter } from '../../../app/models';
 
 type FileInfo = {
@@ -17,6 +17,11 @@ export async function createAttachment(userId: UUID, { name, content }: FileInfo
   );
   await writeFile(localPath, content);
   const user = await dbAdapter.getUserById(userId);
-  const attachment = await Attachment.create(localPath, name, user!, null);
+
+  if (!user) {
+    throw new Error(`User ${userId} not found`);
+  }
+
+  const attachment = await Attachment.create(localPath, name, user, null);
   return attachment;
 }

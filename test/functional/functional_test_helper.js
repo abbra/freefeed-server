@@ -1,11 +1,12 @@
-/* eslint-env mocha */
+/* eslint-disable you-dont-need-lodash-underscore/is-undefined */
 import http from 'http';
 import { stringify as qsStringify } from 'querystring';
 import util from 'util';
+import { readFile } from 'fs/promises';
+import { basename } from 'path';
 
-import { fileFrom } from 'node-fetch';
 import request from 'superagent';
-import _, { merge } from 'lodash';
+import _, { merge } from 'lodash-es';
 import socketIO from 'socket.io-client';
 import expect from 'unexpected';
 import Application from 'koa';
@@ -528,6 +529,13 @@ export function updateGroupAsync(group, adminContext, groupData) {
   });
 }
 
+// Helper to create File from filesystem
+export async function fileFrom(filePath, mimeType) {
+  const buffer = await readFile(filePath);
+  const fileName = basename(filePath);
+  return new File([buffer], fileName, { type: mimeType });
+}
+
 export async function updateProfilePicture(userContext, filePath) {
   const form = new FormData();
   form.append('file', await fileFrom(filePath, 'image/png'));
@@ -579,7 +587,7 @@ export function groupToProtected(group, userContext) {
   return updateGroupAsync(group, userContext, { isPrivate: '0', isProtected: '1' });
 }
 
-export async function subscribeToAsync(subscriber, victim) {
+export async function subscribeToAsync(subscriber, victim, noEvents = true) {
   let victimObj;
 
   if (victim instanceof User) {
@@ -591,7 +599,7 @@ export async function subscribeToAsync(subscriber, victim) {
     victimObj = await dbAdapter.getFeedOwnerById(victim.id ?? victim.group.id);
   }
 
-  await subscriber.user.subscribeTo(victimObj);
+  await subscriber.user.subscribeTo(victimObj, { noEvents });
 }
 
 export function unsubscribeFromAsync(unsubscriber, victim) {
@@ -633,7 +641,7 @@ export async function mutualSubscriptions(userContexts) {
 }
 
 export async function createAndReturnPostToFeed(feed, userContext, body) {
-  const destinations = _.isArray(feed) ? _.map(feed, 'username') : [feed.username];
+  const destinations = Array.isArray(feed) ? feed.map((f) => f.username) : [feed.username];
   const response = await postJson('/v1/posts', {
     post: { body },
     meta: { feeds: destinations },
@@ -1095,7 +1103,7 @@ export async function fetchTimeline(path, viewerContext = null) {
  */
 export function noFieldOrEmptyArray(name) {
   return function (obj) {
-    return !(name in obj) || (_.isArray(obj[name]) && obj[name].length === 0);
+    return !(name in obj) || (Array.isArray(obj[name]) && obj[name].length === 0);
   };
 }
 
@@ -1195,7 +1203,11 @@ export function withEmailCapture({ clearBeforeEach = true, multiple = false } = 
       })),
   );
   after(removeMailListener);
-  clearBeforeEach && beforeEach(() => (ref.current = multiple ? [] : null));
+
+  if (clearBeforeEach) {
+    beforeEach(() => (ref.current = multiple ? [] : null));
+  }
+
   return ref;
 }
 

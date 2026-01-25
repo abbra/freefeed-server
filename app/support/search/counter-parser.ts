@@ -3,8 +3,15 @@ const counterExpressions = [
   /^(?<start>\d+|\*)\.\.(?<end>\d+|\*)$/, // "3..10" or "3..*"
 ];
 
+type CounterGroups = {
+  op?: string;
+  value?: string;
+  start?: string;
+  end?: string;
+};
+
 export function parseCounterExpression(counterExpr: string): [string, string] | null {
-  let match = null;
+  let match: RegExpExecArray | null = null;
 
   for (const expression of counterExpressions) {
     if ((match = expression.exec(counterExpr)) !== null) {
@@ -16,7 +23,7 @@ export function parseCounterExpression(counterExpr: string): [string, string] | 
     return null;
   }
 
-  const { op, value, start, end } = match.groups!;
+  const { op, value, start, end } = match.groups as CounterGroups;
 
   // The returning values will be used in the SQL query as "count BETWEEN start
   // AND end", which is equivalent to "count >= start AND count <= end".

@@ -1,17 +1,6 @@
 import Redis from 'ioredis';
-import {
-  cloneDeep,
-  intersection,
-  isArray,
-  isFunction,
-  isPlainObject,
-  keyBy,
-  last,
-  map,
-  noop,
-  uniqBy,
-} from 'lodash';
-import IoServer from 'socket.io';
+import { intersection, isPlainObject, keyBy, map, noop, uniqBy } from 'lodash-es';
+import { Server as SocketIOServer } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import createDebug from 'debug';
 import Raven from 'raven';
@@ -49,7 +38,7 @@ export default class PubsubListener {
     const pubClient = redisConnection();
     const subClient = pubClient.duplicate();
 
-    this.io = IoServer(server, {
+    this.io = new SocketIOServer(server, {
       allowEIO3: true,
       cors: { origin: true, credentials: true },
     });
@@ -135,7 +124,7 @@ export default class PubsubListener {
       }
 
       const channelListsPromises = map(data, async (channelIds, channelType) => {
-        if (!isArray(channelIds)) {
+        if (!Array.isArray(channelIds)) {
           throw new EventHandlingError(`List of ${channelType} ids has to be an array`);
         }
 
@@ -193,7 +182,7 @@ export default class PubsubListener {
       for (const channelType of Object.keys(data)) {
         const channelIds = data[channelType];
 
-        if (!isArray(channelIds)) {
+        if (!Array.isArray(channelIds)) {
           throw new EventHandlingError(
             `List of ${channelType} ids has to be an array`,
             `got bogus channel list`,
@@ -366,7 +355,7 @@ export default class PubsubListener {
         const { userId } = socket;
         // We may need to change the json data, so we create a deep copy for this
         // socket.
-        const data = cloneDeep(payload);
+        const data = structuredClone(payload);
 
         // Bans
         if (post && userId) {
@@ -1002,7 +991,8 @@ class EventHandlingError extends Error {
 const onSocketEvent = (socket, event, handler) =>
   socket.on(event, async (data, ...extra) => {
     const debugPrefix = `[socket.id=${socket.id}] '${event}' request`;
-    const callback = isFunction(last(extra)) ? last(extra) : noop;
+    const lastExtra = extra.at(-1);
+    const callback = typeof lastExtra === 'function' ? lastExtra : noop;
 
     try {
       debug(debugPrefix);

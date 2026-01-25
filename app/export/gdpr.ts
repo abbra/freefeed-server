@@ -5,42 +5,42 @@ import moment from 'moment';
 import { DataFactory, Writer } from 'n3';
 import PgCursor from 'pg-cursor';
 import pgFormat from 'pg-format';
-import noop from 'lodash/noop';
+import { noop } from 'lodash-es';
 import config from 'config';
-import { QueryResultRow } from 'pg';
+import { type QueryResultRow } from 'pg';
 import { type Knex } from 'knex';
 
 import { DbAdapter } from '../support/DbAdapter';
 
 const { literal, namedNode, quad } = DataFactory;
 
-interface UserRow {
+type UserRow = {
   uid: string;
   username: string;
   screen_name: string;
-}
+};
 
-interface LikerRow extends UserRow {
+type LikerRow = {
   created_at: number;
-}
+} & UserRow;
 
 type LikersResult = {
   rows: LikerRow[];
 };
 
-interface RecipientRow extends UserRow {}
+type RecipientRow = UserRow;
 
 type RecipientsResult = {
   rows: RecipientRow[];
 };
 
-interface CommentRow extends UserRow {
+type CommentRow = {
   comment_id: number;
   comment_uuid: string;
   body: string;
   created_at: number;
   updated_at: number;
-}
+} & UserRow;
 
 type CommentsResult = {
   rows: CommentRow[];
@@ -218,7 +218,6 @@ export class DataProvider {
       const cursor = pg.query(new PgCursor(sql));
       const read: CursorReadF = promisify(cursor.read).bind(cursor);
 
-      // eslint-disable-next-line no-constant-condition
       while (true) {
         const rows = await read(100);
 
@@ -285,7 +284,6 @@ export class DataProvider {
         const cursor = pg.query(new PgCursor(sql));
         const read: CursorReadF = promisify(cursor.read).bind(cursor);
 
-        // eslint-disable-next-line no-constant-condition
         while (true) {
           const rows = await read(100);
 
@@ -381,7 +379,6 @@ export class DataProvider {
         const cursor = pg.query(new PgCursor(sql, [user.id]));
         const read: CursorReadF = promisify(cursor.read).bind(cursor);
 
-        // eslint-disable-next-line no-constant-condition
         while (true) {
           const rows = await read(100);
 

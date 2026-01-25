@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $pg_database */
 import { mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';

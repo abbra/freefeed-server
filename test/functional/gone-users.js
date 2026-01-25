@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 /* global $database, $pg_database */
 import config from 'config';
 import expect from 'unexpected';

@@ -2,7 +2,7 @@ import { format } from 'util';
 
 import createDebug from 'debug';
 import config from 'config';
-import { Loggly } from 'node-loggly-bulk';
+import loggly from 'node-loggly-bulk';
 
 /**
  * Tweak createDebug to send messages to Loggly (https://www.loggly.com/)
@@ -16,7 +16,7 @@ export function addLogglyToDebug() {
     return;
   }
 
-  const client = new Loggly({ token, subdomain, tags, json: true });
+  const client = new loggly.Loggly({ token, subdomain, tags, json: true });
   const _formatArgs = createDebug.formatArgs;
   createDebug.formatArgs = function (args) {
     client.log(

@@ -1,4 +1,3 @@
-/* eslint-env node, mocha */
 import expect from 'unexpected';
 
 import { deepMergeJSON } from '../../app/support/deep-merge';

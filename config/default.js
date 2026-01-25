@@ -1,7 +1,7 @@
 import fs from 'fs';
 
 import smtpTransport from 'nodemailer-smtp-transport';
-import { deferConfig as defer } from 'config/defer';
+import { deferConfig as defer } from 'config/defer.js';
 
 const stubTransport = function () {
   return {
@@ -258,6 +258,7 @@ config.redis = {
 config.performance = {
   // PostgreSQL 'statement_timeout' for search queries in milliseconds (0 => no timeout)
   searchQueriesTimeout: 0,
+  bcryptRounds: 10,
 };
 
 config.postgres = {
@@ -571,4 +572,4 @@ config.hashtagStats = {
   refreshInterval: 2 * 60 * 60, // 2 hours
 };
 
-module.exports = config;
+export default config;
