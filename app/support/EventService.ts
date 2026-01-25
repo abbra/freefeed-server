@@ -19,6 +19,7 @@ type OnPostFeedsChangedParams = {
 
 type EventData = { userId: UUID; event: T_EVENT_TYPE };
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class EventService {
   static async onUserBanned(
     initiatorIntId: number,
@@ -243,14 +244,14 @@ export class EventService {
 
     // Message to the comment author
     await createEvent(
-      commentAuthor!.intId,
+      commentAuthor.intId,
       EVENT_TYPES.COMMENT_RESTORED,
       restoredBy.intId,
-      commentAuthor!.intId,
+      commentAuthor.intId,
       postGroups.length === 0 ? null : postGroups[0].intId,
       post.id,
       comment.id,
-      postAuthor!.intId,
+      postAuthor.intId,
     );
 
     if (postGroups.length === 0) {
@@ -270,11 +271,11 @@ export class EventService {
           a.intId,
           EVENT_TYPES.COMMENT_RESTORED_BY_ANOTHER_ADMIN,
           restoredBy.intId,
-          commentAuthor!.intId,
+          commentAuthor.intId,
           groups[0].intId,
           post.id,
           comment.id,
-          postAuthor!.intId,
+          postAuthor.intId,
         );
       }),
     );
@@ -290,16 +291,20 @@ export class EventService {
 
     const postAuthor = await dbAdapter.getUserById(post.userId);
 
+    if (!postAuthor) {
+      return;
+    }
+
     // Message to the post author
     await createEvent(
-      postAuthor!.intId,
+      postAuthor.intId,
       EVENT_TYPES.POST_RESTORED,
       restoredBy.intId,
-      postAuthor!.intId,
+      postAuthor.intId,
       postGroups.length === 0 ? null : postGroups[0].intId,
       post.id,
       null,
-      postAuthor!.intId,
+      postAuthor.intId,
     );
 
     if (postGroups.length === 0) {
@@ -319,11 +324,11 @@ export class EventService {
           a.intId,
           EVENT_TYPES.POST_RESTORED_BY_ANOTHER_ADMIN,
           restoredBy.intId,
-          postAuthor!.intId,
+          postAuthor.intId,
           groups[0].intId,
           post.id,
           null,
-          postAuthor!.intId,
+          postAuthor.intId,
         );
       }),
     );
@@ -402,6 +407,11 @@ export class EventService {
     const usersCanSeeComment = await comment.usersCanSee();
     const targetUsers = affectedUsers.filter((u) => usersCanSeeComment.includes(u.id));
 
+    if (!postAuthor || !commentAuthor) {
+      // Just in case
+      return;
+    }
+
     // Create events
     await Promise.all(
       (
@@ -412,12 +422,12 @@ export class EventService {
         createEvent(
           user.intId,
           event,
-          commentAuthor!.intId,
+          commentAuthor.intId,
           user.intId,
           postGroupIntId,
           post.id,
           comment.id,
-          postAuthor!.intId,
+          postAuthor.intId,
         ),
       ),
     );
@@ -440,6 +450,10 @@ export class EventService {
       post.getGroupsPostedTo(),
     ]);
 
+    if (!postAuthor) {
+      return;
+    }
+
     // Message to the comment author
     if (commentAuthor) {
       // Is post belongs to any group managed by destroyer?
@@ -452,7 +466,7 @@ export class EventService {
         groups.length === 0 ? null : groups[0].intId,
         post.id,
         null,
-        postAuthor!.intId,
+        postAuthor.intId,
       );
     }
 
@@ -477,7 +491,7 @@ export class EventService {
           groups[0].intId,
           post.id,
           null,
-          postAuthor!.intId,
+          postAuthor.intId,
         );
       }),
     );
@@ -492,12 +506,16 @@ export class EventService {
 
     const postAuthor = await dbAdapter.getUserById(post.userId);
 
+    if (!postAuthor) {
+      return;
+    }
+
     // Message to the post author
     await createEvent(
-      postAuthor!.intId,
+      postAuthor.intId,
       EVENT_TYPES.POST_MODERATED,
       destroyedBy.intId,
-      postAuthor!.intId,
+      postAuthor.intId,
       postGroups.length === 0 ? null : postGroups[0].intId,
       null,
       null,
@@ -521,7 +539,7 @@ export class EventService {
           a.intId,
           EVENT_TYPES.POST_MODERATED_BY_ANOTHER_ADMIN,
           destroyedBy.intId,
-          postAuthor!.intId,
+          postAuthor.intId,
           groups[0].intId,
           null,
           null,
@@ -536,6 +554,11 @@ export class EventService {
       dbAdapter.getUserById(post.userId),
       group.getAdministrators(),
     ]);
+
+    if (!postAuthor) {
+      return;
+    }
+
     const recipients = uniqBy((postAuthor ? [postAuthor] : []).concat(admins), 'id');
     await Promise.all(
       recipients.map((u) =>
@@ -547,7 +570,7 @@ export class EventService {
           group.intId,
           post.id,
           null,
-          postAuthor!.intId,
+          postAuthor.intId,
         ),
       ),
     );
@@ -558,6 +581,11 @@ export class EventService {
       dbAdapter.getUserById(post.userId),
       group.getAdministrators(),
     ]);
+
+    if (!postAuthor) {
+      return;
+    }
+
     const recipients = uniqBy((postAuthor ? [postAuthor] : []).concat(admins), 'id');
     await Promise.all(
       recipients.map((u) =>
@@ -569,7 +597,7 @@ export class EventService {
           group.intId,
           post.id,
           null,
-          postAuthor!.intId,
+          postAuthor.intId,
         ),
       ),
     );
@@ -637,12 +665,16 @@ export class EventService {
 
     const postAuthor = await dbAdapter.getUserById(post.userId);
 
+    if (!postAuthor) {
+      return;
+    }
+
     // Message to the post author
     await createEvent(
-      postAuthor!.intId,
+      postAuthor.intId,
       EVENT_TYPES.POST_MODERATED,
       changedBy.intId,
-      postAuthor!.intId,
+      postAuthor.intId,
       removedFromGroups.length === 0 ? null : removedFromGroups[0].intId,
       post.id,
       null,
@@ -666,11 +698,11 @@ export class EventService {
           a.intId,
           EVENT_TYPES.POST_MODERATED_BY_ANOTHER_ADMIN,
           changedBy.intId,
-          postAuthor!.intId,
+          postAuthor.intId,
           groups[0].intId,
           post.id,
           null,
-          postAuthor!.intId,
+          postAuthor.intId,
         );
       }),
     );
@@ -1088,8 +1120,8 @@ async function createEvent(
     if (recipientIntId !== createdByUserIntId) {
       updates.push(pubSub.updateUnreadNotifications(recipientIntId));
 
-      if (eventType === EVENT_TYPES.SUBSCRIPTION_REQUEST_APPROVED) {
-        updates.push(pubSub.updateUnreadNotifications(createdByUserIntId!));
+      if (eventType === EVENT_TYPES.SUBSCRIPTION_REQUEST_APPROVED && createdByUserIntId) {
+        updates.push(pubSub.updateUnreadNotifications(createdByUserIntId));
       }
     }
   }

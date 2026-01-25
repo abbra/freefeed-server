@@ -85,9 +85,10 @@ export class ContentTooLargeException extends Error {
   }
 }
 
-export class ServerErrorException {
-  constructor(message) {
-    this.message = message || 'Internal server error';
+export class ServerErrorException extends Error {
+  constructor(message = 'Internal server error') {
+    super(message);
+    Error.captureStackTrace(this, this.constructor);
     this.status = 500;
   }
 }

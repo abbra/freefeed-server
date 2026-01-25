@@ -114,6 +114,7 @@ function serializeAttachmentV2(att: Attachment): SerializedAttachmentV2 {
         }
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       result.imageSizes['o'] = { w: att.width!, h: att.height!, url: result.url };
     } else {
       // Show it as 'general'

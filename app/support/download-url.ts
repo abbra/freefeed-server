@@ -43,7 +43,7 @@ export async function downloadURL(
   // }
 
   if (response.headers.has('content-length')) {
-    const contentLength = parseInt(response.headers.get('content-length')!);
+    const contentLength = parseInt(response.headers.get('content-length') ?? '');
 
     if (!isNaN(contentLength) && contentLength > sizeLimit) {
       throw new Error(`File is too large (${contentLength} bytes, max. ${sizeLimit})`);

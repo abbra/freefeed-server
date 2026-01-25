@@ -68,6 +68,7 @@ export async function proxy(ctx: Context) {
   // 2. Some of response headers that we want to pass to the client
   for (const header of ['Location', 'Content-Type', 'Content-Length']) {
     if (response.headers.has(header)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       ctx.set(header, response.headers.get(header)!);
     }
   }

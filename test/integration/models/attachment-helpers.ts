@@ -17,6 +17,11 @@ export async function createAttachment(userId: UUID, { name, content }: FileInfo
   );
   await writeFile(localPath, content);
   const user = await dbAdapter.getUserById(userId);
-  const attachment = await Attachment.create(localPath, name, user!, null);
+
+  if (!user) {
+    throw new Error(`User ${userId} not found`);
+  }
+
+  const attachment = await Attachment.create(localPath, name, user, null);
   return attachment;
 }

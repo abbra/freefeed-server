@@ -2,6 +2,7 @@ import config from 'config';
 
 import Mailer from '../../lib/mailer';
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export default class UserMailer {
   static async resetPassword(user, locals) {
     const subject = config.mailer.resetPasswordMailSubject;

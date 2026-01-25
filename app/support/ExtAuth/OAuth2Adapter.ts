@@ -51,11 +51,20 @@ type StateData = {
   profile?: Profile;
 };
 
+const MODE_DISCOVERY = 'discovery';
+const MODE_ENDPOINTS = 'endpoints';
+
+type EndpointsConfig =
+  | { mode: typeof MODE_DISCOVERY; url: string }
+  | {
+      mode: typeof MODE_ENDPOINTS;
+      authorization: string;
+      token: string;
+      userinfo: string;
+    };
+
 export class OAuth2Adapter extends Adapter<Query> {
-  private readonly discoveryURL?: string;
-  private readonly authorizationEndpoint?: string;
-  private readonly tokenEndpoint?: string;
-  private readonly userinfoEndpoint?: string;
+  private readonly endpoints: EndpointsConfig;
   private readonly scope: string = 'openid profile email';
   private readonly userInfoFields: UserInfoFields;
 
@@ -70,14 +79,17 @@ export class OAuth2Adapter extends Adapter<Query> {
     this.clientSecret = params.clientSecret;
 
     if ('discoveryRoot' in params) {
-      this.discoveryURL = `${params.discoveryRoot.replace(
-        /\/$/,
-        '',
-      )}/.well-known/openid-configuration`;
+      this.endpoints = {
+        mode: MODE_DISCOVERY,
+        url: `${params.discoveryRoot.replace(/\/$/, '')}/.well-known/openid-configuration`,
+      };
     } else {
-      this.authorizationEndpoint = params.authorizationEndpoint;
-      this.tokenEndpoint = params.tokenEndpoint;
-      this.userinfoEndpoint = params.userinfoEndpoint;
+      this.endpoints = {
+        mode: MODE_ENDPOINTS,
+        authorization: params.authorizationEndpoint,
+        token: params.tokenEndpoint,
+        userinfo: params.userinfoEndpoint,
+      };
     }
 
     if (params.scope !== undefined) {
@@ -90,11 +102,11 @@ export class OAuth2Adapter extends Adapter<Query> {
   async getAuthorizeURL(startParams: AuthStartParams): Promise<string> {
     let authUrl;
 
-    if (this.discoveryURL) {
-      const { authorization_endpoint } = await fetchJSON<DiscoveryResponse>(this.discoveryURL);
+    if (this.endpoints.mode === MODE_DISCOVERY) {
+      const { authorization_endpoint } = await fetchJSON<DiscoveryResponse>(this.endpoints.url);
       authUrl = authorization_endpoint;
     } else {
-      authUrl = this.authorizationEndpoint!;
+      authUrl = this.endpoints.authorization;
     }
 
     const stateKey = await this.cache.put<StateData>({ params: startParams });
@@ -138,13 +150,13 @@ export class OAuth2Adapter extends Adapter<Query> {
   private async fetchProfile(code: string, { params: { redirectURL } }: StateData) {
     let token_endpoint: string, userinfo_endpoint: string;
 
-    if (this.discoveryURL) {
+    if (this.endpoints.mode === MODE_DISCOVERY) {
       ({ token_endpoint, userinfo_endpoint } = await fetchJSON<DiscoveryResponse>(
-        this.discoveryURL,
+        this.endpoints.url,
       ));
     } else {
-      token_endpoint = this.tokenEndpoint!;
-      userinfo_endpoint = this.userinfoEndpoint!;
+      token_endpoint = this.endpoints.token;
+      userinfo_endpoint = this.endpoints.userinfo;
     }
 
     const access_token = await this.fetchAccessToken(code, redirectURL, token_endpoint);

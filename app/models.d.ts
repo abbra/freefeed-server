@@ -294,6 +294,7 @@ export const sessionTokenV1Store: SessionTokenV1Store;
 
 export { AuthToken, AppTokenV1, SessionTokenV1 } from './models/auth-tokens';
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ServerInfo {}
 
 type JobParams = {

@@ -54,6 +54,7 @@ describe('Comments in to-delete state', () => {
 
     it(`should not appear in Luna's Comments timeline`, async () => {
       const timeline = await luna.getCommentsTimelineIntId();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const p1 = (await dbAdapter.getPostById(post.id))!; // Re-read post
       expect(p1.feedIntIds, 'not to contain', timeline);
     });

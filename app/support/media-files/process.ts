@@ -86,16 +86,20 @@ export async function processMediaFile(
       const artist = getKeyCaseInsensitive(info.tags, 'artist');
       const album = getKeyCaseInsensitive(info.tags, 'album');
 
+      if (!commonResult.meta) {
+        commonResult.meta = {};
+      }
+
       if (title) {
-        commonResult.meta!['dc:title'] = title;
+        commonResult.meta['dc:title'] = title;
       }
 
       if (artist) {
-        commonResult.meta!['dc:creator'] = artist;
+        commonResult.meta['dc:creator'] = artist;
       }
 
       if (album) {
-        commonResult.meta!['dc:relation.isPartOf'] = album;
+        commonResult.meta['dc:relation.isPartOf'] = album;
       }
     }
   }
@@ -263,7 +267,9 @@ async function processImage(
   if (useOriginal && !isVideoStill) {
     previews[''] = previews[maxPreviewSize.variant];
     filesToUpload[''] = filesToUpload[maxPreviewSize.variant];
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete previews[maxPreviewSize.variant];
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete filesToUpload[maxPreviewSize.variant];
   }
 
@@ -499,7 +505,9 @@ async function processVideo(
 
     videoPreviews[''] = videoPreviews[maxVariant];
     videoFiles[''] = videoFiles[maxVariant];
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete videoPreviews[maxVariant];
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete videoFiles[maxVariant];
   } else {
     videoFiles[''] = { path: localFilePath, ext: info.extension };

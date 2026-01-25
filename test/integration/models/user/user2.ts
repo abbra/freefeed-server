@@ -47,14 +47,17 @@ describe('User model', () => {
     it(`should read updated 'firstInteractionAt' field`, async () => {
       // Read user from DB to fill cache
       const lunaClone1 = await dbAdapter.getUserById(luna.id);
-      expect(lunaClone1!.firstInteractionAt, 'to be', null);
+      expect(lunaClone1?.firstInteractionAt, 'to be', null);
 
-      const [ok, now] = await Promise.all([lunaClone1!.setFirstInteraction(), dbAdapter.now()]);
+      const [ok, now] = await Promise.all([
+        lunaClone1?.setFirstInteraction() ?? false,
+        dbAdapter.now(),
+      ]);
       expect(ok, 'to be', true);
 
       // Read user from DB / cache
       const lunaClone2 = await dbAdapter.getUserById(luna.id);
-      expect(lunaClone2!.firstInteractionAt, 'to be close to', now);
+      expect(lunaClone2?.firstInteractionAt, 'to be close to', now);
     });
   });
 });
