@@ -32,7 +32,7 @@ export default defineConfig([
     },
   },
   js.configs.recommended,
-  ts.configs.recommended,
+  ts.configs.strict,
   ts.configs.stylistic,
   importX.flatConfigs.recommended,
   importX.flatConfigs.typescript,
@@ -52,6 +52,12 @@ export default defineConfig([
     rules: {
       'promise/no-callback-in-promise': 'off',
       'promise/always-return': 'off',
+    },
+  },
+  {
+    files: ['app/controllers/api/**'],
+    rules: {
+      '@typescript-eslint/no-extraneous-class': 'off',
     },
   },
   {
