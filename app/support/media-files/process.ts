@@ -141,6 +141,7 @@ export async function processMediaFile(
       await writeFile(stubFilePath, stubContent);
 
       meta.inProgress = true;
+      meta.originalExtension = info.extension;
 
       const [maxPreviewSize] = getVideoPreviewSizes(info);
 

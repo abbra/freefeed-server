@@ -258,6 +258,11 @@ export function addModel(dbAdapter) {
           // File already deleted or doesn't exist - that's ok
         }
 
+        // Remove originalExtension from metadata as it's no longer needed
+        if (mediaData.meta?.originalExtension) {
+          delete mediaData.meta.originalExtension;
+        }
+
         // Update data
         await dbAdapter.updateAttachment(this.id, { ...mediaData, updatedAt: 'now' });
       } catch (err) {
@@ -267,22 +272,32 @@ export function addModel(dbAdapter) {
 
         let fileSize = null;
         let { fileName } = this;
+        let ext = this.meta.originalExtension || null;
 
         try {
           const st = await fs.stat(filePath);
           fileSize = st.size;
+
+          // If we have the original file and know its extension, use it
+          if (!ext) {
+            ext = extname(fileName)
+              .toLowerCase()
+              .replace(/[^a-z0-9_]/g, '')
+              .slice(0, 6);
+          }
+
+          // Update fileName to use the correct extension
+          if (ext) {
+            fileName = setExtension(fileName, ext);
+          }
         } catch {
           debugError(`file ${filePath} doesn't exist anymore, creating a stab`);
           const stubContent = 'The original file was lost';
           await fs.writeFile(filePath, stubContent);
           fileSize = Buffer.byteLength(stubContent);
           fileName = setExtension(fileName, 'txt');
+          ext = 'txt';
         }
-
-        const ext = extname(fileName)
-          .toLowerCase()
-          .replace(/[^a-z0-9_]/g, '') // Only the restricted set of chars is allowed
-          .slice(0, 6); // Limit the length of the extension
 
         // Upload or move files
         await this._placeFiles({ '': { path: filePath, ext } });
@@ -301,6 +316,7 @@ export function addModel(dbAdapter) {
         const toUpdate = {
           updatedAt: 'now',
           mediaType: 'general',
+          fileName,
           fileExtension: ext,
           fileSize,
           mimeType: lookup(ext) || 'application/octet-stream',

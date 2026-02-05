@@ -55,6 +55,7 @@ export type MediaMetaData = {
   animatedImage?: true;
   silent?: true;
   inProgress?: true;
+  originalExtension?: string;
 } & Record<`dc:${string}`, string>;
 
 export type MediaPreviews = {
