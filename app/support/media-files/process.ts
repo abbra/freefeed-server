@@ -1,4 +1,4 @@
-import { stat, unlink, writeFile } from 'fs/promises';
+import { stat, writeFile } from 'fs/promises';
 
 import { lookup as mimeLookup } from 'mime-types';
 import { exiftool } from 'exiftool-vendored';
@@ -500,9 +500,6 @@ async function processVideo(
   );
 
   if (!keepOriginalFile) {
-    debug(`removing original file for ${localFilePath}`);
-    await unlink(localFilePath);
-
     videoPreviews[''] = videoPreviews[maxVariant];
     videoFiles[''] = videoFiles[maxVariant];
     // eslint-disable-next-line @typescript-eslint/no-dynamic-delete

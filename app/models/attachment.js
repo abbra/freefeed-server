@@ -251,6 +251,13 @@ export function addModel(dbAdapter) {
         // Delete stub file
         await this.deleteFiles();
 
+        // Clean up the original file if it still exists
+        try {
+          await fs.unlink(filePath);
+        } catch {
+          // File already deleted or doesn't exist - that's ok
+        }
+
         // Update data
         await dbAdapter.updateAttachment(this.id, { ...mediaData, updatedAt: 'now' });
       } catch (err) {
@@ -282,6 +289,13 @@ export function addModel(dbAdapter) {
 
         // Delete stub file
         await this.deleteFiles();
+
+        // Clean up the original file if it still exists
+        try {
+          await fs.unlink(filePath);
+        } catch {
+          // File already deleted or doesn't exist - that's ok
+        }
 
         // Update data
         const toUpdate = {
