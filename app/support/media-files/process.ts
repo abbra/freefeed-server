@@ -380,7 +380,8 @@ async function processVideo(
   // First, we need to ensure that the video input is in YUV420 format (it is
   // important for some GIFs). We also need to crop it to even dimensions
   // because the yuv420p subsampling requires it.
-  filters.push(`[0:v:0]crop='trunc(iw/2)*2:trunc(ih/2)*2',format=yuv420p[vin]`);
+  // Use V:0 to select the first real video stream (excluding attached_pic)
+  filters.push(`[0:V:0]crop='trunc(iw/2)*2:trunc(ih/2)*2',format=yuv420p[vin]`);
 
   // Next, we need to resize the original video to maximum preview size
   if (maxPreviewSize.width === info.width && maxPreviewSize.height === info.height) {
@@ -396,25 +397,19 @@ async function processVideo(
   }
 
   // Next, we need to split video stream for the further processing. We should
-  // have one 'still' stream for the still frame and some streams for each of
-  // the preview sizes. If we can use original video, then we don't need the
-  // split output for the maximum preview size.
-  const splitVariants = [
-    'still',
-    ...previewSizes.map((p) => p.variant).filter((v) => !canUseOriginalVideo || v !== maxVariant),
-  ];
-  filters.push(
-    `[max]split=${splitVariants.length}${splitVariants.map((v) => `[${v}in]`).join('')}`,
-  );
+  // have streams for each of the preview sizes. If we can use original video,
+  // then we don't need the split output for the maximum preview size.
+  const splitVariants = previewSizes
+    .map((p) => p.variant)
+    .filter((v) => !canUseOriginalVideo || v !== maxVariant);
 
-  // Command for the still frame
-  const stillFile = tmpFileVariant(localFilePath, 'still', 'webp');
-  commands.push(
-    ['-map', `[stillin]`],
-    ['-ss', stillFrameOffset.toString()],
-    ['-frames:v', '1'],
-    stillFile,
-  );
+  if (splitVariants.length > 1) {
+    filters.push(
+      `[max]split=${splitVariants.length}${splitVariants.map((v) => `[${v}in]`).join('')}`,
+    );
+  } else if (splitVariants.length === 1) {
+    filters.push(`[max]copy[${splitVariants[0]}in]`);
+  }
 
   // Bitrate per pixel of the original video
   const originalBpp = info.bitrate / (info.width * info.height);
@@ -439,7 +434,7 @@ async function processVideo(
 
     if (variant === maxVariant && canUseOriginalVideo) {
       commands.push(
-        ['-map', '0:v:0'],
+        ['-map', '0:V:0'], // Use V:0 to select first real video stream (excluding attached_pic)
         ['-c:v', 'copy'], // Just copy the original video stream
         ...commonCommands,
         targetFile,
@@ -486,6 +481,24 @@ async function processVideo(
   debug(
     `finished video conversion for ${localFilePath} in ${Math.round((Date.now() - tStart) / 1000)}s`,
   );
+
+  // Extract still frame with a separate ffmpeg command
+  const stillFile = tmpFileVariant(localFilePath, 'still', 'webp');
+  debug(`extracting still frame for ${localFilePath} as ${stillFile}`);
+  await spawnAsync('ffmpeg', [
+    '-hide_banner',
+    ['-loglevel', 'error'],
+    '-y',
+    ['-ss', stillFrameOffset.toString()],
+    ['-i', localFilePath],
+    [
+      '-vf',
+      `crop='trunc(iw/2)*2:trunc(ih/2)*2',format=yuv420p,scale=${maxPreviewSize.width}:${maxPreviewSize.height}`,
+    ],
+    ['-frames:v', '1'],
+    ['-c:v', 'libwebp'],
+    stillFile,
+  ]);
 
   debug(`processing still frame for ${localFilePath} as ${stillFile}`);
   const [imagePreviews, imageFiles] = await processImage(
