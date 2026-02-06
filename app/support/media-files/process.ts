@@ -1,4 +1,4 @@
-import { stat, unlink, writeFile } from 'fs/promises';
+import { stat, writeFile } from 'fs/promises';
 
 import { lookup as mimeLookup } from 'mime-types';
 import { exiftool } from 'exiftool-vendored';
@@ -141,6 +141,7 @@ export async function processMediaFile(
       await writeFile(stubFilePath, stubContent);
 
       meta.inProgress = true;
+      meta.originalExtension = info.extension;
 
       const [maxPreviewSize] = getVideoPreviewSizes(info);
 
@@ -373,47 +374,50 @@ async function processVideo(
     audioCommands.push(['-map', '0:a:0'], ['-c:a', 'aac'], ['-b:a', '160k']);
   }
 
+  // Next, we need to split video stream for the further processing. We should
+  // have streams for each of the preview sizes. If we can use original video,
+  // then we don't need the split output for the maximum preview size.
+  const splitVariants = previewSizes
+    .map((p) => p.variant)
+    .filter((v) => !canUseOriginalVideo || v !== maxVariant);
+
   // Components of 'filter_complex' graph
   const filters: string[] = [];
 
-  // First, we need to ensure that the video input is in YUV420 format (it is
-  // important for some GIFs). We also need to crop it to even dimensions
-  // because the yuv420p subsampling requires it.
-  filters.push(`[0:v:0]crop='trunc(iw/2)*2:trunc(ih/2)*2',format=yuv420p[vin]`);
+  // Only create filter_complex if we need to process variants
+  if (splitVariants.length > 0) {
+    // First, we need to ensure that the video input is in YUV420 format (it is
+    // important for some GIFs). We also need to crop it to even dimensions
+    // because the yuv420p subsampling requires it.
+    // Use V:0 to select the first real video stream (excluding attached_pic)
+    filters.push(`[0:V:0]crop='trunc(iw/2)*2:trunc(ih/2)*2',format=yuv420p[vin]`);
 
-  // Next, we need to resize the original video to maximum preview size
-  if (maxPreviewSize.width === info.width && maxPreviewSize.height === info.height) {
-    // We can use original video sizes
-    filters.push(`[vin]copy[max]`);
-  } else if (maxPreviewSize.width + 1 === info.width || maxPreviewSize.height + 1 === info.height) {
-    // Special case: the original has odd dimensions, so we just need to crop it to maxPreviewSize
-    filters.push(`[vin]crop=${maxPreviewSize.width}:${maxPreviewSize.height}:0:0[max]`);
-  } else {
-    filters.push(
-      `[vin]zscale=w=${maxPreviewSize.width}:h=${maxPreviewSize.height}:filter=lanczos[max]`,
-    );
+    // Create [max] stream for splitting
+    // Resize the original video to maximum preview size
+    if (maxPreviewSize.width === info.width && maxPreviewSize.height === info.height) {
+      // We can use original video sizes
+      filters.push(`[vin]copy[max]`);
+    } else if (
+      maxPreviewSize.width + 1 === info.width ||
+      maxPreviewSize.height + 1 === info.height
+    ) {
+      // Special case: the original has odd dimensions, so we just need to crop it to maxPreviewSize
+      filters.push(`[vin]crop=${maxPreviewSize.width}:${maxPreviewSize.height}:0:0[max]`);
+    } else {
+      filters.push(
+        `[vin]zscale=w=${maxPreviewSize.width}:h=${maxPreviewSize.height}:filter=lanczos[max]`,
+      );
+    }
+
+    // Split or copy the [max] stream to variant inputs
+    if (splitVariants.length > 1) {
+      filters.push(
+        `[max]split=${splitVariants.length}${splitVariants.map((v) => `[${v}in]`).join('')}`,
+      );
+    } else {
+      filters.push(`[max]copy[${splitVariants[0]}in]`);
+    }
   }
-
-  // Next, we need to split video stream for the further processing. We should
-  // have one 'still' stream for the still frame and some streams for each of
-  // the preview sizes. If we can use original video, then we don't need the
-  // split output for the maximum preview size.
-  const splitVariants = [
-    'still',
-    ...previewSizes.map((p) => p.variant).filter((v) => !canUseOriginalVideo || v !== maxVariant),
-  ];
-  filters.push(
-    `[max]split=${splitVariants.length}${splitVariants.map((v) => `[${v}in]`).join('')}`,
-  );
-
-  // Command for the still frame
-  const stillFile = tmpFileVariant(localFilePath, 'still', 'webp');
-  commands.push(
-    ['-map', `[stillin]`],
-    ['-ss', stillFrameOffset.toString()],
-    ['-frames:v', '1'],
-    stillFile,
-  );
 
   // Bitrate per pixel of the original video
   const originalBpp = info.bitrate / (info.width * info.height);
@@ -438,7 +442,7 @@ async function processVideo(
 
     if (variant === maxVariant && canUseOriginalVideo) {
       commands.push(
-        ['-map', '0:v:0'],
+        ['-map', '0:V:0'], // Use V:0 to select first real video stream (excluding attached_pic)
         ['-c:v', 'copy'], // Just copy the original video stream
         ...commonCommands,
         targetFile,
@@ -479,12 +483,30 @@ async function processVideo(
     ['-loglevel', 'error'],
     '-y',
     ['-i', localFilePath],
-    ['-filter_complex', filters.join(';')],
+    filters.length > 0 ? ['-filter_complex', filters.join(';')] : [],
     ...commands,
   ]);
   debug(
     `finished video conversion for ${localFilePath} in ${Math.round((Date.now() - tStart) / 1000)}s`,
   );
+
+  // Extract still frame with a separate ffmpeg command
+  const stillFile = tmpFileVariant(localFilePath, 'still', 'webp');
+  debug(`extracting still frame for ${localFilePath} as ${stillFile}`);
+  await spawnAsync('ffmpeg', [
+    '-hide_banner',
+    ['-loglevel', 'error'],
+    '-y',
+    ['-ss', stillFrameOffset.toString()],
+    ['-i', localFilePath],
+    [
+      '-vf',
+      `crop='trunc(iw/2)*2:trunc(ih/2)*2',format=yuv420p,scale=${maxPreviewSize.width}:${maxPreviewSize.height}`,
+    ],
+    ['-frames:v', '1'],
+    ['-c:v', 'libwebp'],
+    stillFile,
+  ]);
 
   debug(`processing still frame for ${localFilePath} as ${stillFile}`);
   const [imagePreviews, imageFiles] = await processImage(
@@ -500,9 +522,6 @@ async function processVideo(
   );
 
   if (!keepOriginalFile) {
-    debug(`removing original file for ${localFilePath}`);
-    await unlink(localFilePath);
-
     videoPreviews[''] = videoPreviews[maxVariant];
     videoFiles[''] = videoFiles[maxVariant];
     // eslint-disable-next-line @typescript-eslint/no-dynamic-delete

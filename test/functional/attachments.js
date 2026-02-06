@@ -355,7 +355,7 @@ describe('Attachments', () => {
         height: 720,
         duration: 5.005,
         previewTypes: [],
-        meta: { inProgress: true },
+        meta: { inProgress: true, originalExtension: 'mp4' },
         createdAt: attObj.createdAt.toISOString(),
         updatedAt: attObj.updatedAt.toISOString(),
         createdBy: luna.user.id,

@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.30.0] - Not released
+### Fixed
+- Fixed video attachment processing issues:
+  - Original file is no longer lost when video processing fails.
+  - Video attachments that fail processing now fall back to 'general' type with
+    correct file extension (e.g., `.mp4`) instead of `.tmp`
+  - Fixed WebP encoder errors when extracting still frames from videos - still
+    frame is now extracted in a separate ffmpeg command with explicit static
+    WebP codec.
+  - Fixed video previews being created from embedded cover art instead of actual
+    video content - ffmpeg now correctly selects the main video stream,
+    excluding `attached_pic` streams.
+
 ## [2.29.0] - 2026-01-25
 ### Changed
 - **Breaking change**: Migrated from `tsx` to native Node.js TypeScript
