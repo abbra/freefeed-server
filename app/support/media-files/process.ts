@@ -383,19 +383,6 @@ async function processVideo(
   // Use V:0 to select the first real video stream (excluding attached_pic)
   filters.push(`[0:V:0]crop='trunc(iw/2)*2:trunc(ih/2)*2',format=yuv420p[vin]`);
 
-  // Next, we need to resize the original video to maximum preview size
-  if (maxPreviewSize.width === info.width && maxPreviewSize.height === info.height) {
-    // We can use original video sizes
-    filters.push(`[vin]copy[max]`);
-  } else if (maxPreviewSize.width + 1 === info.width || maxPreviewSize.height + 1 === info.height) {
-    // Special case: the original has odd dimensions, so we just need to crop it to maxPreviewSize
-    filters.push(`[vin]crop=${maxPreviewSize.width}:${maxPreviewSize.height}:0:0[max]`);
-  } else {
-    filters.push(
-      `[vin]zscale=w=${maxPreviewSize.width}:h=${maxPreviewSize.height}:filter=lanczos[max]`,
-    );
-  }
-
   // Next, we need to split video stream for the further processing. We should
   // have streams for each of the preview sizes. If we can use original video,
   // then we don't need the split output for the maximum preview size.
@@ -403,12 +390,32 @@ async function processVideo(
     .map((p) => p.variant)
     .filter((v) => !canUseOriginalVideo || v !== maxVariant);
 
-  if (splitVariants.length > 1) {
-    filters.push(
-      `[max]split=${splitVariants.length}${splitVariants.map((v) => `[${v}in]`).join('')}`,
-    );
-  } else if (splitVariants.length === 1) {
-    filters.push(`[max]copy[${splitVariants[0]}in]`);
+  // Only create [max] stream if we actually need it for splitting
+  if (splitVariants.length > 0) {
+    // Resize the original video to maximum preview size
+    if (maxPreviewSize.width === info.width && maxPreviewSize.height === info.height) {
+      // We can use original video sizes
+      filters.push(`[vin]copy[max]`);
+    } else if (
+      maxPreviewSize.width + 1 === info.width ||
+      maxPreviewSize.height + 1 === info.height
+    ) {
+      // Special case: the original has odd dimensions, so we just need to crop it to maxPreviewSize
+      filters.push(`[vin]crop=${maxPreviewSize.width}:${maxPreviewSize.height}:0:0[max]`);
+    } else {
+      filters.push(
+        `[vin]zscale=w=${maxPreviewSize.width}:h=${maxPreviewSize.height}:filter=lanczos[max]`,
+      );
+    }
+
+    // Split or copy the [max] stream to variant inputs
+    if (splitVariants.length > 1) {
+      filters.push(
+        `[max]split=${splitVariants.length}${splitVariants.map((v) => `[${v}in]`).join('')}`,
+      );
+    } else {
+      filters.push(`[max]copy[${splitVariants[0]}in]`);
+    }
   }
 
   // Bitrate per pixel of the original video
