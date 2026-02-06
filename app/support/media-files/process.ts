@@ -374,15 +374,6 @@ async function processVideo(
     audioCommands.push(['-map', '0:a:0'], ['-c:a', 'aac'], ['-b:a', '160k']);
   }
 
-  // Components of 'filter_complex' graph
-  const filters: string[] = [];
-
-  // First, we need to ensure that the video input is in YUV420 format (it is
-  // important for some GIFs). We also need to crop it to even dimensions
-  // because the yuv420p subsampling requires it.
-  // Use V:0 to select the first real video stream (excluding attached_pic)
-  filters.push(`[0:V:0]crop='trunc(iw/2)*2:trunc(ih/2)*2',format=yuv420p[vin]`);
-
   // Next, we need to split video stream for the further processing. We should
   // have streams for each of the preview sizes. If we can use original video,
   // then we don't need the split output for the maximum preview size.
@@ -390,8 +381,18 @@ async function processVideo(
     .map((p) => p.variant)
     .filter((v) => !canUseOriginalVideo || v !== maxVariant);
 
-  // Only create [max] stream if we actually need it for splitting
+  // Components of 'filter_complex' graph
+  const filters: string[] = [];
+
+  // Only create filter_complex if we need to process variants
   if (splitVariants.length > 0) {
+    // First, we need to ensure that the video input is in YUV420 format (it is
+    // important for some GIFs). We also need to crop it to even dimensions
+    // because the yuv420p subsampling requires it.
+    // Use V:0 to select the first real video stream (excluding attached_pic)
+    filters.push(`[0:V:0]crop='trunc(iw/2)*2:trunc(ih/2)*2',format=yuv420p[vin]`);
+
+    // Create [max] stream for splitting
     // Resize the original video to maximum preview size
     if (maxPreviewSize.width === info.width && maxPreviewSize.height === info.height) {
       // We can use original video sizes
@@ -482,7 +483,7 @@ async function processVideo(
     ['-loglevel', 'error'],
     '-y',
     ['-i', localFilePath],
-    ['-filter_complex', filters.join(';')],
+    filters.length > 0 ? ['-filter_complex', filters.join(';')] : [],
     ...commands,
   ]);
   debug(
