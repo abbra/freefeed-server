@@ -113,8 +113,7 @@ export function initHandlers(jobManager) {
       );
 
       // Schedule next monthly reminder
-      await job.relock(pauseReminderDate(user, 1));
-      await job.keep();
+      await job.keep(pauseReminderDate(user, 1));
     }),
   );
 
@@ -171,7 +170,7 @@ const checkUserStatus = (desiredStatus, handler) => async (job) => {
   const { id, goneAt } = job.payload;
   const user = await dbAdapter.getUserById(id);
 
-  if (user.goneStatus !== desiredStatus || user.goneAt?.getTime() !== goneAt) {
+  if (!user || user.goneStatus !== desiredStatus || user.goneAt?.getTime() !== goneAt) {
     // User status has been changed after the job creation so skip this job
     return;
   }
@@ -198,7 +197,7 @@ export function deletionDate(user) {
 
 export function pauseReminderDate(user, monthsFromNow = 1) {
   return (
-    DateTime.fromJSDate(user.goneAt)
+    DateTime.local()
       .setZone(config.ianaTimeZone)
       // Schedule reminder to 9:00
       .startOf('day')
