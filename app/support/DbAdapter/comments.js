@@ -65,6 +65,25 @@ const commentsTrait = (superClass) =>
       `);
     }
 
+    async getCommentByShortId(postId, commentShortId) {
+      // postId can be either a short ID or UUID
+      const postCondition = validator.isUUID(postId)
+        ? 'c.post_id = :postId'
+        : 'psi.short_id = :postId';
+
+      const attrs = await this.database.getRow(
+        `
+        SELECT c.*
+        FROM comments AS c
+        LEFT JOIN post_short_ids AS psi ON psi.long_id = c.post_id
+        WHERE ${postCondition}
+          AND c.short_id = :commentShortId
+      `,
+        { postId, commentShortId },
+      );
+      return initCommentObject(attrs);
+    }
+
     async getCommentById(id) {
       if (!validator.isUUID(id)) {
         return null;

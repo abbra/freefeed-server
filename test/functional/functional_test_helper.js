@@ -126,6 +126,10 @@ export async function justCreateComment(authorCtx, postId, body) {
   return comment;
 }
 
+export async function getPostShortId(postId) {
+  return await dbAdapter.getPostShortId(postId);
+}
+
 export async function justCreateGroup(
   creatorCtx,
   username,
