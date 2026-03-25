@@ -271,6 +271,7 @@ export class DbAdapter {
 
   // Comments
   getCommentLongIds(shortIds: string[]): Promise<UUID[]>;
+  getCommentByShortId(postShortId: string, commentShortId: string): Promise<Comment | null>;
   getCommentById(id: UUID): Promise<Comment | null>;
   getCommentsByIds(ids: UUID[]): Promise<Comment[]>;
   getCommentsByIntIds(ids: number[]): Promise<Comment[]>;
