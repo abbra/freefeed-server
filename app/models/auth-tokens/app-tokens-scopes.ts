@@ -101,6 +101,7 @@ export const appTokensScopes = [
       'GET /vN/everything',
       'GET /vN/comments/:commentId',
       'GET /vN/comments/:commentId/translated-body',
+      'GET /vN/posts/:postId/comments/id/:commentId',
       'GET /vN/posts/:postId/comments/:seqNumber',
       'POST /vN/posts/byIds',
       'POST /vN/comments/byIds',

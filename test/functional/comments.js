@@ -747,4 +747,135 @@ describe('CommentsController', () => {
       });
     });
   });
+
+  describe('getByPostAndCommentId', () => {
+    let luna, mars;
+    let lunaPost, marsPost;
+    let lunaComment;
+    let lunaPostShortId, marsPostShortId;
+
+    beforeEach(async () => {
+      [luna, mars] = await funcTestHelper.createTestUsers(['luna', 'mars']);
+
+      lunaPost = await funcTestHelper.justCreatePost(luna, 'Luna post');
+      marsPost = await funcTestHelper.justCreatePost(mars, 'Mars post');
+
+      lunaComment = await funcTestHelper.justCreateComment(luna, lunaPost.id, 'Luna comment');
+
+      lunaPostShortId = await funcTestHelper.getPostShortId(lunaPost.id);
+      marsPostShortId = await funcTestHelper.getPostShortId(marsPost.id);
+    });
+
+    it('should return comment by short id', async () => {
+      const resp = await funcTestHelper.performJSONRequest(
+        'GET',
+        `/v2/posts/${lunaPostShortId}/comments/id/${lunaComment.shortId}`,
+      );
+      expect(resp, 'to satisfy', {
+        comments: { id: lunaComment.id, body: 'Luna comment' },
+      });
+    });
+
+    it('should return comment by short id with post UUID', async () => {
+      const resp = await funcTestHelper.performJSONRequest(
+        'GET',
+        `/v2/posts/${lunaPost.id}/comments/id/${lunaComment.shortId}`,
+      );
+      expect(resp, 'to satisfy', {
+        comments: { id: lunaComment.id, body: 'Luna comment' },
+      });
+    });
+
+    it('should return comment by UUID', async () => {
+      const resp = await funcTestHelper.performJSONRequest(
+        'GET',
+        `/v2/posts/${lunaPostShortId}/comments/id/${lunaComment.id}`,
+      );
+      expect(resp, 'to satisfy', {
+        comments: { id: lunaComment.id, body: 'Luna comment' },
+      });
+    });
+
+    it('should return comment by UUID with post UUID', async () => {
+      const resp = await funcTestHelper.performJSONRequest(
+        'GET',
+        `/v2/posts/${lunaPost.id}/comments/id/${lunaComment.id}`,
+      );
+      expect(resp, 'to satisfy', {
+        comments: { id: lunaComment.id, body: 'Luna comment' },
+      });
+    });
+
+    it('should return 404 for non-existent comment short id', async () => {
+      const resp = await funcTestHelper.performJSONRequest(
+        'GET',
+        `/v2/posts/${lunaPostShortId}/comments/id/ffff`,
+      );
+      expect(resp, 'to satisfy', { err: 'Comment not found' });
+    });
+
+    it('should return 404 for non-existent post short id', async () => {
+      const resp = await funcTestHelper.performJSONRequest(
+        'GET',
+        `/v2/posts/ffffff/comments/id/${lunaComment.shortId}`,
+      );
+      expect(resp, 'to satisfy', { err: 'Comment not found' });
+    });
+
+    it('should return 404 when comment UUID belongs to different post', async () => {
+      // Try to get Luna's comment via Mars's post short id
+      const resp = await funcTestHelper.performJSONRequest(
+        'GET',
+        `/v2/posts/${marsPostShortId}/comments/id/${lunaComment.id}`,
+      );
+      expect(resp, 'to satisfy', { err: 'Comment not found' });
+    });
+
+    it('should return 404 when comment short id belongs to different post', async () => {
+      // Try to get Luna's comment via Mars's post short id
+      const resp = await funcTestHelper.performJSONRequest(
+        'GET',
+        `/v2/posts/${marsPostShortId}/comments/id/${lunaComment.shortId}`,
+      );
+      expect(resp, 'to satisfy', { err: 'Comment not found' });
+    });
+
+    describe('Private post visibility', () => {
+      let jupiter, jupiterPost, jupiterComment, jupiterPostShortId;
+
+      beforeEach(async () => {
+        [jupiter] = await funcTestHelper.createTestUsers(['jupiter']);
+        // Luna subscribes to Jupiter first, then Jupiter goes private
+        await funcTestHelper.subscribeToAsync(luna, jupiter);
+        await funcTestHelper.goPrivate(jupiter);
+        jupiterPost = await funcTestHelper.justCreatePost(jupiter, 'Private post');
+        jupiterComment = await funcTestHelper.justCreateComment(
+          jupiter,
+          jupiterPost.id,
+          'Private comment',
+        );
+        jupiterPostShortId = await funcTestHelper.getPostShortId(jupiterPost.id);
+      });
+
+      it('should not return comment from private post for non-subscriber', async () => {
+        const resp = await funcTestHelper.performJSONRequest(
+          'GET',
+          `/v2/posts/${jupiterPostShortId}/comments/id/${jupiterComment.shortId}`,
+        );
+        expect(resp, 'to satisfy', { err: 'You can not see this post' });
+      });
+
+      it('should return comment from private post for subscriber', async () => {
+        const resp = await funcTestHelper.performJSONRequest(
+          'GET',
+          `/v2/posts/${jupiterPostShortId}/comments/id/${jupiterComment.shortId}`,
+          null,
+          funcTestHelper.authHeaders(luna),
+        );
+        expect(resp, 'to satisfy', {
+          comments: { id: jupiterComment.id },
+        });
+      });
+    });
+  });
 });

@@ -1,4 +1,7 @@
-import { getBySeqNumber } from '../../../controllers/api/v1/CommentsController';
+import {
+  getBySeqNumber,
+  getByPostAndCommentId,
+} from '../../../controllers/api/v1/CommentsController';
 import {
   show,
   opengraph,
@@ -16,6 +19,7 @@ export default function addRoutes(app) {
   app.get('/posts/:postId/translated-body', getTranslatedBody);
   app.get('/posts/:postId/backlinks', getReferringPosts);
   app.get('/posts-opengraph/:postId', opengraph);
+  app.get('/posts/:postId/comments/id/:commentId', getByPostAndCommentId);
   app.get('/posts/:postId/comments/:seqNumber', getBySeqNumber);
   // We use POST here because this method can accept many post IDs
   app.post('/posts/byIds', getByIds);

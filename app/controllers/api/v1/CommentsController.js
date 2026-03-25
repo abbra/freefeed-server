@@ -1,6 +1,7 @@
 import compose from 'koa-compose';
 import monitor from 'monitor-dog';
 import { difference, uniq } from 'lodash-es';
+import validator from 'validator';
 
 import { dbAdapter, Comment, AppTokenV1 } from '../../../models';
 import {
@@ -173,6 +174,36 @@ export async function getBySeqNumber(ctx) {
     postId,
     Number.isFinite(number) ? number : -1,
   );
+
+  if (!comment) {
+    throw new NotFoundException('Comment not found');
+  }
+
+  ctx.params.commentId = comment.id;
+
+  await getById(ctx);
+}
+
+export async function getByPostAndCommentId(ctx) {
+  let { postId } = ctx.params;
+  const { commentId } = ctx.params;
+
+  // Resolve short post ID to UUID
+  if (!validator.isUUID(postId)) {
+    postId = (await dbAdapter.getPostLongId(postId)) ?? postId;
+  }
+
+  let comment;
+
+  if (validator.isUUID(commentId)) {
+    comment = await dbAdapter.getCommentById(commentId);
+
+    if (comment?.postId !== postId) {
+      comment = null;
+    }
+  } else {
+    comment = await dbAdapter.getCommentByShortId(postId, commentId);
+  }
 
   if (!comment) {
     throw new NotFoundException('Comment not found');
