@@ -13,8 +13,10 @@ import {
   banUser,
   createAndReturnPost,
   likeComment,
+  putCommentLike,
   createUserAsync,
   unlikeComment,
+  deleteCommentLike,
   getCommentLikes,
   like,
   mutualSubscriptions,
@@ -113,6 +115,49 @@ describe('Comment likes', () => {
               403,
               "You can't like comment that you have already liked",
             );
+          });
+
+          describe('PUT /comments/:commentId/like', () => {
+            it('should like comment and return operationId in meta', async () => {
+              const marsComment = await justCreateComment(mars, lunaPost.id, 'Mars comment');
+              const res = await putCommentLike(marsComment.id, luna, 'op-123');
+              const body = await res.json();
+
+              expect(res, 'to satisfy', { status: 200 });
+              expect(body, 'to satisfy', {
+                likes: expect.it('to have length', 1),
+                meta: { operationId: 'op-123' },
+              });
+              expect(body.likes[0].userId, 'to be', luna.user.id);
+            });
+
+            it('should return 200 when comment is already liked', async () => {
+              const marsComment = await justCreateComment(mars, lunaPost.id, 'Mars comment');
+              await putCommentLike(marsComment.id, luna, 'op-1');
+
+              const res = await putCommentLike(marsComment.id, luna, 'op-2');
+              const body = await res.json();
+
+              expect(res, 'to satisfy', { status: 200 });
+              expect(body, 'to satisfy', {
+                likes: expect.it('to have length', 1),
+                meta: { operationId: 'op-2' },
+              });
+              expect(body.likes[0].userId, 'to be', luna.user.id);
+            });
+
+            it('should return operationId: null when header is missing', async () => {
+              const marsComment = await justCreateComment(mars, lunaPost.id, 'Mars comment');
+              const res = await putCommentLike(marsComment.id, luna);
+              const body = await res.json();
+
+              expect(res, 'to satisfy', { status: 200 });
+              expect(body, 'to satisfy', {
+                likes: expect.it('to have length', 1),
+                meta: { operationId: null },
+              });
+              expect(body.likes[0].userId, 'to be', luna.user.id);
+            });
           });
 
           describe('comment likes sorting', () => {
@@ -357,6 +402,49 @@ describe('Comment likes', () => {
               403,
               "You can't un-like comment that you haven't yet liked",
             );
+          });
+
+          describe('DELETE /comments/:commentId/like', () => {
+            it('should unlike comment and return operationId in meta', async () => {
+              const marsComment = await justCreateComment(mars, lunaPost.id, 'Mars comment');
+              await likeComment(marsComment.id, luna);
+
+              const res = await deleteCommentLike(marsComment.id, luna, 'op-unlike-1');
+              const body = await res.json();
+
+              expect(res, 'to satisfy', { status: 200 });
+              expect(body, 'to satisfy', {
+                likes: expect.it('to be empty'),
+                meta: { operationId: 'op-unlike-1' },
+              });
+            });
+
+            it('should return 200 when comment is not liked', async () => {
+              const marsComment = await justCreateComment(mars, lunaPost.id, 'Mars comment');
+
+              const res = await deleteCommentLike(marsComment.id, luna, 'op-unlike-2');
+              const body = await res.json();
+
+              expect(res, 'to satisfy', { status: 200 });
+              expect(body, 'to satisfy', {
+                likes: expect.it('to be empty'),
+                meta: { operationId: 'op-unlike-2' },
+              });
+            });
+
+            it('should return operationId: null when header is missing', async () => {
+              const marsComment = await justCreateComment(mars, lunaPost.id, 'Mars comment');
+              await likeComment(marsComment.id, luna);
+
+              const res = await deleteCommentLike(marsComment.id, luna);
+              const body = await res.json();
+
+              expect(res, 'to satisfy', { status: 200 });
+              expect(body, 'to satisfy', {
+                likes: expect.it('to be empty'),
+                meta: { operationId: null },
+              });
+            });
           });
 
           describe('comment likes sorting', () => {

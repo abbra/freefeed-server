@@ -279,6 +279,7 @@ export class DbAdapter {
   getCommentBySeqNumber(postId: UUID, seqNumber: number): Promise<Comment | null>;
 
   // Comment likes
+  createCommentLike(commentUUID: UUID, likerUUID: UUID): Promise<boolean>;
   deleteCommentLike(commentUUID: UUID, likerUUID: UUID): Promise<boolean>;
   getLikesInfoForComments(
     commentsUUIDs: UUID[],

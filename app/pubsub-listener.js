@@ -762,6 +762,8 @@ export default class PubsubListener {
       json.comments.userId = data.unlikerUUID;
     }
 
+    json.meta = { operationId: data.operationId };
+
     const rooms = await getRoomsOfPost(post);
     await this.broadcastMessage(rooms, msgType, json, {
       post,
@@ -783,6 +785,10 @@ export default class PubsubListener {
       await dbAdapter.getLikesInfoForComments([commentUUID], viewerId);
     json.comments.likes = parseInt(commentLikesData.c_likes);
     json.comments.hasOwnLike = commentLikesData.has_own_like;
+
+    if (viewerId !== json.comments.userId) {
+      json.meta.operationId = null;
+    }
 
     defaultEmitter(socket, type, json);
   }

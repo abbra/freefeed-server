@@ -169,6 +169,8 @@ export const appTokensScopes = [
       'DELETE /vN/posts/:postId/like',
       'POST /vN/comments/:commentId/like',
       'POST /vN/comments/:commentId/unlike',
+      'PUT /vN/comments/:commentId/like',
+      'DELETE /vN/comments/:commentId/like',
       'POST /vN/posts/:postId/leave',
       'POST /vN/posts/:postId/notifyOfAllComments',
       'POST /vN/posts/:postId/pin',

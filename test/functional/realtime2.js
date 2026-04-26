@@ -51,6 +51,50 @@ describe('Realtime #2', () => {
 
   afterEach(() => [lunaSession, marsSession, anonSession].forEach((s) => s.disconnect()));
 
+  describe('operationId in comment like realtime events', () => {
+    let post, comment;
+
+    beforeEach(async () => {
+      post = await funcTestHelper.createAndReturnPost(luna, 'Luna post');
+      comment = await funcTestHelper.justCreateComment(luna, post.id, 'Luna comment');
+
+      await Promise.all([
+        lunaSession.sendAsync('subscribe', { post: [post.id] }),
+        marsSession.sendAsync('subscribe', { post: [post.id] }),
+      ]);
+    });
+
+    it(`should include operationId in comment_like:new event for action performer only`, async () => {
+      const lunaEvent = lunaSession.receive('comment_like:new');
+      const marsEvent = marsSession.receive('comment_like:new');
+
+      await Promise.all([
+        funcTestHelper.putCommentLike(comment.id, mars, 'comment-like-op-1'),
+        lunaEvent,
+        marsEvent,
+      ]);
+
+      expect(await marsEvent, 'to satisfy', { meta: { operationId: 'comment-like-op-1' } });
+      expect(await lunaEvent, 'to satisfy', { meta: { operationId: null } });
+    });
+
+    it(`should include operationId in comment_like:remove event for action performer only`, async () => {
+      await funcTestHelper.putCommentLike(comment.id, mars, 'comment-like-op-2');
+
+      const lunaEvent = lunaSession.receive('comment_like:remove');
+      const marsEvent = marsSession.receive('comment_like:remove');
+
+      await Promise.all([
+        funcTestHelper.deleteCommentLike(comment.id, mars, 'comment-unlike-op-1'),
+        lunaEvent,
+        marsEvent,
+      ]);
+
+      expect(await marsEvent, 'to satisfy', { meta: { operationId: 'comment-unlike-op-1' } });
+      expect(await lunaEvent, 'to satisfy', { meta: { operationId: null } });
+    });
+  });
+
   describe('Socket status', () => {
     it(`should return status of anonSession`, async () => {
       const resp = await anonSession.sendAsync('status', null);

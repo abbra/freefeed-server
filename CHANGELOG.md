@@ -13,16 +13,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `DELETE /v1/posts/:postId/like` removes a like and returns `200 OK` even if
     the post is not liked.
 
-  Both endpoints accept an optional `operation-id` header for client-side
-  deduplication and return it as `meta.operationId`.
+- New idempotent endpoints for comment likes:
+  - `PUT /v2/comments/:commentId/like` likes a comment and returns `200 OK` even
+    if the comment is already liked.
+  - `DELETE /v2/comments/:commentId/like` removes a comment like and returns
+    `200 OK` even if the comment is not liked.
 
-  Existing `POST /v1/posts/:postId/like` and `POST /v1/posts/:postId/unlike`
-  responses now also include `meta.operationId`, with `null` when the header is
-  not provided.
+  It is recommended to use these new endpoints instead of the existing ones to
+  improve reliability of like operations.   Existing like-related endpoints
+  (`POST /v1/posts/:postId/like`, `POST /v1/posts/:postId/unlike`, `POST
+  /v2/comments/:commentId/like`, and `POST /v2/comments/:commentId/unlike`) are
+  still available but treats as legacy.
 
-  Realtime `like:new` and `like:remove` events now include `meta.operationId`;
-  it is visible only to the user who performed the action and is `null` for
-  other subscribers.
+  Both new and old like-related endpoints accept an optional `operation-id`
+  header for client-side deduplication and return it as `meta.operationId` in
+  their responses, with `null` when the header is not provided.
+
+  Realtime events `like:new`, `like:remove`, `comment_like:new`, and
+  `comment_like:remove` now include `meta.operationId`; it is visible only to
+  the user who performed the action and is `null` for other subscribers.
 
 ## [2.29.4] - 2026-03-25
 ### Added
