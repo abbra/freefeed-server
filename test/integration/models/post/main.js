@@ -482,6 +482,29 @@ describe('Post', () => {
         likes[2].id.should.eql(users[4].id);
       }
     });
+
+    it('should accept operationId option and return true on success', async () => {
+      const result = await post.addLike(userA, { operationId: 'test-op-id' });
+      result.should.be.true;
+
+      const likers = await post.getLikes();
+      likers.length.should.eql(1);
+      likers[0].id.should.eql(userA.id);
+    });
+
+    it('should accept null operationId and return true on success', async () => {
+      const result = await post.addLike(userA, { operationId: null });
+      result.should.be.true;
+
+      const likers = await post.getLikes();
+      likers.length.should.eql(1);
+    });
+
+    it('should return false when liking already liked post', async () => {
+      await post.addLike(userA, { operationId: 'first-op' });
+      const result = await post.addLike(userA, { operationId: 'second-op' });
+      result.should.be.false;
+    });
   });
 
   describe('#removeLike()', () => {
@@ -542,6 +565,29 @@ describe('Post', () => {
         .catch((e) => {
           done(e);
         });
+    });
+
+    it('should accept operationId option and return true on success', async () => {
+      await post.addLike(userA);
+      const result = await post.removeLike(userA, { operationId: 'test-unlike-op' });
+      result.should.be.true;
+
+      const likers = await post.getLikes();
+      likers.should.be.empty;
+    });
+
+    it('should accept null operationId and return true on success', async () => {
+      await post.addLike(userA);
+      const result = await post.removeLike(userA, { operationId: null });
+      result.should.be.true;
+
+      const likers = await post.getLikes();
+      likers.should.be.empty;
+    });
+
+    it('should return false when unliking not-liked post', async () => {
+      const result = await post.removeLike(userA, { operationId: 'unlike-op' });
+      result.should.be.false;
     });
   });
 

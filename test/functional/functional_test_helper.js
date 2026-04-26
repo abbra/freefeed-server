@@ -517,6 +517,42 @@ export function unlike(postId, authToken) {
   return postJson(`/v1/posts/${postId}/unlike`, { authToken });
 }
 
+export async function putLike(postId, authToken, operationId = null) {
+  const headers = { 'Content-Type': 'application/json' };
+
+  if (operationId) {
+    headers['operation-id'] = operationId;
+  }
+
+  if (authToken) {
+    headers['authorization'] = `Bearer ${authToken}`;
+  }
+
+  return fetch(await apiUrl(`/v1/posts/${postId}/like`), {
+    agent,
+    method: 'PUT',
+    headers,
+  });
+}
+
+export async function deleteLike(postId, authToken, operationId = null) {
+  const headers = { 'Content-Type': 'application/json' };
+
+  if (operationId) {
+    headers['operation-id'] = operationId;
+  }
+
+  if (authToken) {
+    headers['authorization'] = `Bearer ${authToken}`;
+  }
+
+  return fetch(await apiUrl(`/v1/posts/${postId}/like`), {
+    agent,
+    method: 'DELETE',
+    headers,
+  });
+}
+
 export function updateUserAsync(userContext, user) {
   return postJson(`/v1/users/${userContext.user.id}`, {
     authToken: userContext.authToken,
