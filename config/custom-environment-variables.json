@@ -6,6 +6,9 @@
     "host": "FRFS_REDIS_HOST",
     "port": { "__name": "FRFS_REDIS_PORT", "__format": "json" }
   },
+  "imageMagick": {
+    "command": "FRFS_IMAGEMAGICK_COMMAND"
+  },
   "postgres": {
     "connection": {
       "host": "FRFS_PG_HOST",

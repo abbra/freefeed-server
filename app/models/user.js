@@ -21,7 +21,7 @@ import { nodeDirname } from '../support/node-dirname';
 import { EventService } from '../support/EventService';
 import { userCooldownStart, userDataDeletionStart, userPausedStart } from '../jobs/user-gone';
 import { allExternalProviders } from '../support/ExtAuth';
-import { spawnAsync } from '../support/spawn-async';
+import { runImageMagick } from '../support/image-magick';
 
 import { validate as validateUserPrefs } from './user-prefs';
 
@@ -1040,7 +1040,7 @@ export function addModel(dbAdapter) {
       const retinaSize = size * 2;
 
       const tmpPictureFile = join(tmpdir(), `resized-${uuid}-${size}`);
-      await spawnAsync('convert', [
+      await runImageMagick('convert', [
         path,
         '-auto-orient',
         '-resize',

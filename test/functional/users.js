@@ -2,7 +2,6 @@
 /* global $pg_database, $should */
 import jwt from 'jsonwebtoken';
 import * as _ from 'lodash-es';
-import { mkdirp } from 'mkdirp';
 import request from 'superagent';
 import expect from 'unexpected';
 import config from 'config';
@@ -1388,10 +1387,7 @@ describe('UsersController', () => {
     let authToken;
 
     beforeEach(async () => {
-      const [user] = await Promise.all([
-        funcTestHelper.createUserAsync('Luna', 'password'),
-        mkdirp(config.profilePictures.storage.rootDir + config.profilePictures.path),
-      ]);
+      const user = await funcTestHelper.createUserAsync('Luna', 'password');
 
       ({ authToken } = user);
     });

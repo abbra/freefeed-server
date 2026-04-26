@@ -248,7 +248,7 @@ describe('Attachments', () => {
 
     // Test the v4 API response
     const resp1 = await performJSONRequest('GET', `/v4/attachments/${id}`);
-    expect(resp1.attachments, 'to equal', {
+    expect(resp1.attachments, 'to satisfy', {
       id,
       mediaType: 'audio',
       fileName: 'music.mp3',
@@ -259,7 +259,9 @@ describe('Attachments', () => {
         'dc:creator': 'Piermic',
         'dc:relation.isPartOf': 'Wikimedia',
       },
-      duration: 24.032653,
+      // Different FFmpeg versions may report slightly different durations, so
+      // we allow a small delta
+      duration: expect.it('to be close to', 24.032653, 0.1),
       createdAt: attObj.createdAt.toISOString(),
       updatedAt: attObj.updatedAt.toISOString(),
       createdBy: luna.user.id,

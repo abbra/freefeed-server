@@ -8,7 +8,7 @@ import expect from 'unexpected';
 
 import cleanDB from '../../dbCleaner';
 import { User, Attachment } from '../../../app/models';
-import { spawnAsync } from '../../../app/support/spawn-async';
+import { runImageMagick } from '../../../app/support/image-magick';
 
 const orientationNames = [
   'Undefined', // No orientation tag
@@ -67,7 +67,7 @@ describe('Orientation', () => {
 });
 
 async function getOrientation(filename) {
-  const out = await spawnAsync('identify', ['-format', '%[orientation]', filename]);
+  const out = await runImageMagick('identify', ['-format', '%[orientation]', filename]);
   return out.stdout;
 }
 
@@ -76,7 +76,7 @@ async function getOrientation(filename) {
  * orientation tag when it is not zero.
  */
 async function createTestImage(filename, orientation) {
-  await spawnAsync('convert', [
+  await runImageMagick('convert', [
     ['-size', '200x300'],
     'xc:#000000',
     ['-fill', '#ffffff'],
@@ -115,7 +115,7 @@ function patternForOrientation(orientation) {
 }
 
 async function expectOrientation(filePath, orientation) {
-  const { stdout: buffer } = await spawnAsync(
+  const { stdout: buffer } = await runImageMagick(
     'convert',
     [filePath, '-filter', 'Point', '-resize', '3x3', 'gray:-'],
     { binary: true },
