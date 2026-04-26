@@ -100,13 +100,22 @@ export default class pubSub {
     await this.publisher.commentUpdated(payload);
   }
 
-  async newLike(post: Post, userId: UUID) {
-    const payload = JSON.stringify({ userId, postId: post.id });
+  async newLike(
+    post: Post,
+    userId: UUID,
+    { operationId = null }: { operationId?: string | null } = {},
+  ) {
+    const payload = JSON.stringify({ userId, postId: post.id, operationId });
     await this.publisher.likeAdded(payload);
   }
 
-  async removeLike(postId: UUID, userId: UUID, rooms: string[]) {
-    const payload = JSON.stringify({ userId, postId, rooms });
+  async removeLike(
+    postId: UUID,
+    userId: UUID,
+    rooms: string[],
+    { operationId = null }: { operationId?: string | null } = {},
+  ) {
+    const payload = JSON.stringify({ userId, postId, rooms, operationId });
     await this.publisher.likeRemoved(payload);
   }
 

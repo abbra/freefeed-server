@@ -267,6 +267,7 @@ export class DbAdapter {
   ): Promise<Map<UUID, { userId: UUID; createdAt: string; pinnedBy: UUID }[]>>;
 
   // Likes
+  likePost(postId: UUID, userId: UUID): Promise<boolean>;
   unlikePost(postId: UUID, userId: UUID): Promise<boolean>;
 
   // Comments
