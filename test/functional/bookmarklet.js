@@ -125,7 +125,7 @@ describe('BookmarkletController', () => {
         } else if (url === '/big-body.jpg') {
           ctx.status = 200;
           ctx.response.type = 'image/jpeg';
-          ctx.body = getStreamOfLength(imageSizeLimit * 2);
+          ctx.body = getStreamOfLength(imageSizeLimit + 1024);
         } else if (url === '/im%C3%A5ge.png') {
           ctx.status = 200;
           ctx.response.type = 'image/png';
@@ -250,7 +250,7 @@ async function callBookmarklet(author, body) {
   return respBody;
 }
 
-function getStreamOfLength(length, chunk = Buffer.alloc(1024)) {
+function getStreamOfLength(length, chunk = Buffer.alloc(1024 * 1024)) {
   let bytesLeft = length;
   return new Readable({
     read() {
@@ -258,7 +258,7 @@ function getStreamOfLength(length, chunk = Buffer.alloc(1024)) {
         this.push(chunk);
         bytesLeft -= chunk.length;
       } else if (bytesLeft > 0) {
-        this.push(chunk.slice(0, bytesLeft));
+        this.push(chunk.subarray(0, bytesLeft));
         bytesLeft = 0;
       } else {
         this.push(null);
