@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [2.30.0] - Not released
+### Added
+- New idempotent endpoints for post likes:
+  - `PUT /v1/posts/:postId/like` likes a post and returns `200 OK` even if the
+    post is already liked.
+  - `DELETE /v1/posts/:postId/like` removes a like and returns `200 OK` even if
+    the post is not liked.
+
+  Both endpoints accept an optional `operation-id` header for client-side
+  deduplication and return it as `meta.operationId`.
+
+  Existing `POST /v1/posts/:postId/like` and `POST /v1/posts/:postId/unlike`
+  responses now also include `meta.operationId`, with `null` when the header is
+  not provided.
+
+  Realtime `like:new` and `like:remove` events now include `meta.operationId`;
+  it is visible only to the user who performed the action and is `null` for
+  other subscribers.
 
 ## [2.29.4] - 2026-03-25
 ### Added
