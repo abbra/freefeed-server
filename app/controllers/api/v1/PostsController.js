@@ -121,19 +121,27 @@ export default class PostsController {
     monitored('posts.likes'),
     async (ctx) => {
       const { user, post } = ctx.state;
+      const { 'operation-id': operationId = null } = ctx.request.headers;
 
       if (post.userId === user.id) {
         throw new ForbiddenException("You can't like your own post");
       }
 
-      const success = await post.addLike(user);
+      const success = await post.addLike(user, { operationId });
 
-      if (!success) {
+      if (
+        !success &&
+        // POST requests are legacy, and we don't allow user to like post that
+        // he has already liked (by the legacy API contract). The new PUT/DELETE
+        // idempotent API allows user to like/unlike post multiple times without
+        // error.
+        ctx.method === 'POST'
+      ) {
         throw new ForbiddenException("You can't like post that you have already liked");
       }
 
       monitor.increment('posts.reactions');
-      ctx.body = {};
+      ctx.body = { meta: { operationId } };
     },
   ]);
 
@@ -143,14 +151,23 @@ export default class PostsController {
     monitored('posts.unlikes'),
     async (ctx) => {
       const { user, post } = ctx.state;
-      const success = await post.removeLike(user);
+      const { 'operation-id': operationId = null } = ctx.request.headers;
 
-      if (!success) {
+      const success = await post.removeLike(user, { operationId });
+
+      if (
+        !success &&
+        // POST requests are legacy, and we don't allow user to like post that
+        // he has already liked (by the legacy API contract). The new PUT/DELETE
+        // idempotent API allows user to like/unlike post multiple times without
+        // error.
+        ctx.method === 'POST'
+      ) {
         throw new ForbiddenException("You can't un-like post that you haven't yet liked");
       }
 
       monitor.decrement('posts.reactions');
-      ctx.body = {};
+      ctx.body = { meta: { operationId } };
     },
   ]);
 

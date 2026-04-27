@@ -800,14 +800,14 @@ describe('PostsController', () => {
             .post(`${app.context.config.host}/v1/posts/${context.post.id}/like`)
             .send({ authToken: otherUserAuthToken })
             .end((err, res) => {
-              res.body.should.be.empty;
+              res.body.should.eql({ meta: { operationId: null } });
               $should.not.exist(err);
 
               request
                 .post(`${app.context.config.host}/v1/posts/${context.post.id}/unlike`)
                 .send({ authToken: otherUserAuthToken })
                 .end((err, res) => {
-                  res.body.should.be.empty;
+                  res.body.should.eql({ meta: { operationId: null } });
                   $should.not.exist(err);
 
                   done();
@@ -838,6 +838,140 @@ describe('PostsController', () => {
     it("should not un-like user's own post", async () => {
       const response = await funcTestHelper.unlike(context.post.id, context.authToken);
       response.status.should.eql(403);
+    });
+  });
+
+  describe('PUT /posts/:postId/like (idempotent)', () => {
+    let context = {};
+    let otherUserAuthToken;
+
+    beforeEach(async () => {
+      context = await funcTestHelper.createUserAsync('Luna', 'password');
+
+      const [marsCtx, post] = await Promise.all([
+        funcTestHelper.createUserAsync('mars', 'password2'),
+        funcTestHelper.justCreatePost(context, 'Post body'),
+      ]);
+
+      context.post = post;
+      otherUserAuthToken = marsCtx.authToken;
+    });
+
+    it('should like post and return 200 with operationId in meta', async () => {
+      const response = await funcTestHelper.putLike(context.post.id, otherUserAuthToken, 'op-123');
+      response.status.should.eql(200);
+
+      const data = await response.json();
+      data.should.eql({ meta: { operationId: 'op-123' } });
+    });
+
+    it('should return 200 when liking already liked post (idempotent, no 403)', async () => {
+      await funcTestHelper.putLike(context.post.id, otherUserAuthToken, 'op-1');
+      const response = await funcTestHelper.putLike(context.post.id, otherUserAuthToken, 'op-2');
+      response.status.should.eql(200);
+
+      const data = await response.json();
+      data.should.eql({ meta: { operationId: 'op-2' } });
+    });
+
+    it('should handle parallel idempotent likes without errors', async () => {
+      const responses = await Promise.all([
+        funcTestHelper.putLike(context.post.id, otherUserAuthToken, 'op-1'),
+        funcTestHelper.putLike(context.post.id, otherUserAuthToken, 'op-2'),
+        funcTestHelper.putLike(context.post.id, otherUserAuthToken, 'op-3'),
+      ]);
+
+      responses.forEach((r) => r.status.should.eql(200));
+    });
+
+    it('should return operationId: null when header is missing', async () => {
+      const response = await funcTestHelper.putLike(context.post.id, otherUserAuthToken);
+      response.status.should.eql(200);
+
+      const data = await response.json();
+      data.should.eql({ meta: { operationId: null } });
+    });
+
+    it('should not allow liking own post', async () => {
+      const response = await funcTestHelper.putLike(context.post.id, context.authToken, 'op-1');
+      response.status.should.eql(403);
+    });
+
+    describe('Interaction with banned user', () => {
+      let postOfMars;
+      let marsCtx;
+
+      beforeEach(async () => {
+        marsCtx = await funcTestHelper.createUserAsync('mars2', 'password3');
+        postOfMars = await funcTestHelper.justCreatePost(marsCtx, 'I am mars!');
+        await funcTestHelper.banUser(context, marsCtx);
+      });
+
+      it(`should not allow like on banned user's post`, async () => {
+        const response = await funcTestHelper.putLike(postOfMars.id, context.authToken, 'op-1');
+        response.status.should.eql(403);
+      });
+    });
+  });
+
+  describe('DELETE /posts/:postId/like (idempotent)', () => {
+    let context = {};
+    let otherUserAuthToken;
+
+    beforeEach(async () => {
+      context = await funcTestHelper.createUserAsync('Luna', 'password');
+
+      const [marsCtx, post] = await Promise.all([
+        funcTestHelper.createUserAsync('mars', 'password2'),
+        funcTestHelper.justCreatePost(context, 'Post body'),
+      ]);
+
+      context.post = post;
+      otherUserAuthToken = marsCtx.authToken;
+    });
+
+    it('should unlike post and return 200 with operationId in meta', async () => {
+      await funcTestHelper.like(context.post.id, otherUserAuthToken);
+      const response = await funcTestHelper.deleteLike(
+        context.post.id,
+        otherUserAuthToken,
+        'op-unlike-1',
+      );
+      response.status.should.eql(200);
+
+      const data = await response.json();
+      data.should.eql({ meta: { operationId: 'op-unlike-1' } });
+    });
+
+    it('should return 200 when unliking not-liked post (idempotent, no 403)', async () => {
+      const response = await funcTestHelper.deleteLike(
+        context.post.id,
+        otherUserAuthToken,
+        'op-unlike-1',
+      );
+      response.status.should.eql(200);
+
+      const data = await response.json();
+      data.should.eql({ meta: { operationId: 'op-unlike-1' } });
+    });
+
+    it('should handle parallel idempotent unlikes without errors', async () => {
+      await funcTestHelper.like(context.post.id, otherUserAuthToken);
+      const responses = await Promise.all([
+        funcTestHelper.deleteLike(context.post.id, otherUserAuthToken, 'op-1'),
+        funcTestHelper.deleteLike(context.post.id, otherUserAuthToken, 'op-2'),
+      ]);
+
+      responses.forEach((r) => r.status.should.eql(200));
+    });
+
+    it('should return operationId: null when header is missing', async () => {
+      await funcTestHelper.like(context.post.id, otherUserAuthToken);
+      const response = await funcTestHelper.deleteLike(context.post.id, otherUserAuthToken);
+      response.status.should.eql(200);
+
+      const data = await response.json();
+      data.should.eql({ meta: { operationId: null } });
     });
   });
 

@@ -12,19 +12,21 @@ export default class CommentLikesController {
     monitored('comments.like'),
     async (ctx) => {
       const { comment, user } = ctx.state;
+      const { 'operation-id': operationId = null } = ctx.request.headers;
 
       if (comment.userId === user.id) {
         throw new ForbiddenException("You can't like your own comment");
       }
 
-      const ok = await comment.addLike(user);
+      const ok = await comment.addLike(user, { operationId });
 
-      if (!ok) {
+      if (!ok && ctx.method === 'POST') {
         throw new ForbiddenException("You can't like comment that you have already liked");
       }
 
       // Return likes list
       await CommentLikesController.likes(ctx);
+      ctx.body.meta = { operationId };
     },
   ]);
 
@@ -34,19 +36,21 @@ export default class CommentLikesController {
     monitored('comments.unlike'),
     async (ctx) => {
       const { comment, user } = ctx.state;
+      const { 'operation-id': operationId = null } = ctx.request.headers;
 
       if (comment.userId === user.id) {
         throw new ForbiddenException("You can't un-like your own comment");
       }
 
-      const ok = await comment.removeLike(user);
+      const ok = await comment.removeLike(user, { operationId });
 
-      if (!ok) {
+      if (!ok && ctx.method === 'POST') {
         throw new ForbiddenException("You can't un-like comment that you haven't yet liked");
       }
 
       // Return likes list
       await CommentLikesController.likes(ctx);
+      ctx.body.meta = { operationId };
     },
   ]);
 

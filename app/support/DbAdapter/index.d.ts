@@ -267,6 +267,7 @@ export class DbAdapter {
   ): Promise<Map<UUID, { userId: UUID; createdAt: string; pinnedBy: UUID }[]>>;
 
   // Likes
+  likePost(postId: UUID, userId: UUID): Promise<boolean>;
   unlikePost(postId: UUID, userId: UUID): Promise<boolean>;
 
   // Comments
@@ -278,6 +279,7 @@ export class DbAdapter {
   getCommentBySeqNumber(postId: UUID, seqNumber: number): Promise<Comment | null>;
 
   // Comment likes
+  createCommentLike(commentUUID: UUID, likerUUID: UUID): Promise<boolean>;
   deleteCommentLike(commentUUID: UUID, likerUUID: UUID): Promise<boolean>;
   getLikesInfoForComments(
     commentsUUIDs: UUID[],

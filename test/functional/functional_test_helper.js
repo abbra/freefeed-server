@@ -517,6 +517,42 @@ export function unlike(postId, authToken) {
   return postJson(`/v1/posts/${postId}/unlike`, { authToken });
 }
 
+export async function putLike(postId, authToken, operationId = null) {
+  const headers = { 'Content-Type': 'application/json' };
+
+  if (operationId) {
+    headers['operation-id'] = operationId;
+  }
+
+  if (authToken) {
+    headers['authorization'] = `Bearer ${authToken}`;
+  }
+
+  return fetch(await apiUrl(`/v1/posts/${postId}/like`), {
+    agent,
+    method: 'PUT',
+    headers,
+  });
+}
+
+export async function deleteLike(postId, authToken, operationId = null) {
+  const headers = { 'Content-Type': 'application/json' };
+
+  if (operationId) {
+    headers['operation-id'] = operationId;
+  }
+
+  if (authToken) {
+    headers['authorization'] = `Bearer ${authToken}`;
+  }
+
+  return fetch(await apiUrl(`/v1/posts/${postId}/like`), {
+    agent,
+    method: 'DELETE',
+    headers,
+  });
+}
+
 export function updateUserAsync(userContext, user) {
   return postJson(`/v1/users/${userContext.user.id}`, {
     authToken: userContext.authToken,
@@ -944,8 +980,12 @@ export async function markAllNotificationsAsRead(user) {
 // Comment likes
 // ************************
 
-export async function likeComment(commentId, likerContext = null) {
+export async function likeComment(commentId, likerContext = null, operationId = null) {
   const headers = {};
+
+  if (operationId) {
+    headers['operation-id'] = operationId;
+  }
 
   if (likerContext) {
     headers['X-Authentication-Token'] = likerContext.authToken;
@@ -955,8 +995,27 @@ export async function likeComment(commentId, likerContext = null) {
   return fetch(url, { agent, method: 'POST', headers });
 }
 
-export async function unlikeComment(commentId, unlikerContext = null) {
+export async function putCommentLike(commentId, likerContext = null, operationId = null) {
   const headers = {};
+
+  if (operationId) {
+    headers['operation-id'] = operationId;
+  }
+
+  if (likerContext) {
+    headers['X-Authentication-Token'] = likerContext.authToken;
+  }
+
+  const url = await apiUrl(`/v2/comments/${commentId}/like`);
+  return fetch(url, { agent, method: 'PUT', headers });
+}
+
+export async function unlikeComment(commentId, unlikerContext = null, operationId = null) {
+  const headers = {};
+
+  if (operationId) {
+    headers['operation-id'] = operationId;
+  }
 
   if (unlikerContext) {
     headers['X-Authentication-Token'] = unlikerContext.authToken;
@@ -964,6 +1023,21 @@ export async function unlikeComment(commentId, unlikerContext = null) {
 
   const url = await apiUrl(`/v2/comments/${commentId}/unlike`);
   return fetch(url, { agent, method: 'POST', headers });
+}
+
+export async function deleteCommentLike(commentId, unlikerContext = null, operationId = null) {
+  const headers = {};
+
+  if (operationId) {
+    headers['operation-id'] = operationId;
+  }
+
+  if (unlikerContext) {
+    headers['X-Authentication-Token'] = unlikerContext.authToken;
+  }
+
+  const url = await apiUrl(`/v2/comments/${commentId}/like`);
+  return fetch(url, { agent, method: 'DELETE', headers });
 }
 
 export async function getCommentLikes(commentId, viewerContext = null) {

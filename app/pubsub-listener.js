@@ -526,22 +526,22 @@ export default class PubsubListener {
     await this.broadcastMessage(rooms, type, json, { post });
   };
 
-  onLikeNew = async ({ userId, postId }) => {
+  onLikeNew = async ({ userId, postId, operationId }) => {
     const post = await dbAdapter.getPostById(postId);
     const json = {
       users: { id: userId }, // will be filled by _likeEventEmitter
-      meta: { postId },
+      meta: { postId, operationId },
     };
     const type = eventNames.LIKE_ADDED;
     const rooms = await getRoomsOfPost(post);
     await this.broadcastMessage(rooms, type, json, { post, emitter: this._likeEventEmitter });
   };
 
-  onLikeRemove = async ({ userId, postId, rooms }) => {
-    const json = { meta: { userId, postId } };
+  onLikeRemove = async ({ userId, postId, rooms, operationId }) => {
+    const json = { meta: { userId, postId, operationId } };
     const post = await dbAdapter.getPostById(postId);
     const type = eventNames.LIKE_REMOVED;
-    await this.broadcastMessage(rooms, type, json, { post });
+    await this.broadcastMessage(rooms, type, json, { post, emitter: this._unlikeEventEmitter });
   };
 
   onPostHide = async ({ postId, userId }) => {
@@ -762,6 +762,8 @@ export default class PubsubListener {
       json.comments.userId = data.unlikerUUID;
     }
 
+    json.meta = { operationId: data.operationId };
+
     const rooms = await getRoomsOfPost(post);
     await this.broadcastMessage(rooms, msgType, json, {
       post,
@@ -784,16 +786,38 @@ export default class PubsubListener {
     json.comments.likes = parseInt(commentLikesData.c_likes);
     json.comments.hasOwnLike = commentLikesData.has_own_like;
 
+    if (viewerId !== json.comments.userId) {
+      json.meta.operationId = null;
+    }
+
     defaultEmitter(socket, type, json);
   }
 
   async _likeEventEmitter(socket, type, json) {
-    const viewerId = socket.userId;
+    const { userId: viewerId } = socket;
     const userId = json.users.id;
+
     // We need to re-serialize users according to the viewerId
     const users = await serializeUsersByIds([userId], viewerId, false);
     // eslint-disable-next-line prefer-destructuring
     json.users = users[0];
+
+    // Show operationId only for the user who performed the action
+    if (viewerId !== userId) {
+      json.meta.operationId = null;
+    }
+
+    defaultEmitter(socket, type, json);
+  }
+
+  _unlikeEventEmitter(socket, type, json) {
+    const { userId: viewerId } = socket;
+
+    // Show operationId only for the user who performed the action
+    if (viewerId !== json.meta.userId) {
+      json.meta.operationId = null;
+    }
+
     defaultEmitter(socket, type, json);
   }
 
