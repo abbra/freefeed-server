@@ -16,7 +16,15 @@ describe('Media files', () => {
     const { file: fileName, info } = file;
     it(`should detect media info for ${fileName}`, async () => {
       const detected = await detectMediaType(join(samplesDir, fileName), fileName);
-      expect(info, 'to equal', detected);
+
+      if (info.duration) {
+        // Different FFmpeg versions may report slightly different durations, so
+        // we allow a small delta
+        const d = info.duration;
+        info.duration = expect.it('to be close to', d, 0.1);
+      }
+
+      expect(detected, 'to satisfy', info);
     });
   }
 });

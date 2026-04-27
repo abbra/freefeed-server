@@ -4,6 +4,7 @@ import { lookup as mimeLookup } from 'mime-types';
 import { exiftool } from 'exiftool-vendored';
 import createDebug from 'debug';
 
+import { runImageMagick } from '../image-magick';
 import { spawnAsync, type SpawnAsyncArgs } from '../spawn-async';
 import { currentConfig } from '../app-async-context';
 import { ContentTooLargeException } from '../exceptions';
@@ -247,7 +248,7 @@ async function processImage(
         return;
       }
 
-      await spawnAsync('convert', [
+      await runImageMagick('convert', [
         `${localFilePath}[0]`, // Adding [0] for the case of animated or multi-page images
         '-auto-orient',
         ['-resize', `${width}!x${height}!`],

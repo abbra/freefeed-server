@@ -38,15 +38,22 @@ process.env.MONITOR_PREFIX = config.monitorPrefix;
 const checkIfMediaDirectoriesExist = async () => {
   let gotErrors = false;
 
-  const attConf = currentConfig().attachments;
+  const { attachments, profilePictures } = currentConfig();
+  const dirs = [
+    ['Attachments', attachments],
+    ['Profile pictures', profilePictures],
+  ].filter(([, mediaConfig]) => mediaConfig.storage.type === 'fs');
 
-  const attachmentsDir = attConf.storage.rootDir + attConf.path;
+  for (const [name, mediaConfig] of dirs) {
+    const dir = mediaConfig.storage.rootDir + mediaConfig.path;
 
-  try {
-    await access(attachmentsDir, constants.W_OK);
-  } catch {
-    gotErrors = true;
-    log(`Attachments dir does not exist: ${attachmentsDir}`);
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      await access(dir, constants.W_OK);
+    } catch {
+      gotErrors = true;
+      log(`${name} dir does not exist: ${dir}`);
+    }
   }
 
   if (gotErrors) {

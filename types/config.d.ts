@@ -224,6 +224,13 @@ declare module 'config' {
     hashtagStats: {
       refreshInterval: number;
     };
+
+    imageMagick: {
+      // 'auto' prefers ImageMagick 7 'magick' CLI and falls back to ImageMagick 6
+      // legacy 'convert'/'identify' commands. Set to 'legacy' to force ImageMagick 6
+      // commands, or to 'magick' / a path to magick to force ImageMagick 7 CLI.
+      command: 'auto' | 'legacy' | string;
+    };
   };
 
   export type TranslationLimits = {
