@@ -786,7 +786,7 @@ export default class PubsubListener {
     json.comments.likes = parseInt(commentLikesData.c_likes);
     json.comments.hasOwnLike = commentLikesData.has_own_like;
 
-    if (viewerId !== json.comments.userId) {
+    if (json.meta && viewerId !== json.comments.userId) {
       json.meta.operationId = null;
     }
 
@@ -803,7 +803,7 @@ export default class PubsubListener {
     json.users = users[0];
 
     // Show operationId only for the user who performed the action
-    if (viewerId !== userId) {
+    if (json.meta && viewerId !== json.comments.userId) {
       json.meta.operationId = null;
     }
 
@@ -814,7 +814,7 @@ export default class PubsubListener {
     const { userId: viewerId } = socket;
 
     // Show operationId only for the user who performed the action
-    if (viewerId !== json.meta.userId) {
+    if (json.meta && viewerId !== json.comments.userId) {
       json.meta.operationId = null;
     }
 
