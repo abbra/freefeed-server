@@ -100,13 +100,22 @@ export default class pubSub {
     await this.publisher.commentUpdated(payload);
   }
 
-  async newLike(post: Post, userId: UUID) {
-    const payload = JSON.stringify({ userId, postId: post.id });
+  async newLike(
+    post: Post,
+    userId: UUID,
+    { operationId = null }: { operationId?: string | null } = {},
+  ) {
+    const payload = JSON.stringify({ userId, postId: post.id, operationId });
     await this.publisher.likeAdded(payload);
   }
 
-  async removeLike(postId: UUID, userId: UUID, rooms: string[]) {
-    const payload = JSON.stringify({ userId, postId, rooms });
+  async removeLike(
+    postId: UUID,
+    userId: UUID,
+    rooms: string[],
+    { operationId = null }: { operationId?: string | null } = {},
+  ) {
+    const payload = JSON.stringify({ userId, postId, rooms, operationId });
     await this.publisher.likeRemoved(payload);
   }
 
@@ -126,13 +135,23 @@ export default class pubSub {
     await this.publisher.postUnsaved(JSON.stringify({ userId, postId }));
   }
 
-  async newCommentLike(commentId: UUID, postId: UUID, likerUUID: UUID) {
-    const payload = JSON.stringify({ commentId, postId, likerUUID });
+  async newCommentLike(
+    commentId: UUID,
+    postId: UUID,
+    likerUUID: UUID,
+    { operationId = null }: { operationId?: string | null } = {},
+  ) {
+    const payload = JSON.stringify({ commentId, postId, likerUUID, operationId });
     await this.publisher.commentLikeAdded(payload);
   }
 
-  async removeCommentLike(commentId: UUID, postId: UUID, unlikerUUID: UUID) {
-    const payload = JSON.stringify({ commentId, postId, unlikerUUID });
+  async removeCommentLike(
+    commentId: UUID,
+    postId: UUID,
+    unlikerUUID: UUID,
+    { operationId = null }: { operationId?: string | null } = {},
+  ) {
+    const payload = JSON.stringify({ commentId, postId, unlikerUUID, operationId });
     await this.publisher.commentLikeRemoved(payload);
   }
 

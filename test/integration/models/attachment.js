@@ -5,7 +5,6 @@ import { tmpdir } from 'os';
 import { v4 as createUuid } from 'uuid';
 import { before, beforeEach, describe, it } from 'mocha';
 import expect from 'unexpected';
-import { mkdirp } from 'mkdirp';
 import { lookup as mimeLookup } from 'mime-types';
 
 import cleanDB from '../../dbCleaner';
@@ -13,7 +12,7 @@ import { dbAdapter, Attachment } from '../../../app/models';
 import { currentConfig } from '../../../app/support/app-async-context';
 import { createUser } from '../helpers/users';
 import { createPost } from '../helpers/posts-and-comments';
-import { spawnAsync } from '../../../app/support/spawn-async';
+import { runImageMagick } from '../../../app/support/image-magick';
 import { withModifiedConfig } from '../../helpers/with-modified-config';
 import { initJobProcessing } from '../../../app/jobs';
 import { ATTACHMENT_PREPARE_VIDEO } from '../../../app/jobs/attachment-prepare-video';
@@ -35,11 +34,6 @@ describe('Attachments', () => {
     // Create user
     user = await createUser('luna');
     jobManager = await initJobProcessing();
-
-    const attConf = currentConfig().attachments;
-
-    // Create directories for attachments
-    await mkdirp(attConf.storage.rootDir + attConf.path);
   });
 
   beforeEach(() => fakeS3Storage.clear());
@@ -112,7 +106,7 @@ describe('Attachments', () => {
       currentConfig().attachments.storage.rootDir,
       att.getRelFilePath('p2', 'webp'),
     );
-    const out = await spawnAsync('identify', ['-format', '%w %h %[orientation]', originalFile]);
+    const out = await runImageMagick('identify', ['-format', '%w %h %[orientation]', originalFile]);
     expect(out.stdout, 'to equal', '300 900 Undefined');
   });
 
@@ -123,7 +117,7 @@ describe('Attachments', () => {
     // original colors
     {
       const originalFile = join(rootDir, att.getRelFilePath('', att.fileExtension));
-      const { stdout: buffer } = await spawnAsync(
+      const { stdout: buffer } = await runImageMagick(
         'convert',
         [originalFile, '-resize', '1x1!', '-colorspace', 'sRGB', '-depth', '8', 'rgb:-'],
         { binary: true },
@@ -138,7 +132,7 @@ describe('Attachments', () => {
     // preview colors
     {
       const previewFile = join(rootDir, att.getRelFilePath('p1', 'webp'));
-      const { stdout: buffer } = await spawnAsync(
+      const { stdout: buffer } = await runImageMagick(
         'convert',
         [previewFile, '-resize', '1x1!', '-colorspace', 'sRGB', '-depth', '8', 'rgb:-'],
         { binary: true },

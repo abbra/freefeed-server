@@ -209,6 +209,13 @@ config.profilePictures = {
   path: 'profilepics/', // must have trailing slash
 };
 
+config.imageMagick = {
+  // 'auto' prefers ImageMagick 7 'magick' CLI and falls back to ImageMagick 6
+  // legacy 'convert'/'identify' commands. Set to 'legacy' to force ImageMagick 6
+  // commands, or to 'magick' / a path to magick to force ImageMagick 7 CLI.
+  command: 'auto',
+};
+
 config.mailer = {
   useSMTPTransport: false,
   transport: defer((cfg) => (cfg.mailer.useSMTPTransport ? smtpTransport : stubTransport)),

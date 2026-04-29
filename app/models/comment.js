@@ -335,13 +335,15 @@ export function addModel(dbAdapter) {
      * liked by this user.
      *
      * @param {User} user
+     * @param {Object} options
+     * @param {string} options.operationId - Operation ID for client-side deduplication
      * @returns {Promise<boolean>}
      */
-    async addLike(user) {
+    async addLike(user, { operationId = null } = {}) {
       const ok = await dbAdapter.createCommentLike(this.id, user.id);
 
       if (ok) {
-        await pubSub.newCommentLike(this.id, this.postId, user.id);
+        await pubSub.newCommentLike(this.id, this.postId, user.id, { operationId });
       }
 
       return ok;
@@ -353,13 +355,15 @@ export function addModel(dbAdapter) {
      * liked by this user.
      *
      * @param {User} user
+     * @param {Object} options
+     * @param {string} options.operationId - Operation ID for client-side deduplication
      * @returns {boolean}
      */
-    async removeLike(user) {
+    async removeLike(user, { operationId = null } = {}) {
       const ok = await dbAdapter.deleteCommentLike(this.id, user.id);
 
       if (ok) {
-        await pubSub.removeCommentLike(this.id, this.postId, user.id);
+        await pubSub.removeCommentLike(this.id, this.postId, user.id, { operationId });
       }
 
       return ok;

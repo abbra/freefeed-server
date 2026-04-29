@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 /* global $pg_database */
 import request from 'superagent';
-import { mkdirp } from 'mkdirp';
-import config from 'config';
 
 import cleanDB from '../dbCleaner';
 import { getSingleton } from '../../app/app';
@@ -349,7 +347,6 @@ describe('GroupsController', () => {
 
     beforeEach(async () => {
       context = await funcTestHelper.createUserAsync('Luna', 'password');
-      await mkdirp(config.profilePictures.storage.rootDir + config.profilePictures.path);
       await funcTestHelper.createGroupAsync(context, 'pepyatka-dev', 'Pepyatka Developers');
     });
 

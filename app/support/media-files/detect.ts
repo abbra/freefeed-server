@@ -1,5 +1,6 @@
 import { open } from 'fs/promises';
 
+import { runImageMagick } from '../image-magick';
 import { spawnAsync } from '../spawn-async';
 
 import {
@@ -22,7 +23,7 @@ export async function detectMediaType(
   if (probablyImage) {
     // Identify using ImageMagick
     try {
-      const out = await spawnAsync('identify', [
+      const out = await runImageMagick('identify', [
         ['-format', '%m %W %H %[orientation] %n|'],
         `${localFilePath}[0,1]`, // Select only up to 2 first frames to reduce the memory usage
       ]);

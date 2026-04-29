@@ -12,4 +12,7 @@ export default function addRoutes(app) {
   app.delete('/posts/:postId/save', PostsController.unsave);
   app.post('/posts/:postId/disableComments', PostsController.disableComments);
   app.post('/posts/:postId/enableComments', PostsController.enableComments);
+  // Idempotent likes and unlikes
+  app.put('/posts/:postId/like', PostsController.like);
+  app.delete('/posts/:postId/like', PostsController.unlike);
 }

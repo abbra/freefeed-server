@@ -826,9 +826,11 @@ export function addModel(dbAdapter) {
      * liked by this user.
      *
      * @param {User} user
+     * @param {Object} options
+     * @param {string} options.operationId - Operation ID for client-side deduplication
      * @returns {boolean}
      */
-    async addLike(user) {
+    async addLike(user, { operationId = null } = {}) {
       const success = await dbAdapter.likePost(this.id, user.id);
 
       if (!success) {
@@ -853,7 +855,7 @@ export function addModel(dbAdapter) {
       await dbAdapter.insertPostIntoFeeds([likesTimeline.intId], this.id);
 
       // Send realtime notifications
-      await pubSub.newLike(this, user.id);
+      await pubSub.newLike(this, user.id, { operationId });
 
       return true;
     }
@@ -864,9 +866,11 @@ export function addModel(dbAdapter) {
      * liked by this user.
      *
      * @param {User} user
+     * @param {Object} options
+     * @param {string} options.operationId - Operation ID for client-side deduplication
      * @returns {boolean}
      */
-    async removeLike(user) {
+    async removeLike(user, { operationId = null } = {}) {
       const success = await dbAdapter.unlikePost(this.id, user.id);
 
       if (!success) {
@@ -880,7 +884,7 @@ export function addModel(dbAdapter) {
       await dbAdapter.withdrawPostFromFeeds([timelineId], this.id);
 
       // Send realtime notifications
-      await pubSub.removeLike(this.id, user.id, realtimeRooms);
+      await pubSub.removeLike(this.id, user.id, realtimeRooms, { operationId });
 
       return true;
     }
