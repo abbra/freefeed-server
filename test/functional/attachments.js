@@ -1101,6 +1101,20 @@ describe('Attachments', () => {
         });
       });
 
+      it(`should fall back to SDR image preview for hdr request`, async () => {
+        const resp = await performJSONRequest(
+          'GET',
+          `/v4/attachments/${att.id}/image?hdr&width=100&height=100`,
+        );
+        expect(resp, 'to satisfy', {
+          url: att.getFileUrl('thumbnails'),
+          mimeType: 'image/webp',
+          width: 525,
+          height: 175,
+        });
+        expect(resp, 'not to have key', 'hdr');
+      });
+
       it(`should return 'image' preview that is bigger than the original`, async () => {
         const resp = await performJSONRequest(
           'GET',
@@ -1168,6 +1182,41 @@ describe('Attachments', () => {
             mimeType: 'image/avif',
             width: 900,
             height: 300,
+          });
+        });
+      });
+    });
+
+    describe("'HDR image' type", () => {
+      /** @type {Attachment} */
+      let hdrAtt;
+
+      before(async () => {
+        const filePath = path.join(
+          __dirname,
+          '../fixtures/media-files/Ultra_HDR_Samples_Originals_01.jpg',
+        );
+        const data = new FormData();
+        data.append('file', await fileFrom(filePath, 'image/jpeg'));
+        const resp = await performJSONRequest('POST', '/v4/attachments', data, authHeaders(luna));
+        const { id } = resp.attachments;
+        hdrAtt = await dbAdapter.getAttachmentById(id);
+      });
+
+      describe(`when the imgproxy is turned on`, () => {
+        withModifiedConfig({ attachments: { useImgProxy: true } });
+
+        it(`should not use imgproxy for HDR preview`, async () => {
+          const resp = await performJSONRequest(
+            'GET',
+            `/v4/attachments/${hdrAtt.id}/image?hdr&width=1000&height=1000&format=avif`,
+          );
+          expect(resp, 'to satisfy', {
+            url: hdrAtt.getFileUrl('p4-hdr', 'jpg'),
+            mimeType: 'image/jpeg',
+            width: 2305,
+            height: 1735,
+            hdr: true,
           });
         });
       });
