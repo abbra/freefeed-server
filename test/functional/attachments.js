@@ -257,18 +257,18 @@ describe('Attachments', () => {
       width: 2305,
       height: 1735,
     });
-    expect(sdrPreview, 'not to have key', 'hdr');
+    expect(sdrPreview, 'not to have key', 'variant');
 
     const hdrPreview = await performJSONRequest(
       'GET',
-      `/v4/attachments/${id}/image?hdr&width=1000&height=1000`,
+      `/v4/attachments/${id}/image?variant=hdr&width=1000&height=1000`,
     );
     expect(hdrPreview, 'to satisfy', {
       url: expect.it('to end with', `/p4-hdr/${id}.jpg`),
       mimeType: 'image/jpeg',
       width: 2305,
       height: 1735,
-      hdr: true,
+      variant: 'hdr',
     });
   });
 
@@ -1101,10 +1101,10 @@ describe('Attachments', () => {
         });
       });
 
-      it(`should fall back to SDR image preview for hdr request`, async () => {
+      it(`should fall back to SDR image preview for HDR variant request`, async () => {
         const resp = await performJSONRequest(
           'GET',
-          `/v4/attachments/${att.id}/image?hdr&width=100&height=100`,
+          `/v4/attachments/${att.id}/image?variant=hdr&width=100&height=100`,
         );
         expect(resp, 'to satisfy', {
           url: att.getFileUrl('thumbnails'),
@@ -1112,7 +1112,18 @@ describe('Attachments', () => {
           width: 525,
           height: 175,
         });
-        expect(resp, 'not to have key', 'hdr');
+        expect(resp, 'not to have key', 'variant');
+      });
+
+      it(`should return an error for unsupported preview variant`, async () => {
+        const resp = await performJSONRequest(
+          'GET',
+          `/v4/attachments/${att.id}/image?variant=unknown`,
+        );
+        expect(resp, 'to satisfy', {
+          err: 'Invalid variant value',
+          __httpCode: 422,
+        });
       });
 
       it(`should return 'image' preview that is bigger than the original`, async () => {
@@ -1209,14 +1220,14 @@ describe('Attachments', () => {
         it(`should not use imgproxy for HDR preview`, async () => {
           const resp = await performJSONRequest(
             'GET',
-            `/v4/attachments/${hdrAtt.id}/image?hdr&width=1000&height=1000&format=avif`,
+            `/v4/attachments/${hdrAtt.id}/image?variant=hdr&width=1000&height=1000&format=avif`,
           );
           expect(resp, 'to satisfy', {
             url: hdrAtt.getFileUrl('p4-hdr', 'jpg'),
             mimeType: 'image/jpeg',
             width: 2305,
             height: 1735,
-            hdr: true,
+            variant: 'hdr',
           });
         });
       });

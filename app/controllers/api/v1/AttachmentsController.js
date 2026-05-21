@@ -194,6 +194,10 @@ export default class AttachmentsController {
         throw new ValidationException('Invalid format value');
       }
 
+      if ('variant' in query && query.variant !== 'hdr') {
+        throw new ValidationException('Invalid variant value');
+      }
+
       const width = 'width' in query ? Number.parseInt(query.width, 10) : undefined;
       const height = 'height' in query ? Number.parseInt(query.height, 10) : undefined;
 
@@ -206,7 +210,7 @@ export default class AttachmentsController {
 
       const asRedirect = 'redirect' in query;
       const withDownload = 'download' in query;
-      const preferHdr = 'hdr' in query;
+      const preferHdr = query.variant === 'hdr';
 
       const attachment = await dbAdapter.getAttachmentById(attId);
 
@@ -251,7 +255,7 @@ export default class AttachmentsController {
         response.height = prv.h;
 
         if (useHdrPreview) {
-          response.hdr = true;
+          response.variant = 'hdr';
         }
 
         // With imgproxy, we can resize images (except some types) and change
