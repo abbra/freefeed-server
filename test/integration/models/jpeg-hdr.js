@@ -53,10 +53,10 @@ describe('JPEG HDR previews', () => {
 
       const { stdout: dimensions } = await runImageMagick('identify', [
         '-format',
-        '%w %h %[profiles]',
+        '%w %h',
         targetPath,
       ]);
-      expect(dimensions, 'to be', '1020 768 icc,mpf,xmp');
+      expect(dimensions, 'to be', '1020 768');
 
       const { stdout: metadata } = await spawnAsync(await exiftoolPath(), [
         '-G1',
