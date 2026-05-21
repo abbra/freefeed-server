@@ -9,3 +9,6 @@ https://commons.wikimedia.org/wiki/File:Piermic_-_Improvisation_with_Sopranino_R
 
 The "polyphon" video has CC0 license and taken from Wikimedia Commons:
 https://commons.wikimedia.org/wiki/File:Polyphon-_Kreuz-Polka.ogv
+
+The "Ultra_HDR_Samples_Originals_01.jpg" has CC Attribution 4.0 International license and taken from:
+https://github.com/MishaalRahmanGH/Ultra_HDR_Samples
