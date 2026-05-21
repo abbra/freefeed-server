@@ -221,6 +221,57 @@ describe('Attachments', () => {
     });
   });
 
+  it(`should expose HDR image previews when available`, async () => {
+    const filePath = path.join(
+      __dirname,
+      '../fixtures/media-files/Ultra_HDR_Samples_Originals_01.jpg',
+    );
+    const data = new FormData();
+    data.append('file', await fileFrom(filePath, 'image/jpeg'));
+    const resp = await performJSONRequest('POST', '/v4/attachments', data, authHeaders(luna));
+    const { id } = resp.attachments;
+    const attObj = await dbAdapter.getAttachmentById(id);
+
+    expect(resp.attachments, 'to satisfy', {
+      mediaType: 'image',
+      previewTypes: ['image'],
+      meta: { hdr: true },
+    });
+
+    expect(attObj.previews, 'to satisfy', {
+      image: {
+        p4: { ext: 'webp' },
+      },
+      imageHDR: {
+        'p4-hdr': { ext: 'jpg' },
+      },
+    });
+
+    const sdrPreview = await performJSONRequest(
+      'GET',
+      `/v4/attachments/${id}/image?width=1000&height=1000`,
+    );
+    expect(sdrPreview, 'to satisfy', {
+      url: expect.it('to end with', `/p4/${id}.webp`),
+      mimeType: 'image/webp',
+      width: 2305,
+      height: 1735,
+    });
+    expect(sdrPreview, 'not to have key', 'hdr');
+
+    const hdrPreview = await performJSONRequest(
+      'GET',
+      `/v4/attachments/${id}/image?hdr&width=1000&height=1000`,
+    );
+    expect(hdrPreview, 'to satisfy', {
+      url: expect.it('to end with', `/p4-hdr/${id}.jpg`),
+      mimeType: 'image/jpeg',
+      width: 2305,
+      height: 1735,
+      hdr: true,
+    });
+  });
+
   it(`should create mp3 audio attachment`, async () => {
     const filePath = path.join(__dirname, '../fixtures/media-files/music.mp3');
     const data = new FormData();

@@ -53,6 +53,7 @@ export type MediaInfo = MediaInfoImage | MediaInfoVideo | MediaInfoAudio | Media
 
 export type MediaMetaData = {
   animatedImage?: true;
+  hdr?: true;
   silent?: true;
   inProgress?: true;
   originalExtension?: string;

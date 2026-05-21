@@ -206,6 +206,7 @@ export default class AttachmentsController {
 
       const asRedirect = 'redirect' in query;
       const withDownload = 'download' in query;
+      const preferHdr = 'hdr' in query;
 
       const attachment = await dbAdapter.getAttachmentById(attId);
 
@@ -235,7 +236,8 @@ export default class AttachmentsController {
       } else {
         // Visual types, 'image' and 'video'
 
-        const previews = attachment.previews[type];
+        const useHdrPreview = type === 'image' && preferHdr && attachment.previews.imageHDR;
+        const previews = useHdrPreview ? attachment.previews.imageHDR : attachment.previews[type];
         const {
           variant,
           width: resWidth,
@@ -248,11 +250,17 @@ export default class AttachmentsController {
         response.width = prv.w;
         response.height = prv.h;
 
+        if (useHdrPreview) {
+          response.hdr = true;
+        }
+
         // With imgproxy, we can resize images (except some types) and change
         // their format
         if (
           useImgProxy &&
           type === 'image' &&
+          // imgproxy doesn't support HDR images
+          !useHdrPreview &&
           // We don't need to resize SVGs
           attachment.fileExtension !== 'svg' &&
           // We should not resize (probably) animated legacy GIFs
