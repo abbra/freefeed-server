@@ -60,6 +60,7 @@ export type MediaMetaData = {
 
 export type MediaPreviews = {
   image?: VisualPreviews;
+  imageHDR?: VisualPreviews;
   video?: VisualPreviews;
   audio?: NonVisualPreviews;
 };

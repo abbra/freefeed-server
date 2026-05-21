@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from 'fs/promises';
+import { copyFile, mkdtemp, rm } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 
@@ -9,6 +9,7 @@ import { exiftoolPath } from 'exiftool-vendored';
 import { nodeDirname } from '../../../app/support/node-dirname';
 import { runImageMagick } from '../../../app/support/image-magick';
 import { spawnAsync } from '../../../app/support/spawn-async';
+import { processMediaFile } from '../../../app/support/media-files/process';
 import {
   createJpegHdrPreview,
   inspectJpegHdrPreview,
@@ -67,6 +68,37 @@ describe('JPEG HDR previews', () => {
       ]);
       expect(metadata, 'not to contain', '[GPS]');
       expect(metadata, 'not to contain', '[ExifIFD]');
+    } finally {
+      await rm(workDir, { recursive: true, force: true });
+    }
+  });
+
+  it('should create HDR previews during image media processing', async () => {
+    const workDir = await mkdtemp(join(tmpdir(), 'freefeed-hdr-process-'));
+
+    try {
+      const localPath = join(workDir, 'ultra-hdr.jpg');
+      await copyFile(sourcePath, localPath);
+
+      const result = await processMediaFile(localPath, 'ultra-hdr.jpg');
+      const { image, imageHDR } = result.previews;
+
+      expect(imageHDR, 'to be defined');
+
+      for (const [variant, preview] of Object.entries(image)) {
+        const hdrVariant = `${variant}-hdr`;
+        expect(imageHDR, 'to have key', hdrVariant);
+        expect(imageHDR[hdrVariant], 'to equal', { ...preview, ext: 'jpg' });
+        expect(result.files, 'to have key', hdrVariant);
+      }
+
+      const [[maxVariant]] = Object.entries(imageHDR).sort((a, b) => b[1].w - a[1].w);
+      const info = await inspectJpegHdrPreview(result.files[maxVariant].path);
+      expect(info, 'to satisfy', {
+        numberOfImages: 2,
+        validate: 'OK',
+        warnings: [],
+      });
     } finally {
       await rm(workDir, { recursive: true, force: true });
     }
