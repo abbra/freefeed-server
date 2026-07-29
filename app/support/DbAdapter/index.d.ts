@@ -76,9 +76,7 @@ export type EventRecord = {
 };
 
 type ListAttachmentsOptions = { userId: UUID; limit: number } & (
-  | { createdBefore?: string }
-  | { createdAfter: string }
-  | { offset: number }
+  { createdBefore?: string } | { createdAfter: string } | { offset: number }
 );
 
 type AttachmentsSanitizeTask = {
