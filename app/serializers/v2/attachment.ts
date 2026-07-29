@@ -139,8 +139,12 @@ function serializeAttachmentV2(att: Attachment): SerializedAttachmentV2 {
 function serializeAttachmentV4(att: Attachment): SerializedAttachmentV4 {
   const maxVar = att.maxSizedVariant('image');
   const maxPrv = att.previews.image?.[maxVar ?? '-'];
+  const meta: MediaMetaData = {
+    ...att.meta,
+    ...(att.previews.imageHDR ? { hdr: true } : {}),
+  };
 
-  const isMetaEmpty = Object.keys(att.meta).length === 0;
+  const isMetaEmpty = Object.keys(meta).length === 0;
   const isPreviewSizesDifferent = maxPrv && (maxPrv.w !== att.width || maxPrv.h !== att.height);
 
   return {
@@ -148,8 +152,10 @@ function serializeAttachmentV4(att: Attachment): SerializedAttachmentV4 {
     mediaType: att.mediaType,
     fileName: att.fileName,
     fileSize: att.fileSize,
-    previewTypes: Object.keys(att.previews).sort() as (keyof MediaPreviews)[],
-    meta: isMetaEmpty ? undefined : att.meta,
+    previewTypes: Object.keys(att.previews)
+      .filter((type) => type !== 'imageHDR')
+      .sort() as (keyof MediaPreviews)[],
+    meta: isMetaEmpty ? undefined : meta,
 
     width: att.width ?? undefined,
     height: att.height ?? undefined,

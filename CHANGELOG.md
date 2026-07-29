@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [2.31.0] - Not released
+### Added
+- Added JPEG Ultra HDR / JPEG_R image preview generation. For supported JPEG
+  images with gain maps, the server now creates a second set of JPEG previews
+  with gain maps and stores them as HDR-specific preview variants.
+  
+  Attachments with generated HDR previews expose `meta.hdr: true`, and clients
+  can request the HDR version with `GET /v4/attachments/:id/image?variant=hdr`.
+  The `variant=hdr` query parameter is safe to send for any image attachment: if
+  an HDR preview is not available, the endpoint falls back to the regular SDR
+  preview. HDR preview responses include `variant: "hdr"`.
 
 ## [2.30.0] - 2026-04-29
 ### Added
