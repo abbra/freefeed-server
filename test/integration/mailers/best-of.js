@@ -59,6 +59,27 @@ describe('BestOfDigests', () => {
         `<img class="image-attachment-img" src="http://localhost:31337/attachments/thumbnails/${att.id}.webp" alt="${att.fileName}`,
       );
     });
+
+    it('should inline email styles with Juice', async () => {
+      const dailySummary = await getSummary(luna, 1);
+      const body = await renderSummaryBody(dailySummary);
+
+      expect(
+        body,
+        'to match',
+        /<div class="post timeline-post" data-author="luna" style="(?=[^"]*padding-top: 14px)(?=[^"]*border-bottom: 1px solid #eee)(?=[^"]*line-height: 19px)[^"]*">/,
+      );
+      expect(
+        body,
+        'to match',
+        /<div class="post-body" style="(?=[^"]*margin-left: 63px)(?=[^"]*color: #666)(?=[^"]*font-size: 14px)[^"]*">/,
+      );
+      expect(
+        body,
+        'to match',
+        /<img class="image-attachment-img"[^>]*style="(?=[^"]*display: block)(?=[^"]*max-width: 525px)(?=[^"]*max-height: 175px)[^"]*"[^>]*>/,
+      );
+    });
   });
 
   describe('sendBestOfEmail', () => {
