@@ -1567,81 +1567,81 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@slonik/driver@npm:^48.19.0":
-  version: 48.19.0
-  resolution: "@slonik/driver@npm:48.19.0"
+"@slonik/driver@npm:^49.10.9":
+  version: 49.10.9
+  resolution: "@slonik/driver@npm:49.10.9"
   dependencies:
-    "@slonik/types": "npm:^48.19.0"
-    "@slonik/utilities": "npm:^48.19.0"
-    roarr: "npm:^7.21.5"
+    "@slonik/types": "npm:^49.10.9"
+    "@slonik/utilities": "npm:^49.10.9"
+    roarr: "npm:^7.21.7"
     serialize-error: "npm:^12.0.0"
     strict-event-emitter-types: "npm:^2.0.0"
   peerDependencies:
     zod: ^3.25 || ^4
-  checksum: 10c0/940a66430dc8c9d625bda0c2a264b3d26da42122fbcf6cbf56da9a154fdb561689b5368fee1e67f1b5a8d337827067f535b1e1e89c23584de17d0695cdb12545
+  checksum: 10c0/248b3c4e93b07f7405286d40019891810dce57e0c2f44ce6c6bc7e9b726713e462531e660c2262049fe6e22e3d52f41cacafae99c7a180ad40f7ecf31b0ef437
   languageName: node
   linkType: hard
 
-"@slonik/errors@npm:^48.19.0":
-  version: 48.19.0
-  resolution: "@slonik/errors@npm:48.19.0"
+"@slonik/errors@npm:^49.10.9":
+  version: 49.10.9
+  resolution: "@slonik/errors@npm:49.10.9"
   dependencies:
-    "@slonik/types": "npm:^48.19.0"
-  checksum: 10c0/c47bc3f5ff9badbab0e0b7bbc399ced7fe59a6b7af68cbdf0a41621ec57e54a04fbc55ec91b5a6a2e6eff0ff4d1c8a6ad24ed96140085d28b239e6a9819e628b
+    "@slonik/types": "npm:^49.10.9"
+  checksum: 10c0/788baf56e276bb35807b70f08d65e3b7327da4795da61d0a4a66cbec52e189bfcd70f5527555f73e784a47dd2654194f3fa95832ba8d0d8cb2acd4d931898dd3
   languageName: node
   linkType: hard
 
-"@slonik/pg-driver@npm:^48.19.0":
-  version: 48.19.0
-  resolution: "@slonik/pg-driver@npm:48.19.0"
+"@slonik/pg-driver@npm:^49.10.9":
+  version: 49.10.9
+  resolution: "@slonik/pg-driver@npm:49.10.9"
   dependencies:
-    "@slonik/driver": "npm:^48.19.0"
-    "@slonik/errors": "npm:^48.19.0"
-    "@slonik/sql-tag": "npm:^48.19.0"
-    "@slonik/types": "npm:^48.19.0"
-    "@slonik/utilities": "npm:^48.19.0"
-    pg: "npm:^8.18.0"
+    "@slonik/driver": "npm:^49.10.9"
+    "@slonik/errors": "npm:^49.10.9"
+    "@slonik/sql-tag": "npm:^49.10.9"
+    "@slonik/types": "npm:^49.10.9"
+    "@slonik/utilities": "npm:^49.10.9"
+    pg: "npm:^8.22.0"
     pg-query-stream: "npm:^4.12.0"
     pg-types: "npm:^4.1.0"
     postgres-array: "npm:^3.0.4"
   peerDependencies:
     zod: ^3.25 || ^4
-  checksum: 10c0/96de9b77683e7dfc9cd0d6af1bf35f49b9eb9db490d5c6bd135c8943a61ee01232663d929c0ebb228195e58505fa3197caf44baeb7025d2a2c13434017170613
+  checksum: 10c0/c078f32d27457ff9cd4636b18cc85437a4671bd03f07d2e0c2154e4af64a9771e3a14c8d8557438d6fb5f1afdd9a5dea9db9f1b1e74fe3dbf7b331f795c56f06
   languageName: node
   linkType: hard
 
-"@slonik/sql-tag@npm:^48.19.0":
-  version: 48.19.0
-  resolution: "@slonik/sql-tag@npm:48.19.0"
+"@slonik/sql-tag@npm:^49.10.9":
+  version: 49.10.9
+  resolution: "@slonik/sql-tag@npm:49.10.9"
   dependencies:
-    "@slonik/errors": "npm:^48.19.0"
-    "@slonik/types": "npm:^48.19.0"
-    roarr: "npm:^7.21.5"
+    "@slonik/errors": "npm:^49.10.9"
+    "@slonik/types": "npm:^49.10.9"
+    roarr: "npm:^7.21.7"
     safe-stable-stringify: "npm:^2.5.0"
     serialize-error: "npm:^12.0.0"
     zod: "npm:^4.3.6"
-  checksum: 10c0/3b487f3abc377db5fdff277d7b2d8a5593848915a6715d84e579572649b928d3992af31e20938b5229bfec87d355b9d57cf2016f2e5dc95f0e230ffeee3c20f5
+  checksum: 10c0/ebcf4ed8dc8978ac7cf633625dca80e6bbb1833f7888c5b44f19c7053e57e9276440593a9c5ab4f6a19717d61e2a35ac6b9a6a9b080255d698895cdf833ed47e
   languageName: node
   linkType: hard
 
-"@slonik/types@npm:^48.19.0":
-  version: 48.19.0
-  resolution: "@slonik/types@npm:48.19.0"
+"@slonik/types@npm:^49.10.9":
+  version: 49.10.9
+  resolution: "@slonik/types@npm:49.10.9"
   peerDependencies:
     zod: ^3.25 || ^4
-  checksum: 10c0/0abb7c81470691c9cadc94361960ac7c18d1a5352fa7edcbb7a6e561262c251d44c5ca5e58e6160e5b93703f9adfaa1c82ce0b121ede43c5169fd11bd8a2847e
+  checksum: 10c0/eeb44821e6daacdb7aedb415293048b776e4172c3722bd36e57b64d9a7ba168e80df9a42a2b696668e6981251891a198ec6c0304db887b452087201906b48fee
   languageName: node
   linkType: hard
 
-"@slonik/utilities@npm:^48.19.0":
-  version: 48.19.0
-  resolution: "@slonik/utilities@npm:48.19.0"
+"@slonik/utilities@npm:^49.10.9":
+  version: 49.10.9
+  resolution: "@slonik/utilities@npm:49.10.9"
   dependencies:
-    "@slonik/errors": "npm:^48.19.0"
-    "@slonik/types": "npm:^48.19.0"
+    "@slonik/errors": "npm:^49.10.9"
+    "@slonik/types": "npm:^49.10.9"
   peerDependencies:
     zod: ^3.25 || ^4
-  checksum: 10c0/e5abedf185ae3f6846999152ee972d16c4003fc625afff2bc310f9654673f5144d763fabe19da7388bd27a67afa5111d3b897c8f4cab2a5cf7a2d333853d157c
+  checksum: 10c0/2dbc22dd7d3f4013528f02c76ea16a4c89785e09a78c2a148596ae80d1db732a3f7501f9bab0857d8f6c17c0f1fd625ead61cc5813de2537ddc699115444b02f
   languageName: node
   linkType: hard
 
@@ -5777,7 +5777,7 @@ __metadata:
     n3: "npm:~2.1.1"
     node-cache: "npm:~5.1.2"
     node-loggly-bulk: "npm:~4.0.2"
-    nodemailer: "npm:~7.0.13"
+    nodemailer: "npm:~9.0.3"
     nodemailer-smtp-transport: "npm:~2.7.4"
     nodemailer-stub-transport: "npm:~1.1.0"
     npm-run-all: "npm:~4.1.5"
@@ -5793,7 +5793,8 @@ __metadata:
     s3rver: "npm:~3.7.1"
     sbd: "npm:~1.0.19"
     sinon: "npm:~21.0.3"
-    slonik: "npm:~48.19.0"
+    slonik: "npm:~49.10.9"
+    smtp-server: "npm:~3.19.2"
     social-text-tokenizer: "npm:~3.2.3"
     socket.io: "npm:~4.8.3"
     socket.io-client: "npm:~2.3.1"
@@ -5810,7 +5811,7 @@ __metadata:
     unexpected-moment: "npm:~3.3.0"
     unexpected-sinon: "npm:~11.1.0"
     url: "npm:0.11.4"
-    uuid: "npm:~13.0.2"
+    uuid: "npm:~14.0.1"
     validator: "npm:~13.15.35"
     xml-parser: "npm:~1.2.1"
     xmlbuilder: "npm:~15.1.1"
@@ -6530,6 +6531,13 @@ __metadata:
     redis-parser: "npm:3.0.0"
     standard-as-callback: "npm:2.1.0"
   checksum: 10c0/a8b27043cf2c045dfc93f40a32ce24cf9f8b57799a37f4234c4b925c365ccf131629590f94a512f546fda2ba8ed034009c94c4933ecd44c50bc166636d929fd6
+  languageName: node
+  linkType: hard
+
+"ipv6-normalize@npm:1.0.1":
+  version: 1.0.1
+  resolution: "ipv6-normalize@npm:1.0.1"
+  checksum: 10c0/89156fbfc4f8828b29adf8009332ec77cd93a17a6e28066d602c3154b7bbc37df07f981ab2b6debb46f9a716867262ae4ea5399f3fa9bb0fc8019e6dc2a96023
   languageName: node
   linkType: hard
 
@@ -8216,17 +8224,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nodemailer@npm:9.0.3":
+"nodemailer@npm:9.0.3, nodemailer@npm:~9.0.3":
   version: 9.0.3
   resolution: "nodemailer@npm:9.0.3"
   checksum: 10c0/9e93516fb9fcc8835b683cdf3b90135648dabf0133ac9b04890303c2e23eef1d7bae58fe98afb0e251ae10428b96f05df483deb78f0b49f47793debbb0383216
-  languageName: node
-  linkType: hard
-
-"nodemailer@npm:~7.0.13":
-  version: 7.0.13
-  resolution: "nodemailer@npm:7.0.13"
-  checksum: 10c0/b26aa5b9fa4a033bbc1e1c16ef75ee2a9c8641fd290c00a8361d6a251b3c1b8bad545a23efa627f59cb266340a448891ea8aa49d8a9307c767b8505219d95079
   languageName: node
   linkType: hard
 
@@ -8849,7 +8850,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pg@npm:^8.18.0, pg@npm:~8.22.0":
+"pg@npm:^8.22.0, pg@npm:~8.22.0":
   version: 8.22.0
   resolution: "pg@npm:8.22.0"
   dependencies:
@@ -9449,7 +9450,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"roarr@npm:^7.21.5":
+"roarr@npm:^7.21.7":
   version: 7.21.7
   resolution: "roarr@npm:7.21.7"
   dependencies:
@@ -9844,25 +9845,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"slonik@npm:~48.19.0":
-  version: 48.19.0
-  resolution: "slonik@npm:48.19.0"
+"slonik@npm:~49.10.9":
+  version: 49.10.9
+  resolution: "slonik@npm:49.10.9"
   dependencies:
     "@opentelemetry/api": "npm:^1.9.0"
-    "@slonik/driver": "npm:^48.19.0"
-    "@slonik/errors": "npm:^48.19.0"
-    "@slonik/pg-driver": "npm:^48.19.0"
-    "@slonik/sql-tag": "npm:^48.19.0"
-    "@slonik/utilities": "npm:^48.19.0"
+    "@slonik/driver": "npm:^49.10.9"
+    "@slonik/errors": "npm:^49.10.9"
+    "@slonik/pg-driver": "npm:^49.10.9"
+    "@slonik/sql-tag": "npm:^49.10.9"
+    "@slonik/utilities": "npm:^49.10.9"
     "@standard-schema/spec": "npm:^1.0.0"
     iso8601-duration: "npm:^2.1.3"
     p-queue: "npm:^9.3.0"
     postgres-interval: "npm:^4.0.2"
-    roarr: "npm:^7.21.5"
+    roarr: "npm:^7.21.7"
     serialize-error: "npm:^12.0.0"
     strict-event-emitter-types: "npm:^2.0.0"
     zod: "npm:^4.3.6"
-  checksum: 10c0/346404466176216b15cec96bf7eac8a75e451adbf7e7dee7e960cee800256364ceaaad628c8fc4420def0c9f426e74442d1d9e628e00f1a7a66b1e1c7d224774
+  checksum: 10c0/2dc29c93cb4bb220a639e23771b35a94f3d13f7c5c8f0fbff9062e4d10a1ba864e7c60f82c878a92c1894c553e21079e3395929e456757fa3c6ba903a307d166
   languageName: node
   linkType: hard
 
@@ -9873,6 +9874,17 @@ __metadata:
     httpntlm: "npm:1.6.1"
     nodemailer-shared: "npm:1.1.0"
   checksum: 10c0/1abbae665dd2bce09e8a7b552b22e0c0d300c834159e00300d42a7ef30a608fffd3c21002660d1574abfe892481441045370593edf1300dcf8d92da79ff27d06
+  languageName: node
+  linkType: hard
+
+"smtp-server@npm:~3.19.2":
+  version: 3.19.2
+  resolution: "smtp-server@npm:3.19.2"
+  dependencies:
+    ipv6-normalize: "npm:1.0.1"
+    nodemailer: "npm:9.0.3"
+    punycode.js: "npm:2.3.1"
+  checksum: 10c0/17d13751aea96790e1383e71ec3a54d8d71781806b0987364974aee38847e638a586828ba80d619019ceacd41042a4916176ff1d836f68f3af356a8989efbe6b
   languageName: node
   linkType: hard
 
@@ -11002,12 +11014,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:~13.0.2":
-  version: 13.0.2
-  resolution: "uuid@npm:13.0.2"
+"uuid@npm:~14.0.1":
+  version: 14.0.1
+  resolution: "uuid@npm:14.0.1"
   bin:
     uuid: dist-node/bin/uuid
-  checksum: 10c0/32c7ee84fa7c7966cc09b3a1514a752a8e2f609f15c00033fbaedc0255d577d1877b839f11ee537f37e587bbc620bbb98c3b3a1482931b8ed47d79497cd7a7cd
+  checksum: 10c0/2d961289097cb68c37d93d1da0b5c3aafc1eb9948a455cca8d0ae53a099b2fe583b8933254a84097f700e6bac2e23033364904df0467c22551d5d9611febcaf6
   languageName: node
   linkType: hard
 
