@@ -221,6 +221,57 @@ describe('Attachments', () => {
     });
   });
 
+  it(`should expose HDR image previews when available`, async () => {
+    const filePath = path.join(
+      __dirname,
+      '../fixtures/media-files/Ultra_HDR_Samples_Originals_01.jpg',
+    );
+    const data = new FormData();
+    data.append('file', await fileFrom(filePath, 'image/jpeg'));
+    const resp = await performJSONRequest('POST', '/v4/attachments', data, authHeaders(luna));
+    const { id } = resp.attachments;
+    const attObj = await dbAdapter.getAttachmentById(id);
+
+    expect(resp.attachments, 'to satisfy', {
+      mediaType: 'image',
+      previewTypes: ['image'],
+      meta: { hdr: true },
+    });
+
+    expect(attObj.previews, 'to satisfy', {
+      image: {
+        p4: { ext: 'webp' },
+      },
+      imageHDR: {
+        'p4-hdr': { ext: 'jpg' },
+      },
+    });
+
+    const sdrPreview = await performJSONRequest(
+      'GET',
+      `/v4/attachments/${id}/image?width=1000&height=1000`,
+    );
+    expect(sdrPreview, 'to satisfy', {
+      url: expect.it('to end with', `/p4/${id}.webp`),
+      mimeType: 'image/webp',
+      width: 2305,
+      height: 1735,
+    });
+    expect(sdrPreview, 'not to have key', 'variant');
+
+    const hdrPreview = await performJSONRequest(
+      'GET',
+      `/v4/attachments/${id}/image?variant=hdr&width=1000&height=1000`,
+    );
+    expect(hdrPreview, 'to satisfy', {
+      url: expect.it('to end with', `/p4-hdr/${id}.jpg`),
+      mimeType: 'image/jpeg',
+      width: 2305,
+      height: 1735,
+      variant: 'hdr',
+    });
+  });
+
   it(`should create mp3 audio attachment`, async () => {
     const filePath = path.join(__dirname, '../fixtures/media-files/music.mp3');
     const data = new FormData();
@@ -1050,6 +1101,31 @@ describe('Attachments', () => {
         });
       });
 
+      it(`should fall back to SDR image preview for HDR variant request`, async () => {
+        const resp = await performJSONRequest(
+          'GET',
+          `/v4/attachments/${att.id}/image?variant=hdr&width=100&height=100`,
+        );
+        expect(resp, 'to satisfy', {
+          url: att.getFileUrl('thumbnails'),
+          mimeType: 'image/webp',
+          width: 525,
+          height: 175,
+        });
+        expect(resp, 'not to have key', 'variant');
+      });
+
+      it(`should return an error for unsupported preview variant`, async () => {
+        const resp = await performJSONRequest(
+          'GET',
+          `/v4/attachments/${att.id}/image?variant=unknown`,
+        );
+        expect(resp, 'to satisfy', {
+          err: 'Invalid variant value',
+          __httpCode: 422,
+        });
+      });
+
       it(`should return 'image' preview that is bigger than the original`, async () => {
         const resp = await performJSONRequest(
           'GET',
@@ -1117,6 +1193,41 @@ describe('Attachments', () => {
             mimeType: 'image/avif',
             width: 900,
             height: 300,
+          });
+        });
+      });
+    });
+
+    describe("'HDR image' type", () => {
+      /** @type {Attachment} */
+      let hdrAtt;
+
+      before(async () => {
+        const filePath = path.join(
+          __dirname,
+          '../fixtures/media-files/Ultra_HDR_Samples_Originals_01.jpg',
+        );
+        const data = new FormData();
+        data.append('file', await fileFrom(filePath, 'image/jpeg'));
+        const resp = await performJSONRequest('POST', '/v4/attachments', data, authHeaders(luna));
+        const { id } = resp.attachments;
+        hdrAtt = await dbAdapter.getAttachmentById(id);
+      });
+
+      describe(`when the imgproxy is turned on`, () => {
+        withModifiedConfig({ attachments: { useImgProxy: true } });
+
+        it(`should not use imgproxy for HDR preview`, async () => {
+          const resp = await performJSONRequest(
+            'GET',
+            `/v4/attachments/${hdrAtt.id}/image?variant=hdr&width=1000&height=1000&format=avif`,
+          );
+          expect(resp, 'to satisfy', {
+            url: hdrAtt.getFileUrl('p4-hdr', 'jpg'),
+            mimeType: 'image/jpeg',
+            width: 2305,
+            height: 1735,
+            variant: 'hdr',
           });
         });
       });

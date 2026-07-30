@@ -23,6 +23,7 @@ import {
 } from './types';
 import { getImagePreviewSizes, getVideoPreviewSizes } from './geometry';
 import { setExtension } from './file-ext';
+import { createJpegHdrPreview } from './jpeg-hdr';
 
 const __dirname = nodeDirname(import.meta.url);
 
@@ -107,7 +108,16 @@ export async function processMediaFile(
 
   if (info.type === 'image') {
     const [imagePreviews, files] = await processImage(info, localFilePath);
-    return { mediaType: 'image', ...commonResult, previews: { image: imagePreviews }, files };
+    const [imageHDRPreviews, hdrFiles] = await processImageHdr(info, localFilePath, imagePreviews);
+    return {
+      mediaType: 'image',
+      ...commonResult,
+      previews: {
+        image: imagePreviews,
+        ...(imageHDRPreviews ? { imageHDR: imageHDRPreviews } : {}),
+      },
+      files: { ...files, ...hdrFiles },
+    };
   }
 
   if (info.type === 'audio') {
@@ -276,6 +286,79 @@ async function processImage(
   }
 
   return [previews, filesToUpload];
+}
+
+async function processImageHdr(
+  info: MediaInfoImage,
+  localFilePath: string,
+  imagePreviews: VisualPreviews,
+): Promise<[VisualPreviews | null, FilesToUpload]> {
+  if (info.format !== 'jpeg') {
+    return [null, {}];
+  }
+
+  const quality = currentConfig().attachments.previews.imagePreviewQuality;
+  const previews: VisualPreviews = {};
+  const filesToUpload: FilesToUpload = {};
+  const entries = Object.entries(imagePreviews);
+
+  if (entries.length === 0) {
+    return [null, {}];
+  }
+
+  const [[firstVariant, firstPreview]] = entries;
+  const firstCreated = await createHdrPreview(
+    localFilePath,
+    quality,
+    firstVariant,
+    firstPreview,
+    previews,
+    filesToUpload,
+  );
+
+  if (!firstCreated) {
+    return [null, {}];
+  }
+
+  await Promise.all(
+    entries
+      .slice(1)
+      .map(([variant, preview]) =>
+        createHdrPreview(localFilePath, quality, variant, preview, previews, filesToUpload),
+      ),
+  );
+
+  return [previews, filesToUpload];
+}
+
+async function createHdrPreview(
+  localFilePath: string,
+  quality: number,
+  variant: string,
+  { w, h }: { w: number; h: number },
+  previews: VisualPreviews,
+  filesToUpload: FilesToUpload,
+): Promise<boolean> {
+  const hdrVariant = hdrVariantName(variant);
+  const targetPath = tmpFileVariant(localFilePath, hdrVariant, 'jpg');
+  const created = await createJpegHdrPreview({
+    sourcePath: localFilePath,
+    targetPath,
+    width: w,
+    height: h,
+    quality,
+  });
+
+  if (created) {
+    previews[hdrVariant] = { w, h, ext: 'jpg' };
+    filesToUpload[hdrVariant] = { path: targetPath, ext: 'jpg' };
+  }
+
+  return created;
+}
+
+function hdrVariantName(variant: string): string {
+  return variant ? `${variant}-hdr` : 'original-hdr';
 }
 
 async function processAudio(
