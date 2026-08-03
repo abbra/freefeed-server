@@ -28,9 +28,11 @@ type CreateAppleJpegHdrPreviewOptions = {
 };
 
 const APP2 = 0xe2;
+const APP1 = 0xe1;
 const APP10 = 0xea;
 const ICC_PROFILE_PREFIX = Buffer.from('ICC_PROFILE', 'latin1');
 const ISO_GAIN_MAP_PREFIX = Buffer.from('urn:iso:std:iso:ts:21496:-1', 'latin1');
+const XMP_PREFIX = Buffer.from('http://ns.adobe.com/xap/1.0/\0', 'latin1');
 const AROT_PREFIX = Buffer.from('AROT', 'latin1');
 const APPLE_GAIN_MAP_VERSION = Buffer.from('HDRGainMapVersion', 'latin1');
 
@@ -53,8 +55,14 @@ export async function createAppleJpegHdrPreview({
 
   const gainMap = await extractGainMap(sourcePath);
   const gainMapArot = gainMap && findJpegSegment(gainMap, APP10, AROT_PREFIX);
+  const gainMapXmp = gainMap && findJpegSegment(gainMap, APP1, XMP_PREFIX);
 
-  if (!gainMap || !gainMapArot || !gainMap.includes(APPLE_GAIN_MAP_VERSION)) {
+  if (
+    !gainMap ||
+    !gainMapArot ||
+    !gainMapXmp ||
+    !gainMapXmp.data.includes(APPLE_GAIN_MAP_VERSION)
+  ) {
     return null;
   }
 
@@ -96,8 +104,8 @@ export async function createAppleJpegHdrPreview({
       readFile(basePath),
       readFile(resizedGainMapPath),
     ]);
-    const restoredBase = restoreHdrSegments(base, primaryIso, primaryArot);
-    const restoredGainMap = restoreHdrSegments(resizedGainMap, gainMapIso, gainMapArot);
+    const restoredBase = restoreHdrSegments(base, primaryIso, primaryArot, null);
+    const restoredGainMap = restoreHdrSegments(resizedGainMap, gainMapIso, gainMapArot, gainMapXmp);
 
     await Promise.all([
       writeFile(restoredBasePath, restoredBase),
@@ -147,6 +155,11 @@ async function resizeGainMap(
     sourcePath,
     ...orientationArgs(orientation),
     ['-resize', `${targetSize.width}!x${targetSize.height}!`],
+    // ImageMagick 6 preserves APP10 and XMP profiles while ImageMagick 7 drops
+    // APP10. Strip both consistently; the original HDR segments are restored
+    // after resizing.
+    '+profile',
+    '*',
     ['-quality', '90'],
     targetPath,
   ]);
@@ -190,14 +203,17 @@ function restoreHdrSegments(
   jpeg: Buffer,
   isoSegment: JpegSegment | null,
   arotSegment: JpegSegment,
+  xmpSegment: JpegSegment | null,
 ): Buffer {
   const iso = isoSegment?.data ?? Buffer.alloc(0);
+  const xmp = xmpSegment?.data ?? Buffer.alloc(0);
   const icc = findJpegSegment(jpeg, APP2, ICC_PROFILE_PREFIX);
 
   if (!icc) {
     const insertOffset = findMetadataInsertOffset(jpeg);
     return Buffer.concat([
       jpeg.subarray(0, insertOffset),
+      xmp,
       iso,
       arotSegment.data,
       jpeg.subarray(insertOffset),
