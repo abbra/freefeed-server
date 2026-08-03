@@ -192,13 +192,14 @@ describe('SearchController', () => {
     });
   });
   describe('Search in account names and screennames', () => {
-    let luna, mars, post;
+    let luna, mars, alice, post;
     before(async () => {
       await cleanDB($pg_database);
 
-      [luna, mars] = await funcTestHelper.createTestUsers(['luna', 'mars']);
+      [luna, mars, alice] = await funcTestHelper.createTestUsers(['luna', 'mars', 'somealicebob']);
       await luna.user.update({ screenName: 'Quick brown fox' });
       await mars.user.update({ screenName: 'Lazy dog' });
+      await alice.user.update({ screenName: 'Cheshire cat' });
 
       post = await funcTestHelper.justCreatePost(luna, 'hello from luna');
     });
@@ -218,6 +219,15 @@ describe('SearchController', () => {
         posts: [{ id: post.id }],
         foundUsers: [luna.user.id],
         users: [{ id: luna.user.id, screenName: 'Quick brown fox' }],
+      });
+    });
+
+    it('should find username substring with a leading @', async () => {
+      const response = await funcTestHelper.performSearch(luna, '@alice');
+      expect(response, 'to satisfy', {
+        posts: [],
+        foundUsers: [alice.user.id],
+        users: [{ id: alice.user.id, screenName: 'Cheshire cat' }],
       });
     });
   });

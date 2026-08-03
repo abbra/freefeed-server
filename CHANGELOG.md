@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Apple HDR gain maps now retain their APP10 `AROT` tone curves and Apple HDR
   0.1/0.2 metadata when the base image and gain map are resized, producing HDR
   previews compatible with Apple Adaptive HDR rendering.
+### Fixed
+- Account search queries starting with `@` now match username substrings while
+  preserving mention search in posts, comments, screen names, and descriptions.
 
 ## [2.31.0] - 2026-07-30
 ### Added
