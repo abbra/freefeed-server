@@ -279,16 +279,19 @@ function exactPhraseToTSQuery(text: string): string {
 }
 
 /**
- * Transforms the text-related queries to prefix forms. It is used for username
- * substring search.
+ * Transforms text queries to prefix forms for username substring search.
+ * A leading '@' is removed because username vectors do not contain it. The
+ * original token is still used for mention search in posts and comments.
  */
 export function toPrefixQuery<T extends AnyText | SeqTexts | Text>(token: T): T {
   if (token instanceof Text) {
-    if (token.phrase || token.text.endsWith('*')) {
-      return token;
+    const text = token.text.replace(/^@/, '');
+
+    if (token.phrase || text.endsWith('*')) {
+      return new Text(token.exclude, token.phrase, text) as T;
     }
 
-    return new Text(token.exclude, token.phrase, `${token.text}*`) as T;
+    return new Text(token.exclude, token.phrase, `${text}*`) as T;
   }
 
   if (token instanceof AnyText) {

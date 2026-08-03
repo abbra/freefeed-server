@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [2.32.0] - Not released
+### Fixed
+- Account search queries starting with `@` now match username substrings while
+  preserving mention search in posts, comments, screen names, and descriptions.
 
 ## [2.31.0] - 2026-07-30
 ### Added
