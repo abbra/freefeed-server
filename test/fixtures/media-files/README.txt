@@ -12,3 +12,9 @@ https://commons.wikimedia.org/wiki/File:Polyphon-_Kreuz-Polka.ogv
 
 The "Ultra_HDR_Samples_Originals_01.jpg" has CC Attribution 4.0 International license and taken from:
 https://github.com/MishaalRahmanGH/Ultra_HDR_Samples
+
+The "apple_gainmap_old_arot.jpg" and "apple_gainmap_new_arot.jpg" images are
+derived from the Apple HDR gain map test files from libavif. Synthetic APP10
+AROT curves were added to exercise Apple Adaptive HDR preview generation. The
+files are distributed under the BSD 3-Clause license. See LICENSE-libavif.txt.
+https://github.com/AOMediaCodec/libavif/tree/main/tests/data

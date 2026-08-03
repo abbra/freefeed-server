@@ -22,6 +22,28 @@ describe('JPEG HDR previews', () => {
     __dirname,
     '../../fixtures/media-files/Ultra_HDR_Samples_Originals_01.jpg',
   );
+  const appleFixtures = [
+    {
+      name: 'Apple HDR 0.2 image with AROT curves',
+      sourcePath: join(__dirname, '../../fixtures/media-files/apple_gainmap_new_arot.jpg'),
+      width: 384,
+      height: 512,
+      gainMapWidth: 192,
+      gainMapHeight: 256,
+      version: '0.2.0.0',
+      isoSegments: 0,
+    },
+    {
+      name: 'Apple HDR 0.1 image with AROT curves',
+      sourcePath: join(__dirname, '../../fixtures/media-files/apple_gainmap_old_arot.jpg'),
+      width: 384,
+      height: 512,
+      gainMapWidth: 192,
+      gainMapHeight: 256,
+      version: '0.1.0.0',
+      isoSegments: 0,
+    },
+  ];
 
   it('should create a valid clean Ultra HDR JPEG preview', async () => {
     const workDir = await mkdtemp(join(tmpdir(), 'freefeed-hdr-'));
@@ -103,4 +125,76 @@ describe('JPEG HDR previews', () => {
       await rm(workDir, { recursive: true, force: true });
     }
   });
+
+  for (const fixture of appleFixtures) {
+    it(`should create a clean ${fixture.name} preview`, async () => {
+      const workDir = await mkdtemp(join(tmpdir(), 'freefeed-apple-hdr-'));
+
+      try {
+        const targetPath = join(workDir, 'preview.jpg');
+        const created = await createJpegHdrPreview({
+          sourcePath: fixture.sourcePath,
+          targetPath,
+          width: fixture.width,
+          height: fixture.height,
+          quality: 90,
+        });
+
+        expect(created, 'to be true');
+        expect(await inspectJpegHdrPreview(targetPath), 'to satisfy', {
+          numberOfImages: 2,
+          mpImage2Length: expect.it('to be greater than', 0),
+          gainMapImageLength: expect.it('to be greater than', 0),
+          iccProfileDescription: 'Display P3',
+          validate: 'OK',
+          warnings: [],
+        });
+
+        const { stdout: metadata } = await spawnAsync(await exiftoolPath(), [
+          '-G3:1',
+          '-a',
+          '-s',
+          '-ee3',
+          '-ImageWidth',
+          '-ImageHeight',
+          '-HDRGainCurveSize',
+          '-HDRGainMapVersion',
+          '-UniformResourceName',
+          '-Make',
+          '-Model',
+          '-MakerNote:all',
+          '-XMP-hdrgm:all',
+          '-XMP-GContainer:all',
+          targetPath,
+        ]);
+
+        expect(numericTagValues(metadata, 'ImageWidth'), 'to equal', [
+          fixture.width,
+          fixture.gainMapWidth,
+        ]);
+        expect(numericTagValues(metadata, 'ImageHeight'), 'to equal', [
+          fixture.height,
+          fixture.gainMapHeight,
+        ]);
+        expect(numericTagValues(metadata, 'HDRGainCurveSize'), 'to equal', [188, 188]);
+        expect(tagValues(metadata, 'HDRGainMapVersion'), 'to equal', [fixture.version]);
+        expect(tagValues(metadata, 'UniformResourceName'), 'to have length', fixture.isoSegments);
+        expect(metadata, 'not to contain', '[Apple]');
+        expect(metadata, 'not to contain', '[IFD0]');
+        expect(metadata, 'not to contain', '[XMP-hdrgm]');
+        expect(metadata, 'not to contain', '[XMP-GContainer]');
+      } finally {
+        await rm(workDir, { recursive: true, force: true });
+      }
+    });
+  }
 });
+
+function numericTagValues(output, tag) {
+  return tagValues(output, tag).map((value) => parseInt(value, 10));
+}
+
+function tagValues(output, tag) {
+  const re = new RegExp(`^\\[[^\\]]+\\]\\s+${tag}\\s+:\\s+(.+)$`, 'gm');
+  return [...output.matchAll(re)].map((match) => match[1]);
+}
