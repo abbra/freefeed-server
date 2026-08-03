@@ -56,18 +56,18 @@ export async function createAppleJpegHdrPreview({
   const gainMap = await extractGainMap(sourcePath);
   const gainMapArot = gainMap && findJpegSegment(gainMap, APP10, AROT_PREFIX);
   const gainMapXmp = gainMap && findJpegSegment(gainMap, APP1, XMP_PREFIX);
+  const primaryIso = findJpegSegment(source, APP2, ISO_GAIN_MAP_PREFIX);
+  const gainMapIso = gainMap && findJpegSegment(gainMap, APP2, ISO_GAIN_MAP_PREFIX);
 
   if (
     !gainMap ||
-    !gainMapArot ||
     !gainMapXmp ||
-    !gainMapXmp.data.includes(APPLE_GAIN_MAP_VERSION)
+    !gainMapXmp.data.includes(APPLE_GAIN_MAP_VERSION) ||
+    (!gainMapArot && (!primaryIso || !gainMapIso))
   ) {
     return null;
   }
 
-  const primaryIso = findJpegSegment(source, APP2, ISO_GAIN_MAP_PREFIX);
-  const gainMapIso = findJpegSegment(gainMap, APP2, ISO_GAIN_MAP_PREFIX);
   const workDir = await mkdtemp(join(dirname(targetPath), '.apple-hdr-'));
 
   try {
@@ -113,7 +113,7 @@ export async function createAppleJpegHdrPreview({
     ]);
     await assembleMpfJpeg(restoredBasePath, restoredGainMapPath, targetPath);
 
-    return validateApplePreview(targetPath, restoredGainMap.length);
+    return validateApplePreview(targetPath, restoredGainMap.length, gainMapArot === null ? 1 : 2);
   } finally {
     await rm(workDir, { recursive: true, force: true });
   }
@@ -202,10 +202,11 @@ function orientSize(size: ImageSize, orientation: number): ImageSize {
 function restoreHdrSegments(
   jpeg: Buffer,
   isoSegment: JpegSegment | null,
-  arotSegment: JpegSegment,
+  arotSegment: JpegSegment | null,
   xmpSegment: JpegSegment | null,
 ): Buffer {
   const iso = isoSegment?.data ?? Buffer.alloc(0);
+  const arot = arotSegment?.data ?? Buffer.alloc(0);
   const xmp = xmpSegment?.data ?? Buffer.alloc(0);
   const icc = findJpegSegment(jpeg, APP2, ICC_PROFILE_PREFIX);
 
@@ -215,7 +216,7 @@ function restoreHdrSegments(
       jpeg.subarray(0, insertOffset),
       xmp,
       iso,
-      arotSegment.data,
+      arot,
       jpeg.subarray(insertOffset),
     ]);
   }
@@ -224,15 +225,19 @@ function restoreHdrSegments(
     jpeg.subarray(0, icc.offset),
     iso,
     icc.data,
-    arotSegment.data,
+    arot,
     jpeg.subarray(icc.offset + icc.data.length),
   ]);
 }
 
 /**
- * Verifies the MPF index, both AROT curves, and ExifTool validation result.
+ * Verifies the MPF index, restored AROT curves, and ExifTool validation result.
  */
-async function validateApplePreview(filePath: string, gainMapLength: number): Promise<boolean> {
+async function validateApplePreview(
+  filePath: string,
+  gainMapLength: number,
+  expectedCurveCount: number,
+): Promise<boolean> {
   const exe = await exiftoolPath();
   const [{ stdout: tags }, { stdout: validation }] = await Promise.all([
     spawnAsync(exe, [
@@ -253,7 +258,7 @@ async function validateApplePreview(filePath: string, gainMapLength: number): Pr
   return (
     tagValue(tags, 'NumberOfImages') === '2' &&
     parseInt(tagValueInGroup(tags, 'MPImage2', 'MPImageLength') ?? '', 10) === gainMapLength &&
-    curveSizes.length === 2 &&
+    curveSizes.length === expectedCurveCount &&
     !tags.includes('[XMP-hdrgm]') &&
     !tags.includes('[XMP-GContainer]') &&
     tagValue(validation, 'Validate') === 'OK' &&

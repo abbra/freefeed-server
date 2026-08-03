@@ -32,6 +32,7 @@ describe('JPEG HDR previews', () => {
       gainMapHeight: 256,
       version: '0.2.0.0',
       isoSegments: 0,
+      curveSizes: [188, 188],
     },
     {
       name: 'Apple HDR 0.1 image with AROT curves',
@@ -42,6 +43,21 @@ describe('JPEG HDR previews', () => {
       gainMapHeight: 256,
       version: '0.1.0.0',
       isoSegments: 0,
+      curveSizes: [188, 188],
+    },
+    {
+      name: 'ISO Apple HDR image with only a primary AROT curve',
+      sourcePath: join(
+        __dirname,
+        '../../fixtures/media-files/apple_gainmap_new_iso_primary_arot.jpg',
+      ),
+      width: 384,
+      height: 512,
+      gainMapWidth: 192,
+      gainMapHeight: 256,
+      version: '0.2.0.0',
+      isoSegments: 2,
+      curveSizes: [188],
     },
   ];
 
@@ -176,7 +192,7 @@ describe('JPEG HDR previews', () => {
           fixture.height,
           fixture.gainMapHeight,
         ]);
-        expect(numericTagValues(metadata, 'HDRGainCurveSize'), 'to equal', [188, 188]);
+        expect(numericTagValues(metadata, 'HDRGainCurveSize'), 'to equal', fixture.curveSizes);
         expect(tagValues(metadata, 'HDRGainMapVersion'), 'to equal', [fixture.version]);
         expect(tagValues(metadata, 'UniformResourceName'), 'to have length', fixture.isoSegments);
         expect(metadata, 'not to contain', '[Apple]');
