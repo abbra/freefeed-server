@@ -6,6 +6,7 @@ import { program } from 'commander';
 
 import { setSearchConfig } from '../app/setup/postgres';
 import { dbAdapter } from '../app/models';
+import { nodeDirname } from '../app/support/node-dirname';
 import { toTSVector } from '../app/support/search/to-tsvector';
 import { delay } from '../app/support/timers';
 
@@ -14,6 +15,7 @@ import { delay } from '../app/support/timers';
 
 const allTables = ['posts', 'comments'];
 const ZERO_UID = '00000000-00000000-00000000-00000000';
+const __dirname = nodeDirname(import.meta.url);
 const statusFile = path.join(__dirname, '../tmp/reindex_search.json');
 
 program

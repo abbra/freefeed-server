@@ -5,12 +5,14 @@ import path from 'path';
 import { program } from 'commander';
 
 import { dbAdapter } from '../app/models';
+import { nodeDirname } from '../app/support/node-dirname';
 import { delay } from '../app/support/timers';
 
 // Add sequential numbers to comments.
 // Usage: yarn babel bin/migration_comment_numbers.js --help
 
 const ZERO_UID = '00000000-00000000-00000000-00000000';
+const __dirname = nodeDirname(import.meta.url);
 const statusFile = path.join(__dirname, '../tmp/migration_comment_numbers.json');
 
 program

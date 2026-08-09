@@ -6,6 +6,7 @@ import { program } from 'commander';
 
 import { dbAdapter } from '../app/models';
 import { extractShortIds, extractUUIDs } from '../app/support/backlinks';
+import { nodeDirname } from '../app/support/node-dirname';
 import { delay } from '../app/support/timers';
 
 // Reindex backlinks in posts and comments.
@@ -13,6 +14,7 @@ import { delay } from '../app/support/timers';
 
 const allTables = ['posts', 'comments'];
 const ZERO_UID = '00000000-00000000-00000000-00000000';
+const __dirname = nodeDirname(import.meta.url);
 const statusFile = path.join(__dirname, '../tmp/reindex_backlinks.json');
 
 program
