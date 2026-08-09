@@ -6,6 +6,7 @@ import { setTimeout } from 'timers/promises';
 import { program } from 'commander';
 
 import { dbAdapter } from '../app/models';
+import { nodeDirname } from '../app/support/node-dirname';
 
 // Recalculate posts' and comments' counters.
 // Usage: yarn babel bin/reindex_counters.js --help
@@ -16,6 +17,7 @@ const srcTables = {
   comment_counters: 'comments',
 };
 const ZERO_UID = '00000000-00000000-00000000-00000000';
+const __dirname = nodeDirname(import.meta.url);
 const statusFile = path.join(__dirname, '../tmp/reindex_counters.json');
 
 program

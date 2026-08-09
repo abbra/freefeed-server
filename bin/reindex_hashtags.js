@@ -7,12 +7,14 @@ import { program } from 'commander';
 
 import { dbAdapter, postgres } from '../app/models';
 import { extractHashtags } from '../app/support/hashtags';
+import { nodeDirname } from '../app/support/node-dirname';
 
 // Reindex hashtags from posts and comments.
 // Usage: yarn babel bin/reindex_hashtags1.js --help
 
 const allTables = ['posts', 'comments'];
 const ZERO_UID = '00000000-00000000-00000000-00000000';
+const __dirname = nodeDirname(import.meta.url);
 const statusFile = path.join(__dirname, '../tmp/reindex_hashtags.json');
 
 program
