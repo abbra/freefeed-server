@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.32.0] - Not released
+### Changed
+- Reduced PostgreSQL WAL generation by storing transient `local_bumps` feed-ordering
+  data in an unlogged table. Its contents can be cleared after an unclean PostgreSQL
+  shutdown and will repopulate through new activity.
+- Skipped physical `posts.feed_ids` updates when all requested feed IDs are already
+  present, avoiding unnecessary heap and index writes.
+
 ## [2.31.1] - 2026-08-03
 ### Added
 - Added Apple Adaptive HDR JPEG preview generation. JPEG images containing

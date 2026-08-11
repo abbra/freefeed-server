@@ -182,10 +182,14 @@ const postsTrait = (superClass) =>
         return null;
       }
 
-      return this.database.raw('UPDATE posts SET feed_ids = (feed_ids | ?) WHERE uid = ?', [
-        feedIntIds,
-        postId,
-      ]);
+      // Updating feed_ids prevents HOT and rewrites every posts index.
+      // Skip physical no-op updates.
+      return this.database.raw(
+        `UPDATE posts
+         SET feed_ids = (feed_ids | ?)
+         WHERE uid = ? AND NOT (feed_ids @> ?::int[])`,
+        [feedIntIds, postId, feedIntIds],
+      );
     }
 
     withdrawPostFromFeeds(feedIntIds, postUUID) {
